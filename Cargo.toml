@@ -2,6 +2,13 @@
 name = "black-jack"
 version = "0.0.1"
 authors = ["Miles Granger <miles59923@gmail.com>"]
+description = "Rust backend engine for Python package lumber-jack"
+repository = "https://github.com/milesgranger/black-jack"
+readme = "README.md"
+license = "MIT"
+license-file = "LICENSE"
+travis-ci = { repository = "https://github.com/milesgranger/black-jack", branch = "master" }
+coveralls = { repository = "https://github.com/milesgranger/black-jack", branch = "master", service = "github" }
 
 [lib]
 name = "blackjack"
