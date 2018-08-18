@@ -1,0 +1,12 @@
+[package]
+name = "black-jack"
+version = "0.0.1"
+authors = ["Miles Granger <miles59923@gmail.com>"]
+
+[lib]
+name = "blackjack"
+
+[dependencies]
+num = "^0.1"
+ndarray = "^0.11.2"
+libc = "^0.2.42"

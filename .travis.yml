@@ -1,0 +1,29 @@
+sudo: required
+dist: trusty
+language: rust
+
+rust:
+  - stable
+
+matrix:
+  fast_finish: true
+
+cache: cargo
+
+compiler:
+  - gcc
+
+addons:
+  apt:
+    packages:
+      - libssl-dev
+
+script:
+  - cargo build
+  - cargo test
+
+after_success: |
+  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+    RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin 
+    cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+  fi
