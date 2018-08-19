@@ -1,12 +1,16 @@
-use containers::Data;
-use series::Series;
+
+use series::{Series, LumberJackData};
 
 
-pub struct DataFrame<'a> {
-    data: Vec<Series<'a>>
+pub struct DataFrame<'a, T>
+    where T: LumberJackData
+{
+    data: Vec<Series<'a, T>>
 }
 
-impl<'a> DataFrame<'a> {
+impl<'a, T> DataFrame<'a, T>
+    where T: LumberJackData
+{
 
     /// Constructs a new `DataFrame<'a>`
     /// 
@@ -15,7 +19,7 @@ impl<'a> DataFrame<'a> {
     /// ```
     /// use blackjack::dataframe::DataFrame;
     /// 
-    /// let df = DataFrame::new();
+    /// let df: DataFrame<f64> = DataFrame::new();
     /// ```
     pub fn new() -> Self {
         let data = Vec::new();
@@ -40,7 +44,7 @@ impl<'a> DataFrame<'a> {
     /// use blackjack::series::Series;
     /// 
     /// ```
-    pub fn get_column_by_name(&self, name: &'a str) -> Option<&Series<'a>> {
+    pub fn get_column_by_name(&self, name: &'a str) -> Option<&Series<'a, T>> {
         for series in self.data.iter() {
             if name == series.name {
                 return Some(series)
@@ -49,7 +53,7 @@ impl<'a> DataFrame<'a> {
         None
     }
 
-    pub fn add_column(&mut self, series: Series<'a>) -> Result<(), &'static str> {
+    pub fn add_column(&mut self, series: Series<'a, T>) -> Result<(), &'static str> {
         // Can only add column if series length matches or this is an empty dataframe
         if (series.len() != self.len()) & (self.len() > 0){
             Err("Length of new column does not match length of index!")
