@@ -11,20 +11,18 @@ impl LumberJackData for f64 {}
 impl LumberJackData for i64 {}
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Series<'a, T> 
-    where T: LumberJackData
+pub struct Series<'a>
 {
     pub name: &'a str,
-    pub data: Vec<T>
+    pub data: Data
 }
 
-impl<'a, T> Series<'a, T>
-    where T: LumberJackData
+impl<'a> Series<'a>
 {
     pub fn arange<I>(start: I, stop: I) -> ()
-        where I: Integer, Range<I>: Iterator, Vec<T>: FromIterator<<Range<I> as Iterator>::Item>
+        where I: Integer, Range<I>: Iterator, Vec<I>: FromIterator<<Range<I> as Iterator>::Item>
     {
-        let range = (start..stop).collect::<Vec<T>>();
+        let range = (start..stop).collect::<Vec<I>>();
     }
     pub fn len(&self) -> usize {
         self.data.len()

@@ -6,7 +6,7 @@ use blackjack::prelude::*;
 
 #[test]
 fn test_new_dataframe() {
-    let df: DataFrame<f64> = DataFrame::new();
+    let df: DataFrame = DataFrame::new();
 }
 
 #[test]
