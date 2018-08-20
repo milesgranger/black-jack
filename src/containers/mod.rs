@@ -1,5 +1,8 @@
 
 use std::iter::FromIterator;
+use num::*;
+use num::integer::Integer;
+
 
 /// Define which data types can be requested or cast to.
 /// to serve as flags between Cython and Rust for data type conversions / creations
@@ -11,77 +14,63 @@ pub enum DType {
 
 /// Container for various supported data types
 #[derive(Debug, PartialEq, Clone)]
-pub enum Data {
-    Float64(Vec<f64>),
-    Int32(Vec<i32>)
+pub enum Data<I, F>
+    where 
+        I: Integer, 
+        F: Float
+
+{
+    Integer(Vec<I>),
+    Float(Vec<F>)
 }
 
-impl Data {
+impl<I, F> Data<I, F>
+    where 
+        I: Integer + ToPrimitive + NumCast,
+        F: Float + ToPrimitive + NumCast
+{
     pub fn len(&self) -> usize {
         match self {
-            Data::Float64(ref vec) => vec.len(),
-            Data::Int32(ref vec) => vec.len()
+            Data::Integer(ref vec) => vec.len(),
+            Data::Float(ref vec) => vec.len()
         }
     }
 
     pub fn get_dtype(&self) -> DType {
         match self {
-            Data::Float64(ref _vec) => DType::Float64,
-            Data::Int32(ref _vec) => DType::Int32
+            Data::Integer(ref _vec) => DType::Int32,
+            Data::Float(ref _vec) => DType::Int32
         }
     }
 
-    pub fn astype(&self, dtype: DType) -> Self {
+    pub fn astype(self, dtype: DType) -> Self {
         match self {
-            Data::Int32(ref vec) => {
+            Data::Integer(vec) => {
                 match dtype {
-                    DType::Float64 => Data::Float64(vec.iter().map(|v| *v as f64).collect()),
-                    DType::Int32 => Data::Int32(vec.iter().map(|v| *v).collect())
+                    DType::Float64 => Data::Float(vec.into_iter().map(|v| NumCast::from(v).expect("Cannot convert integer to float!")).collect()),
+                    DType::Int32 => Data::Integer(vec.into_iter().map(|v| v).collect())
                 }
             },
-            Data::Float64(ref vec) => {
+            Data::Float(vec) => {
                 match dtype {
-                    DType::Float64 => Data::Float64(vec.iter().map(|v| *v).collect()),
-                    DType::Int32 => Data::Float64(vec.iter().map(|v| *v as f64).collect())
-                }
-            }
-        }
-    }
-
-    pub fn astype_consume(self, dtype: DType) -> Self {
-        match self {
-            Data::Int32(vec) => {
-                match dtype {
-                    DType::Float64 => Data::Float64(vec.into_iter().map(|v| v as f64).collect()),
-                    DType::Int32 => Data::Int32(vec.into_iter().map(|v| v).collect())
-                }
-            },
-            Data::Float64(vec) => {
-                match dtype {
-                    DType::Float64 => Data::Float64(vec.into_iter().map(|v| v).collect()),
-                    DType::Int32 => Data::Int32(vec.into_iter().map(|v| v as i32).collect())
+                    DType::Float64 => Data::Float(vec.into_iter().map(|v| v).collect()),
+                    DType::Int32 => Data::Integer(vec.into_iter().map(|v| NumCast::from(v).expect("Cannot convert float to integer!")).collect())
                 }
             }
         }
     }
 }
 
-impl FromIterator<i32> for Data {
-    fn from_iter<I: IntoIterator<Item=i32>>(iter: I) -> Data {
+impl<I, F> FromIterator<I> for Data<I, F> 
+    where 
+        I: Integer,
+        F: Float,
+{
+    fn from_iter<T: IntoIterator<Item=I>>(iter: T) -> Data<I, F> {
         let mut vec = Vec::new();
         for v in iter {
             vec.push(v)
         }
-        Data::Int32(vec)
-    }
-}
-
-impl FromIterator<f64> for Data {
-    fn from_iter<I: IntoIterator<Item=f64>>(iter: I) -> Data {
-        let mut vec = Vec::new();
-        for v in iter {
-            vec.push(v)
-        }
-        Data::Float64(vec)
+        Data::Integer(vec)
     }
 }

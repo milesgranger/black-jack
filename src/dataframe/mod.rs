@@ -1,13 +1,21 @@
 
+use num::{Integer, Float};
+use num_traits::*;
 use series::{Series};
 
 
-pub struct DataFrame
+pub struct DataFrame<I, F>
+    where
+        I: Integer,
+        F: Float
 {
-    data: Vec<Series>
+    data: Vec<Series<I, F>>
 }
 
-impl DataFrame
+impl<I, F> DataFrame<I, F>
+    where
+        I: Integer + NumCast,
+        F: Float + NumCast
 {
 
     /// Constructs a new `DataFrame<'a>`
@@ -42,7 +50,7 @@ impl DataFrame
     /// use blackjack::series::Series;
     /// 
     /// ```
-    pub fn get_column_by_name(&self, name: String) -> Option<&Series> 
+    pub fn get_column_by_name(&self, name: String) -> Option<&Series<I, F>>
     {
         for (i, s_name) in self.data.iter().enumerate().map(|(i, v)| {(i, v.name.clone().unwrap())}) {
             if &name == &s_name {
@@ -52,7 +60,7 @@ impl DataFrame
         None
     }
 
-    pub fn add_column(&mut self, mut series: Series) -> Result<(), &'static str> {
+    pub fn add_column(&mut self, mut series: Series<I, F>) -> Result<(), &'static str> {
         // Can only add column if series length matches or this is an empty dataframe
         if (series.len() != self.len()) & (self.len() > 0){
             Err("Length of new column does not match length of index!")
