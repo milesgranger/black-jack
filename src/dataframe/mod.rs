@@ -1,13 +1,13 @@
 
-use series::{Series, LumberJackData};
+use series::{Series};
 
 
-pub struct DataFrame<'a>
+pub struct DataFrame
 {
-    data: Vec<Series<'a>>
+    data: Vec<Series>
 }
 
-impl<'a> DataFrame<'a>
+impl DataFrame
 {
 
     /// Constructs a new `DataFrame<'a>`
@@ -42,20 +42,28 @@ impl<'a> DataFrame<'a>
     /// use blackjack::series::Series;
     /// 
     /// ```
-    pub fn get_column_by_name(&self, name: &'a str) -> Option<&Series<'a>> {
-        for series in self.data.iter() {
-            if name == series.name {
-                return Some(series)
+    pub fn get_column_by_name(&self, name: String) -> Option<&Series> 
+    {
+        for (i, s_name) in self.data.iter().enumerate().map(|(i, v)| {(i, v.name.clone().unwrap())}) {
+            if &name == &s_name {
+                return Some(&self.data[i])
             }
         }
         None
     }
 
-    pub fn add_column(&mut self, series: Series<'a>) -> Result<(), &'static str> {
+    pub fn add_column(&mut self, mut series: Series) -> Result<(), &'static str> {
         // Can only add column if series length matches or this is an empty dataframe
         if (series.len() != self.len()) & (self.len() > 0){
             Err("Length of new column does not match length of index!")
         } else {
+            series.name = match series.name {
+                Some(name) => Some(name),
+                None => {
+                    let name = format!("{}", self.len());
+                    Some(name)
+                }
+            };
             self.data.push(series);
             Ok(())
         }
