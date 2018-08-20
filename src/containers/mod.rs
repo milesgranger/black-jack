@@ -2,6 +2,7 @@
 use std::iter::FromIterator;
 use num::*;
 use num::integer::Integer;
+use series::LumberJackData;
 
 
 /// Define which data types can be requested or cast to.
@@ -14,20 +15,18 @@ pub enum DType {
 
 /// Container for various supported data types
 #[derive(Debug, PartialEq, Clone)]
-pub enum Data<I, F>
+pub enum Data<T>
     where 
-        I: Integer, 
-        F: Float
+        T: LumberJackData
 
 {
-    Integer(Vec<I>),
-    Float(Vec<F>)
+    Integer(Vec<T>),
+    Float(Vec<T>)
 }
 
-impl<I, F> Data<I, F>
+impl<T> Data<T>
     where 
-        I: Integer + ToPrimitive + NumCast,
-        F: Float + ToPrimitive + NumCast
+        T: LumberJackData
 {
     pub fn len(&self) -> usize {
         match self {
@@ -61,12 +60,11 @@ impl<I, F> Data<I, F>
     }
 }
 
-impl<I, F> FromIterator<I> for Data<I, F> 
-    where 
-        I: Integer,
-        F: Float,
+impl<T> FromIterator<T> for Data<T> 
+    where
+        T: LumberJackData
 {
-    fn from_iter<T: IntoIterator<Item=I>>(iter: T) -> Data<I, F> {
+    fn from_iter<A: IntoIterator<Item=T>>(iter: A) -> Data<T> {
         let mut vec = Vec::new();
         for v in iter {
             vec.push(v)

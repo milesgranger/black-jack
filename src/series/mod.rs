@@ -6,43 +6,33 @@ use num::*;
 use num_traits::*;
 
 
-pub trait LumberJackData {
+pub trait LumberJackData: Num + Integer + Float {
     fn dtype(&self) -> DType;
 }
-impl LumberJackData for f64 {
-    fn dtype(&self) -> DType {
-        DType::Float64
-    }
-}
-impl LumberJackData for i32 {
-    fn dtype(&self) -> DType {
-        DType::Int32
-    }
-}
+
+
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Series<I, F>
+pub struct Series<T>
     where 
-        I: Integer,
-        F: Float
+        T: LumberJackData
 {
     pub name: Option<String>,
-    pub data: Data<I, F>
+    pub data: Data<T>
 }
 
-impl<I, F> Series<I, F>
+impl<T> Series<T>
     where 
-        I: Integer + NumCast,
-        F: Float + NumCast
+        T: LumberJackData
 {
-    pub fn arange(start: I, stop: I) -> Self
+    pub fn arange<I: Integer>(start: I, stop: I) -> Series<T>
         where I:
             Integer,
             Range<I>: Iterator, 
-            Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
+            Vec<T>: FromIterator<<Range<I> as Iterator>::Item>, 
             Vec<I>: From<Vec<I>>
     {
-        let data: Vec<I> = (start..stop).collect::<Vec<I>>().into();
+        let data: Vec<T> = (start..stop).collect::<Vec<T>>().into();
         Series { name: None, data: Data::Integer(data)}
     }
 
@@ -50,8 +40,8 @@ impl<I, F> Series<I, F>
         self.data.len()
     }
 
-    pub fn from_vec<T>(vec: Vec<T>) -> Self 
-        where T: LumberJackData, Data<I, F>: FromIterator<T>
+    pub fn from_vec<A>(vec: Vec<A>) -> Self 
+        where A: LumberJackData, Data<T>: FromIterator<A>
     {
         let data = Data::from_iter(vec.into_iter());
         Series { name: None, data }
