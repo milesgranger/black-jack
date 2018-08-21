@@ -9,8 +9,8 @@ use series::LumberJackData;
 /// to serve as flags between Cython and Rust for data type conversions / creations
 #[derive(Debug, PartialEq)]
 pub enum DType {
-    Float64,
-    Int32
+    Float,
+    Integer
 }
 
 /// Container for various supported data types
@@ -37,23 +37,25 @@ impl<T> Data<T>
 
     pub fn get_dtype(&self) -> DType {
         match self {
-            Data::Integer(ref _vec) => DType::Int32,
-            Data::Float(ref _vec) => DType::Int32
+            Data::Integer(ref _vec) => DType::Integer,
+            Data::Float(ref _vec) => DType::Float
         }
     }
 
-    pub fn astype(self, dtype: DType) -> Self {
+    pub fn astype(self, dtype: DType) -> Self 
+        where T: NumCast
+    {
         match self {
             Data::Integer(vec) => {
                 match dtype {
-                    DType::Float64 => Data::Float(vec.into_iter().map(|v| NumCast::from(v).expect("Cannot convert integer to float!")).collect()),
-                    DType::Int32 => Data::Integer(vec.into_iter().map(|v| v).collect())
+                    DType::Float => Data::Float(vec.into_iter().map(|v| NumCast::from(v).expect("Cannot convert integer to float!")).collect()),
+                    DType::Integer => Data::Integer(vec.into_iter().map(|v| v).collect())
                 }
             },
             Data::Float(vec) => {
                 match dtype {
-                    DType::Float64 => Data::Float(vec.into_iter().map(|v| v).collect()),
-                    DType::Int32 => Data::Integer(vec.into_iter().map(|v| NumCast::from(v).expect("Cannot convert float to integer!")).collect())
+                    DType::Float => Data::Float(vec.into_iter().map(|v| v).collect()),
+                    DType::Integer => Data::Integer(vec.into_iter().map(|v| NumCast::from(v).expect("Cannot convert float to integer!")).collect())
                 }
             }
         }

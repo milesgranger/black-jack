@@ -3,11 +3,24 @@ use std::ops::Range;
 use std::iter::{Iterator, FromIterator};
 use containers::{Data, DType};
 use num::*;
+use std::fmt::Debug;
 use num_traits::*;
 
 
-pub trait LumberJackData: Num + Integer + Float {
+pub trait LumberJackData: Debug + Copy + Clone  {
     fn dtype(&self) -> DType;
+}
+
+impl LumberJackData for i32 {
+    fn dtype(&self) -> DType {
+        DType::Integer
+    }
+}
+
+impl LumberJackData for f64 {
+    fn dtype(&self) -> DType {
+        DType::Float
+    }
 }
 
 
