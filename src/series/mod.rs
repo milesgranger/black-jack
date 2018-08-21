@@ -6,7 +6,7 @@ use num::*;
 use std::fmt::Debug;
 
 
-pub trait LumberJackData: Debug + Copy + Clone  {
+pub trait LumberJackData {
     fn dtype(&self) -> DType;
 }
 
@@ -24,8 +24,7 @@ impl LumberJackData for f64 {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Series<T>
-    where 
-        T: LumberJackData
+    where T: LumberJackData
 {
     pub name: Option<String>,
     pub data: Data<T>
@@ -33,14 +32,17 @@ pub struct Series<T>
 
 pub trait SeriesData {
 
-    fn arange<I: Integer + LumberJackData>(start: I, stop: I) -> Series<I>
-        where 
+    type T: LumberJackData;
+
+    fn arange<I>(start: I, stop: I) -> Series<Self::T>
+        where
+            Self::T: Integer,
+            I: Integer + LumberJackData, 
             Self: Sized,
-            I:
-                Integer,
-                Range<I>: Iterator, 
-                Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
-                Vec<I>: From<Vec<I>>;
+            Range<I>: Iterator, 
+            Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
+            Vec<Self::T>: From<Vec<I>>,
+            Vec<Self::T>: FromIterator<<Range<I> as Iterator>::Item>;
 
     fn len(&self) -> usize;
 }
@@ -48,14 +50,19 @@ pub trait SeriesData {
 impl<A: LumberJackData> SeriesData for Series<A> 
 {
 
-    fn arange<I: Integer + LumberJackData>(start: I, stop: I) -> Series<I>
-        where I:
-            Integer,
+    type T = A;
+
+    fn arange<I>(start: I, stop: I) -> Series<Self::T>
+        where
+            Self::T: Integer,
+            I: Integer + LumberJackData, 
+            Self: Sized,
             Range<I>: Iterator, 
             Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
-            Vec<I>: From<Vec<I>>
+            Vec<Self::T>: From<Vec<I>>,
+            Vec<Self::T>: FromIterator<<Range<I> as Iterator>::Item>
     {
-        let data: Vec<I> = (start..stop).collect();
+        let data: Vec<Self::T> = (start..stop).collect();
         Series { name: None, data: Data::Integer(data)}
     }
 

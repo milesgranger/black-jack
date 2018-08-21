@@ -8,7 +8,7 @@ use series::{Series, LumberJackData, SeriesData};
 
 pub struct DataFrame
 {
-    data: Vec<Box<SeriesData>>
+    data: Vec<Box<SeriesData<T = LumberJackData>>>
 }
 
 impl DataFrame
@@ -24,7 +24,7 @@ impl DataFrame
     /// let df: DataFrame = DataFrame::new();
     /// ```
     pub fn new() -> Self {
-        let vec: Vec<Box<SeriesData>> = Vec::new();
+        let vec: Vec<Box<SeriesData<T = LumberJackData>>> = Vec::new();
         DataFrame { data: vec }
     }
 
@@ -47,7 +47,7 @@ impl DataFrame
     /// use blackjack::series::Series;
     /// 
     /// ```
-    pub fn add_column<T: LumberJackData + 'static>(&mut self, mut series: Series<T>) -> Result<(), &'static str> {
+    pub fn add_column<S: LumberJackData + 'static + SeriesData<T = LumberJackData>>(&mut self, mut series: Series<S>) -> Result<(), &'static str> {
         // Can only add column if series length matches or this is an empty dataframe
         if (series.len() != self.len()) & (self.len() > 0){
             Err("Length of new column does not match length of index!")
