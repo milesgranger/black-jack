@@ -5,7 +5,7 @@ use blackjack::prelude::*;
 
 #[test]
 fn test_arange() {
-    let _series: Series<i32> = Series::arange(0, 5);
+    let _series = Series::arange(0, 5);
 }
 
 

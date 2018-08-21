@@ -1,2 +1,2 @@
-pub use series::{Series};
+pub use series::{Series, SeriesData, LumberJackData};
 pub use dataframe::{DataFrame};

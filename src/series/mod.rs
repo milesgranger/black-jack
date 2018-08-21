@@ -4,7 +4,6 @@ use std::iter::{Iterator, FromIterator};
 use containers::{Data, DType};
 use num::*;
 use std::fmt::Debug;
-use num_traits::*;
 
 
 pub trait LumberJackData: Debug + Copy + Clone  {
@@ -23,8 +22,6 @@ impl LumberJackData for f64 {
     }
 }
 
-
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct Series<T>
     where 
@@ -34,29 +31,35 @@ pub struct Series<T>
     pub data: Data<T>
 }
 
-impl<T> Series<T>
-    where 
-        T: LumberJackData
+pub trait SeriesData {
+
+    fn arange<I: Integer + LumberJackData>(start: I, stop: I) -> Series<I>
+        where 
+            Self: Sized,
+            I:
+                Integer,
+                Range<I>: Iterator, 
+                Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
+                Vec<I>: From<Vec<I>>;
+
+    fn len(&self) -> usize;
+}
+
+impl<A: LumberJackData> SeriesData for Series<A> 
 {
-    pub fn arange<I: Integer>(start: I, stop: I) -> Series<T>
+
+    fn arange<I: Integer + LumberJackData>(start: I, stop: I) -> Series<I>
         where I:
             Integer,
             Range<I>: Iterator, 
-            Vec<T>: FromIterator<<Range<I> as Iterator>::Item>, 
+            Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
             Vec<I>: From<Vec<I>>
     {
-        let data: Vec<T> = (start..stop).collect::<Vec<T>>().into();
+        let data: Vec<I> = (start..stop).collect();
         Series { name: None, data: Data::Integer(data)}
     }
 
-    pub fn len(&self) -> usize {
+    fn len(&self) -> usize {
         self.data.len()
-    }
-
-    pub fn from_vec<A>(vec: Vec<A>) -> Self 
-        where A: LumberJackData, Data<T>: FromIterator<A>
-    {
-        let data = Data::from_iter(vec.into_iter());
-        Series { name: None, data }
     }
 }

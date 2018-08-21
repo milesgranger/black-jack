@@ -1,19 +1,17 @@
-
+use std::collections::HashMap;
 use num::{Integer, Float};
 use num_traits::*;
-use series::{Series, LumberJackData};
+use series::{Series, LumberJackData, SeriesData};
 
 
-pub struct DataFrame<T>
-    where
-        T: LumberJackData
+
+
+pub struct DataFrame
 {
-    data: Vec<Series<T>>
+    data: Vec<Box<SeriesData>>
 }
 
-impl<T> DataFrame<T>
-    where
-        T: LumberJackData
+impl DataFrame
 {
 
     /// Constructs a new `DataFrame<'a>`
@@ -26,14 +24,15 @@ impl<T> DataFrame<T>
     /// let df: DataFrame = DataFrame::new();
     /// ```
     pub fn new() -> Self {
-        let data = Vec::new();
-        DataFrame { data }
+        let vec: Vec<Box<SeriesData>> = Vec::new();
+        DataFrame { data: vec }
     }
 
     /// Return length of the dataframe
     pub fn len(&self) -> usize {
         if self.data.len() > 0 {
-            self.data[0].len()
+            let first_series = &self.data[0];
+            1
         } else {
             0
         }
@@ -48,17 +47,7 @@ impl<T> DataFrame<T>
     /// use blackjack::series::Series;
     /// 
     /// ```
-    pub fn get_column_by_name(&self, name: String) -> Option<&Series<T>>
-    {
-        for (i, s_name) in self.data.iter().enumerate().map(|(i, v)| {(i, v.name.clone().unwrap())}) {
-            if &name == &s_name {
-                return Some(&self.data[i])
-            }
-        }
-        None
-    }
-
-    pub fn add_column(&mut self, mut series: Series<T>) -> Result<(), &'static str> {
+    pub fn add_column<T: LumberJackData + 'static>(&mut self, mut series: Series<T>) -> Result<(), &'static str> {
         // Can only add column if series length matches or this is an empty dataframe
         if (series.len() != self.len()) & (self.len() > 0){
             Err("Length of new column does not match length of index!")
@@ -70,7 +59,7 @@ impl<T> DataFrame<T>
                     Some(name)
                 }
             };
-            self.data.push(series);
+            self.data.push(Box::new(series));
             Ok(())
         }
     }
