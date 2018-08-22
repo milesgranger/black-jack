@@ -45,7 +45,13 @@ pub trait SeriesData {
             Vec<Self::T>: FromIterator<<Range<I> as Iterator>::Item>;
 
     fn len(&self) -> usize;
+
+    fn name(&self) -> Option<String>;
+    fn set_name(&mut self, name: String) -> ();
 }
+
+
+impl<A: LumberJackData> Series<A> {}
 
 impl<A: LumberJackData> SeriesData for Series<A> 
 {
@@ -63,10 +69,17 @@ impl<A: LumberJackData> SeriesData for Series<A>
             Vec<Self::T>: FromIterator<<Range<I> as Iterator>::Item>
     {
         let data: Vec<Self::T> = (start..stop).collect();
-        Series { name: None, data: Data::Integer(data)}
+        Self { name: None, data: Data::Integer(data)}
     }
 
     fn len(&self) -> usize {
         self.data.len()
+    }
+
+    fn name(&self) -> Option<String> {
+        self.name
+    }
+    fn set_name(&mut self, name: String) -> () {
+        self.name = Some(name);
     }
 }
