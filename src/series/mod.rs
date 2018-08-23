@@ -2,15 +2,20 @@ use num::*;
 use std::ops::Range;
 use std::iter::FromIterator;
 
+use ndarray::Array1 as Array;
+
 /// Trait which is implemented for all supported data types (i32, f64, ect)
-pub trait BlackJackData {}
+pub trait BlackJackData {}  // TODO: Implement an enum to get the high-level type (Integer, Float, String)
 impl BlackJackData for i32 {}
+impl BlackJackData for f32 {}
+impl BlackJackData for i64 {}
 impl BlackJackData for f64 {}
+
 
 
 /// Series struct, meta data surrounding the underlying Vec<BlackJackData>
 pub struct Series<T: BlackJackData> {
-    data: Vec<T>
+    data: Array<T>
 }
 
 /// Implement functions capable of creating a series.
@@ -31,7 +36,7 @@ impl<T: BlackJackData> Series<T> {
             Vec<T>: From<Vec<T>>
     {
         let data: Vec<T> = (start..stop).collect();
-        Series { data }
+        Series { data: Array::from_vec(data) }
     }
 }
 

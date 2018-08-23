@@ -12,7 +12,7 @@ fn test_arange() {
 
 
 #[test]
-fn test_sum() {
+fn test_len() {
     let _series = Series::arange(0, 5);
-    
+    assert_eq!(_series.len(), 5);
 }
