@@ -23,53 +23,62 @@ impl LumberJackData for f64 {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Series<T>
-    where T: LumberJackData
+pub struct Series<I>
+    where I: LumberJackData
 {
     pub name: Option<String>,
-    pub data: Data<T>
+    pub data: Data<I>
 }
 
-pub trait SeriesData {
+pub trait SeriesData<I: ?Sized> 
+    where I: LumberJackData
+{
 
-    type T: LumberJackData;
-
-    fn arange<I>(start: I, stop: I) -> Series<Self::T>
+    fn arange(start: I, stop: I) -> Self
         where
-            Self::T: Integer,
             I: Integer + LumberJackData, 
             Self: Sized,
             Range<I>: Iterator, 
             Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
-            Vec<Self::T>: From<Vec<I>>,
-            Vec<Self::T>: FromIterator<<Range<I> as Iterator>::Item>;
+            Vec<I>: From<Vec<I>>,
+            Vec<I>: FromIterator<<Range<I> as Iterator>::Item>;
 
     fn len(&self) -> usize;
-
     fn name(&self) -> Option<String>;
     fn set_name(&mut self, name: String) -> ();
 }
 
 
-impl<A: LumberJackData> Series<A> {}
+// Satisfy an `Series::arange()` Call, converting a stricter type of LumberJackData to LumberJackData base
+impl<I> From<Vec<I>> for Data<I> 
+    where
+        I: Integer + LumberJackData, 
+        Self: Sized,
+        Range<I>: Iterator, 
+        Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
+        Vec<I>: From<Vec<I>>
+{
+    fn from(vec: Vec<I>) -> Data<I> {
+        Data::Integer(vec)
+    }
+}
 
-impl<A: LumberJackData> SeriesData for Series<A> 
+impl<I: LumberJackData> Series<I> {}
+
+impl<I: LumberJackData> SeriesData<I> for Series<I>
 {
 
-    type T = A;
-
-    fn arange<I>(start: I, stop: I) -> Series<Self::T>
+    fn arange(start: I, stop: I) -> Self
         where
-            Self::T: Integer,
             I: Integer + LumberJackData, 
             Self: Sized,
             Range<I>: Iterator, 
             Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
-            Vec<Self::T>: From<Vec<I>>,
-            Vec<Self::T>: FromIterator<<Range<I> as Iterator>::Item>
+            Vec<I>: From<Vec<I>>,
+            Vec<I>: FromIterator<<Range<I> as Iterator>::Item>
     {
-        let data: Vec<Self::T> = (start..stop).collect();
-        Self { name: None, data: Data::Integer(data)}
+        let data: Vec<I> = (start..stop).collect();
+        Series { name: None, data: Data::from(data)}
     }
 
     fn len(&self) -> usize {
@@ -77,7 +86,7 @@ impl<A: LumberJackData> SeriesData for Series<A>
     }
 
     fn name(&self) -> Option<String> {
-        self.name
+        self.name.clone()
     }
     fn set_name(&mut self, name: String) -> () {
         self.name = Some(name);

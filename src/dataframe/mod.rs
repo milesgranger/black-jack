@@ -4,7 +4,7 @@ use num_traits::*;
 use series::{Series, LumberJackData, SeriesData};
 
 
-type SeriesItem = SeriesData<T = LumberJackData>;
+type SeriesItem = SeriesData<LumberJackData>;
 
 pub struct DataFrame
 {
@@ -47,7 +47,9 @@ impl DataFrame
     /// use blackjack::series::Series;
     /// 
     /// ```
-    pub fn add_column<A: LumberJackData>(&mut self, mut series: Series<A>) -> Result<(), &'static str> 
+    pub fn add_column<S: 'static>(&mut self, mut series: S) -> Result<(), &'static str>
+        where 
+            S: SeriesData<LumberJackData>
     {
         // Can only add column if series length matches or this is an empty dataframe
         if (series.len() != self.len()) & (self.len() > 0){
@@ -59,7 +61,7 @@ impl DataFrame
             };
             series.set_name(name);
 
-            self.data.push(Box::new(series) as Box<SeriesItem>);
+            self.data.push(Box::new(series));
             Ok(())
         }
     }
