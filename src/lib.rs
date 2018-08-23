@@ -12,10 +12,7 @@
 //! 
 //! let mut df  = DataFrame::new();
 //! let series1 = Series::arange(0, 5);
-//! let series2 = Series::from_vec((0..5).collect()); 
 //! 
-//! df.add_column(series1);
-//! df.add_column(series2);
 //! ```
 
 extern crate ndarray;

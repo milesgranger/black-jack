@@ -4,11 +4,11 @@ use num_traits::*;
 use series::{Series, LumberJackData, SeriesData};
 
 
-type SeriesItem = SeriesData<LumberJackData>;
+type DataFrameData = Vec<Box<SeriesData<LumberJackData>>>;
 
 pub struct DataFrame
 {
-    data: Vec<Box<SeriesItem>>
+    data: DataFrameData
 }
 
 impl DataFrame
@@ -24,7 +24,7 @@ impl DataFrame
     /// let df: DataFrame = DataFrame::new();
     /// ```
     pub fn new() -> Self {
-        let vec: Vec<Box<SeriesItem>> = Vec::new();
+        let vec: DataFrameData = Vec::new();
         DataFrame { data: vec }
     }
 
@@ -37,34 +37,4 @@ impl DataFrame
             0
         }
     }
-
-    /// Attempt to get a reference to a series in the dataframe by name
-    /// 
-    /// # Example
-    /// 
-    /// ```
-    /// use blackjack::dataframe::DataFrame;
-    /// use blackjack::series::Series;
-    /// 
-    /// ```
-    pub fn add_column<S: 'static>(&mut self, mut series: S) -> Result<(), &'static str>
-        where 
-            S: SeriesData<LumberJackData>
-    {
-        // Can only add column if series length matches or this is an empty dataframe
-        if (series.len() != self.len()) & (self.len() > 0){
-            Err("Length of new column does not match length of index!")
-        } else {
-            let name = match series.name() {
-                Some(name) => name,
-                None => { format!("{}", self.len()) }
-            };
-            series.set_name(name);
-
-            self.data.push(Box::new(series));
-            Ok(())
-        }
-    }
 }
-
-

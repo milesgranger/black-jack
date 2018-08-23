@@ -27,10 +27,10 @@ pub struct Series<I>
     where I: LumberJackData
 {
     pub name: Option<String>,
-    pub data: Data<I>
+    pub data: Vec<I>
 }
 
-pub trait SeriesData<I: ?Sized> 
+pub trait SeriesData<I> 
     where I: LumberJackData
 {
 
@@ -78,7 +78,7 @@ impl<I: LumberJackData> SeriesData<I> for Series<I>
             Vec<I>: FromIterator<<Range<I> as Iterator>::Item>
     {
         let data: Vec<I> = (start..stop).collect();
-        Series { name: None, data: Data::from(data)}
+        Series { name: None, data}
     }
 
     fn len(&self) -> usize {
