@@ -1,70 +1,20 @@
-use std::collections::HashMap;
-use num::{Integer, Float};
-use num_traits::*;
-use series::{Series, LumberJackData, SeriesData};
+use series::{SeriesObj};
 
 
-type SeriesItem = SeriesData<LumberJackData>;
-
-pub struct DataFrame
+/// 
+pub struct DataFrame<S>
+    where S: SeriesObj
 {
-    data: Vec<Box<SeriesItem>>
+    data: Vec<Box<S>>
 }
 
-impl DataFrame
-{
-
-    /// Constructs a new `DataFrame<'a>`
-    /// 
-    /// # Example
-    /// 
-    /// ```
-    /// use blackjack::dataframe::DataFrame;
-    /// 
-    /// let df: DataFrame = DataFrame::new();
-    /// ```
-    pub fn new() -> Self {
-        let vec: Vec<Box<SeriesItem>> = Vec::new();
-        DataFrame { data: vec }
+impl<S: SeriesObj> DataFrame<S> {
+    pub fn new() -> DataFrame<S> {
+        let data: Vec<Box<S>> = Vec::new();
+        DataFrame { data }
     }
 
-    /// Return length of the dataframe
-    pub fn len(&self) -> usize {
-        if self.data.len() > 0 {
-            let first_series = &self.data[0];
-            1
-        } else {
-            0
-        }
-    }
-
-    /// Attempt to get a reference to a series in the dataframe by name
-    /// 
-    /// # Example
-    /// 
-    /// ```
-    /// use blackjack::dataframe::DataFrame;
-    /// use blackjack::series::Series;
-    /// 
-    /// ```
-    pub fn add_column<S: 'static>(&mut self, mut series: S) -> Result<(), &'static str>
-        where 
-            S: SeriesData<LumberJackData>
-    {
-        // Can only add column if series length matches or this is an empty dataframe
-        if (series.len() != self.len()) & (self.len() > 0){
-            Err("Length of new column does not match length of index!")
-        } else {
-            let name = match series.name() {
-                Some(name) => name,
-                None => { format!("{}", self.len()) }
-            };
-            series.set_name(name);
-
-            self.data.push(Box::new(series));
-            Ok(())
-        }
+    pub fn add_column(&mut self, series: S) -> () {
+        self.data.push(Box::new(series));
     }
 }
-
-

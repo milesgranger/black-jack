@@ -1,94 +1,60 @@
-
-use std::ops::Range;
-use std::iter::{Iterator, FromIterator};
-use containers::{Data, DType};
 use num::*;
-use std::fmt::Debug;
+use std::ops::Range;
+use std::iter::FromIterator;
+
+/// Trait which is implemented for all supported data types (i32, f64, ect)
+pub trait BlackJackData {}
+impl BlackJackData for i32 {}
+impl BlackJackData for f64 {}
 
 
-pub trait LumberJackData {
-    fn dtype(&self) -> DType;
+/// Series struct, meta data surrounding the underlying Vec<BlackJackData>
+pub struct Series<T: BlackJackData> {
+    data: Vec<T>
 }
 
-impl LumberJackData for i32 {
-    fn dtype(&self) -> DType {
-        DType::Integer
-    }
-}
+/// Implement functions capable of creating a series.
+impl<T: BlackJackData> Series<T> {
 
-impl LumberJackData for f64 {
-    fn dtype(&self) -> DType {
-        DType::Float
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Series<I>
-    where I: LumberJackData
-{
-    pub name: Option<String>,
-    pub data: Data<I>
-}
-
-pub trait SeriesData<I: ?Sized> 
-    where I: LumberJackData
-{
-
-    fn arange(start: I, stop: I) -> Self
+    /// Create a new series via a range, with one step increments. 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// let series: Series<i32> = Series::arange(0_i32, 10_i32);
+    /// ```
+    pub fn arange(start: T, stop: T) -> Self
         where
-            I: Integer + LumberJackData, 
+            T: Integer, 
             Self: Sized,
-            Range<I>: Iterator, 
-            Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
-            Vec<I>: From<Vec<I>>,
-            Vec<I>: FromIterator<<Range<I> as Iterator>::Item>;
-
-    fn len(&self) -> usize;
-    fn name(&self) -> Option<String>;
-    fn set_name(&mut self, name: String) -> ();
-}
-
-
-// Satisfy an `Series::arange()` Call, converting a stricter type of LumberJackData to LumberJackData base
-impl<I> From<Vec<I>> for Data<I> 
-    where
-        I: Integer + LumberJackData, 
-        Self: Sized,
-        Range<I>: Iterator, 
-        Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
-        Vec<I>: From<Vec<I>>
-{
-    fn from(vec: Vec<I>) -> Data<I> {
-        Data::Integer(vec)
-    }
-}
-
-impl<I: LumberJackData> Series<I> {}
-
-impl<I: LumberJackData> SeriesData<I> for Series<I>
-{
-
-    fn arange(start: I, stop: I) -> Self
-        where
-            I: Integer + LumberJackData, 
-            Self: Sized,
-            Range<I>: Iterator, 
-            Vec<I>: FromIterator<<Range<I> as Iterator>::Item>, 
-            Vec<I>: From<Vec<I>>,
-            Vec<I>: FromIterator<<Range<I> as Iterator>::Item>
+            Range<T>: Iterator, 
+            Vec<T>: FromIterator<<Range<T> as Iterator>::Item>, 
+            Vec<T>: From<Vec<T>>
     {
-        let data: Vec<I> = (start..stop).collect();
-        Series { name: None, data: Data::from(data)}
+        let data: Vec<T> = (start..stop).collect();
+        Series { data }
     }
+}
 
+
+/// Trait defining functionality of a Series object.
+pub trait SeriesObj {
+    /// Fetch the length of the current series
+    /// 
+    /// ## Example
+    /// 
+    /// ```
+    /// use blackjack::prelude::*;
+    /// let series = Series::arange(0, 5);
+    /// assert_eq!(series.len(), 5);
+    /// ```
+    fn len(&self) -> usize;
+}
+
+
+impl<T: BlackJackData> SeriesObj for Series<T> {
     fn len(&self) -> usize {
         self.data.len()
     }
-
-    fn name(&self) -> Option<String> {
-        self.name.clone()
-    }
-    fn set_name(&mut self, name: String) -> () {
-        self.name = Some(name);
-    }
 }
+
+

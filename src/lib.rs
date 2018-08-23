@@ -1,6 +1,5 @@
 
-//! LumberJack is a crate is a lightweight alternative to Python's
-//! "Pandas" package.
+//! This black-jack crate is meant as a Rust backend for the Python package "lumber-jack"
 //! 
 //! Its main intention is to have a Python wrapper, but feel free
 //! to make use of it in other settings!
@@ -11,11 +10,9 @@
 //! use blackjack::prelude::*;
 //! 
 //! let mut df  = DataFrame::new();
-//! let series1 = Series::arange(0, 5);
-//! let series2 = Series::from_vec((0..5).collect()); 
+//! let series = Series::arange(0, 5);
 //! 
-//! df.add_column(series1);
-//! df.add_column(series2);
+//! df.add_column(series);
 //! ```
 
 extern crate ndarray;
@@ -29,4 +26,3 @@ pub mod macros;
 pub mod series;
 pub mod dataframe;
 pub mod prelude;
-pub mod containers;
