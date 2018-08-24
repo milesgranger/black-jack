@@ -1,6 +1,8 @@
 //! Series represents a single column within a dataframe and wraps many `Array` like
 //! functionality.
 //! 
+//! For methods implemented for a `Series`, please check out the trait [SeriesObj](trait.SeriesObj.html)
+//! 
 //! ## Example use:
 //! 
 //! ```
@@ -57,7 +59,9 @@ impl<T: BlackJackData> Series<T> {
 /// Trait defining functionality of a Series object.
 pub trait SeriesObj {
 
-    type Output;
+    /// The trait of the element output
+    type OutputElement;
+
     /// Fetch the length of the current series
     /// 
     /// ## Example
@@ -79,20 +83,20 @@ pub trait SeriesObj {
     /// let series = Series::arange(0, 5);
     /// assert_eq!(series.sum(), 10);
     /// ```
-    fn sum(&self) -> Self::Output where Self::Output: Num + Clone;
+    fn sum(&self) -> Self::OutputElement where Self::OutputElement: Num + Clone;
 }
 
 
 impl<T: BlackJackData> SeriesObj for Series<T> {
 
-    type Output = T;
+    type OutputElement = T;
 
     fn len(&self) -> usize {
         self.data.len()
     }
 
-    fn sum(&self) -> Self::Output
-        where Self::Output: Num + Clone
+    fn sum(&self) -> Self::OutputElement
+        where Self::OutputElement: Num + Clone
     {
         self.data.scalar_sum()
     }
