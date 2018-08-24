@@ -1,6 +1,19 @@
+//! Series represents a single column within a dataframe and wraps many `Array` like
+//! functionality.
+//! 
+//! ## Example use:
+//! 
+//! ```
+//! use blackjack::prelude::*;
+//! 
+//! let series = Series::arange(0, 5);
+//! 
+//! assert_eq!(series.sum(), 10);
+//! ```
+
 use num::*;
 use std::ops::Range;
-use std::iter::FromIterator;
+use std::iter::{FromIterator};
 
 use ndarray::Array1 as Array;
 
@@ -43,6 +56,8 @@ impl<T: BlackJackData> Series<T> {
 
 /// Trait defining functionality of a Series object.
 pub trait SeriesObj {
+
+    type Output;
     /// Fetch the length of the current series
     /// 
     /// ## Example
@@ -53,12 +68,33 @@ pub trait SeriesObj {
     /// assert_eq!(series.len(), 5);
     /// ```
     fn len(&self) -> usize;
+
+    /// Sum a series, where the datatype meets the conditions of `Clone` and `Num`
+    /// 
+    /// ## Example
+    /// 
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::arange(0, 5);
+    /// assert_eq!(series.sum(), 10);
+    /// ```
+    fn sum(&self) -> Self::Output where Self::Output: Num + Clone;
 }
 
 
 impl<T: BlackJackData> SeriesObj for Series<T> {
+
+    type Output = T;
+
     fn len(&self) -> usize {
         self.data.len()
+    }
+
+    fn sum(&self) -> Self::Output
+        where Self::Output: Num + Clone
+    {
+        self.data.scalar_sum()
     }
 }
 

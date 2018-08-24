@@ -1,3 +1,15 @@
+//! A `DataFrame` represents a collection of varying types of `Series` objects.
+//! 
+//! ## Example use:
+//! 
+//! ```
+//! use blackjack::prelude::*;
+//! 
+//! let mut df = DataFrame::new();
+//! let series = Series::arange(0, 5);
+//! 
+//! df.add_column(series);
+//! ```
 use series::{SeriesObj};
 
 
@@ -23,6 +35,7 @@ impl<S: SeriesObj> DataFrame<S> {
     /// 
     /// ```
     /// use blackjack::prelude::*;
+    /// 
     /// let mut df = DataFrame::new();
     /// let series = Series::arange(0, 5);
     /// df.add_column(series);
