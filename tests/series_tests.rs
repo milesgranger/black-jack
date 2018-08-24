@@ -22,3 +22,9 @@ fn test_sum() {
     let series = Series::arange(0, 5);
     assert_eq!(series.sum(), 10);
 }
+
+#[test]
+fn test_from_vec() {
+    let series = Series::from_vec(vec![1.0, 2.0, 3.0]);
+    assert_eq!(series.sum(), 6.0);
+}

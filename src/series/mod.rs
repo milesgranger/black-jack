@@ -53,6 +53,21 @@ impl<T: BlackJackData> Series<T> {
         let data: Vec<T> = (start..stop).collect();
         Series { data: Array::from_vec(data) }
     }
+
+    /// Series from `Vec<T>`, where T is implemented by [BlackJackData](trait.BlackJackData)
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::from_vec(vec![1_f64, 2_f64, 3_f64]);
+    /// assert_eq!(series.sum(), 6_f64);
+    /// ```
+    pub fn from_vec(vec: Vec<T>) -> Self
+    {
+        let data = Array::from_vec(vec);
+        Series { data }
+    }
 }
 
 
