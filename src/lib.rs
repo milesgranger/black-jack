@@ -1,4 +1,4 @@
-//#![warn(missing_docs)]
+#![warn(missing_docs)]
 //! This black-jack crate is meant as a Rust backend for the Python package "lumber-jack"
 //! 
 //! Its main intention is to have a Python wrapper, but feel free
