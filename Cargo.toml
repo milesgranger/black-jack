@@ -1,6 +1,6 @@
 [package]
 name = "black-jack"
-version = "0.0.12"
+version = "0.0.13"
 authors = ["Miles Granger <miles59923@gmail.com>"]
 description = "Rust backend engine for Python package lumber-jack"
 repository = "https://github.com/milesgranger/black-jack"

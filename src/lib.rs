@@ -9,10 +9,13 @@
 //! ```
 //! use blackjack::prelude::*;
 //! 
-//! let mut df  = DataFrame::new();
-//! let series = Series::arange(0, 5);
+//! let mut df = DataFrame::new();
+//! let series_i32: Series<i32> = Series::arange(0, 5);
+//! let series_f64: Series<f64> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
 //! 
-//! df.add_column(series);
+//! df.add_column(series_i32);
+//! df.add_column(series_f64);
+//! 
 //! ```
 
 extern crate ndarray;
