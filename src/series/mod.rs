@@ -1,6 +1,8 @@
 //! Series represents a single column within a dataframe and wraps many `Array` like
 //! functionality.
 //! 
+//! For methods implemented for a `Series`, please check out the trait [SeriesTrait](trait.SeriesTrait.html)
+//! 
 //! ## Example use:
 //! 
 //! ```
@@ -14,33 +16,45 @@
 use num::*;
 use std::ops::Range;
 use std::iter::{FromIterator};
+use std::fmt::Debug;
+use std::any::{Any};
 
 use ndarray::Array1 as Array;
 
-/// Trait which is implemented for all supported data types (i32, f64, ect)
-pub trait BlackJackData {}  // TODO: Implement an enum to get the high-level type (Integer, Float, String)
-impl BlackJackData for i32 {}
-impl BlackJackData for f32 {}
-impl BlackJackData for i64 {}
+/// Trait dictates the supported primitives for use in [Series](struct.Series.html) structs.
+pub trait BlackJackData: Debug + 'static {}
 impl BlackJackData for f64 {}
+impl BlackJackData for i64 {}
+impl BlackJackData for f32 {}
+impl BlackJackData for i32 {}
 
 
-
-/// Series struct, meta data surrounding the underlying Vec<BlackJackData>
-pub struct Series<T: BlackJackData> {
-    data: Array<T>
+/// Container for storing Series objects of the same type
+#[derive(Debug)]
+pub struct VecStorage<T: Debug + 'static> {
+    internal: Vec<T>,
 }
 
-/// Implement functions capable of creating a series.
+
+/// Series struct for containing underlying Array and other meta data.
+#[derive(Debug)]
+pub struct Series<T: BlackJackData> {
+    
+    /// ndarray attribute; the underlying values of the Series
+    pub data: Array<T>
+}
+
 impl<T: BlackJackData> Series<T> {
 
-    /// Create a new series via a range, with one step increments. 
+    /// Create a new Series struct from an integer range with one step increments. 
+    /// 
     /// ## Example
     /// ```
     /// use blackjack::prelude::*;
-    /// let series: Series<i32> = Series::arange(0_i32, 10_i32);
+    /// 
+    /// let series: Series<i32> = Series::arange(0, 10);
     /// ```
-    pub fn arange(start: T, stop: T) -> Self
+    pub fn arange(start: T, stop: T) -> Self 
         where
             T: Integer, 
             Self: Sized,
@@ -51,51 +65,68 @@ impl<T: BlackJackData> Series<T> {
         let data: Vec<T> = (start..stop).collect();
         Series { data: Array::from_vec(data) }
     }
-}
 
-
-/// Trait defining functionality of a Series object.
-pub trait SeriesObj {
-
-    type Output;
-    /// Fetch the length of the current series
+    /// Create a new Series struct from a vector, where T is supported by [BlackJackData](trait.BlackJackData.html). 
     /// 
     /// ## Example
-    /// 
-    /// ```
-    /// use blackjack::prelude::*;
-    /// let series = Series::arange(0, 5);
-    /// assert_eq!(series.len(), 5);
-    /// ```
-    fn len(&self) -> usize;
-
-    /// Sum a series, where the datatype meets the conditions of `Clone` and `Num`
-    /// 
-    /// ## Example
-    /// 
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series = Series::arange(0, 5);
-    /// assert_eq!(series.sum(), 10);
+    /// let series: Series<i32> = Series::from_vec(vec![1, 2, 3]);
     /// ```
-    fn sum(&self) -> Self::Output where Self::Output: Num + Clone;
-}
-
-
-impl<T: BlackJackData> SeriesObj for Series<T> {
-
-    type Output = T;
-
-    fn len(&self) -> usize {
-        self.data.len()
+    pub fn from_vec(vec: Vec<T>) -> Self {
+        Series { data: Array::from_vec(vec) }
     }
+}
 
-    fn sum(&self) -> Self::Output
-        where Self::Output: Num + Clone
-    {
+
+/// Define the behavior of a Series object.
+pub trait SeriesTrait: Debug + Sized + Any {
+
+    /// The container storage for which any series objects will be stored into; used by the [DataFrame](struct.DataFrame.html)
+    /// to dynamically create new containers if a [Series](struct.Series.html) is added and needs a proper `Vec<T>` for storage
+    type Container: Container<Self>;
+
+    /// The primitive associated with this Series; ie. `f64`
+    type Item;
+
+    /// Sum a given series, yielding the same type as the elements stored in the series.
+    fn sum(&self) -> Self::Item where Self::Item: Num + Clone;
+
+    /// Determine the length of the Series
+    fn len(&self) -> usize;
+}
+
+impl<T: BlackJackData> SeriesTrait for Series<T> {
+    type Container = VecStorage<Self>;
+    type Item = T;
+
+    fn sum(&self) -> T  where T: Num + Clone {
         self.data.scalar_sum()
     }
+
+    fn len(&self) -> usize { self.data.len() }
 }
+
+
+impl<T: Debug> Container<T> for VecStorage<T> {
+    fn new() -> Self {
+        Self { internal: Vec::new() }
+    }
+    fn insert(&mut self, value: T) {
+        self.internal.push(value);
+    }
+}
+
+/// Container behavior for creating and inserting new storage containers. 
+pub trait Container<T: Debug>: Debug + Any {
+
+    /// Create a new container
+    fn new() -> Self where Self: Sized;
+
+    /// Insert a new value into this container
+    fn insert(&mut self, value: T);
+}
+
 
 

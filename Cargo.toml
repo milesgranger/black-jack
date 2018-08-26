@@ -1,6 +1,6 @@
 [package]
 name = "black-jack"
-version = "0.0.12"
+version = "0.0.13"
 authors = ["Miles Granger <miles59923@gmail.com>"]
 description = "Rust backend engine for Python package lumber-jack"
 repository = "https://github.com/milesgranger/black-jack"
@@ -17,5 +17,5 @@ name = "blackjack"
 [dependencies]
 num = "^0.2"
 num-traits = "^0.2"
-ndarray = "^0.11.2"
-libc = "^0.2.42"
+ndarray = "^0.11"
+libc = "^0.2"
