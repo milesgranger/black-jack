@@ -11,6 +11,7 @@
 //! let series = Series::arange(0, 5);
 //! 
 //! assert_eq!(series.sum(), 10);
+//! assert_eq!(series.len(), 5);
 //! ```
 
 use num::*;
@@ -41,7 +42,7 @@ pub struct VecStorage<T: Debug + 'static> {
 pub struct Series<T: BlackJackData> {
     
     /// ndarray attribute; the underlying values of the Series
-    pub data: Array<T>
+    pub values: Array<T>
 }
 
 impl<T: BlackJackData> Series<T> {
@@ -59,11 +60,10 @@ impl<T: BlackJackData> Series<T> {
             T: Integer, 
             Self: Sized,
             Range<T>: Iterator, 
-            Vec<T>: FromIterator<<Range<T> as Iterator>::Item>, 
-            Vec<T>: From<Vec<T>>
+            Vec<T>: FromIterator<<Range<T> as Iterator>::Item>
     {
         let data: Vec<T> = (start..stop).collect();
-        Series { data: Array::from_vec(data) }
+        Series { values: Array::from_vec(data) }
     }
 
     /// Create a new Series struct from a vector, where T is supported by [BlackJackData](trait.BlackJackData.html). 
@@ -75,7 +75,7 @@ impl<T: BlackJackData> Series<T> {
     /// let series: Series<i32> = Series::from_vec(vec![1, 2, 3]);
     /// ```
     pub fn from_vec(vec: Vec<T>) -> Self {
-        Series { data: Array::from_vec(vec) }
+        Series { values: Array::from_vec(vec) }
     }
 }
 
@@ -105,10 +105,10 @@ impl<T: BlackJackData> SeriesTrait for Series<T> {
     type Item = T;
 
     fn sum(&self) -> T  where T: Num + Clone {
-        self.data.scalar_sum()
+        self.values.scalar_sum()
     }
 
-    fn len(&self) -> usize { self.data.len() }
+    fn len(&self) -> usize { self.values.len() }
 }
 
 
