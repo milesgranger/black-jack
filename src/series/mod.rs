@@ -95,6 +95,9 @@ pub trait SeriesTrait: Debug + Sized + Any {
 
     /// Determine the length of the Series
     fn len(&self) -> usize;
+
+    /// Determine if series is empty.
+    fn is_empty(&self) -> bool { self.len() == 0 }
 }
 
 impl<T: BlackJackData> SeriesTrait for Series<T> {

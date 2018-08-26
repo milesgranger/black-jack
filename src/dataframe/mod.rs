@@ -19,6 +19,7 @@ use series::{SeriesTrait, Container, Series, BlackJackData};
 
 /// Struct for holding [Series](struct.Series.html) or [SeriesTrait](trait.SeriesTrait.html) like objects. 
 /// as well as adding some additional functionality by grouping them.
+#[derive(Default)]
 pub struct DataFrame {
     containers: HashMap<TypeId, Box<Any>>,
 }
@@ -43,11 +44,11 @@ impl DataFrame {
         let type_id = TypeId::of::<C>();
 
         // Add a storage if it doesn't exist yet
-        if !self.containers.contains_key(&type_id) {
-            let new_container = <C as SeriesTrait>::Container::new();
-
-            self.containers.insert(type_id, Box::new(new_container));
-        }
+        self.containers
+            .entry(type_id)
+            .or_insert_with(
+                || Box::new(<C as SeriesTrait>::Container::new())
+            );
 
         // Get the storage for this type
         match self.containers.get_mut(&type_id) {
