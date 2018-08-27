@@ -31,7 +31,7 @@ impl BlackJackData for i32 {}
 
 
 /// Series struct for containing underlying Array and other meta data.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Series<T: BlackJackData> {
     
     /// Name of the series, if added to a dataframe without a name, it will be assigned
@@ -121,6 +121,7 @@ pub trait SeriesTrait: Debug + Sized + Any {
 }
 
 impl<T: BlackJackData> SeriesTrait for Series<T> {
+    
     type Container = VecStorage<Self>;
     type Item = T;
 
@@ -157,6 +158,9 @@ pub trait Container<T: Debug>: Debug + Any {
 
     /// Insert a new value into this container
     fn insert(&mut self, value: T);
+
+    /// Get a reference to a series held in the container
+    fn get_ref(&self, search_name: &String) -> Option<&T> where T: SeriesTrait;
 }
 
 impl<T: Debug> Container<T> for VecStorage<T> {
@@ -165,5 +169,17 @@ impl<T: Debug> Container<T> for VecStorage<T> {
     }
     fn insert(&mut self, value: T) {
         self.internal.push(value);
+    }
+
+    fn get_ref(&self, search_name: &String) -> Option<&T>
+        where T: SeriesTrait
+    {
+        for series in self.internal.iter() {
+            match series.name() {
+                Some(name) => if &name == search_name { return Some(&series) },
+                None => continue
+            }
+        }
+        None
     }
 }

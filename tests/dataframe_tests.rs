@@ -10,7 +10,7 @@ fn test_new_dataframe() {
 }
 
 #[test]
-fn test_add_columns_same_length() {
+fn test_add_columns() {
     let mut df = DataFrame::new();
 
     let series1: Series<i32> = Series::arange(0, 5);
@@ -18,4 +18,17 @@ fn test_add_columns_same_length() {
 
     df.add_column(series1);
     df.add_column(series2);
+}
+
+#[test]
+fn test_get_column_by_name() {
+    let mut df = DataFrame::new();
+    let mut series: Series<i32> = Series::arange(0, 5);
+    series.set_name("test-series");
+    let series_clone = series.clone();
+
+    df.add_column(series);
+
+    let series_ref = df.get_column_ref("test-series").expect("Unable to find column named 'test-series'");
+    assert_eq!(*series_ref, series_clone);
 }
