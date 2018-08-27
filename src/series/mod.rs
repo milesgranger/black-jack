@@ -30,21 +30,19 @@ impl BlackJackData for f32 {}
 impl BlackJackData for i32 {}
 
 
-/// Container for storing Series objects of the same type
-#[derive(Debug)]
-pub struct VecStorage<T: Debug + 'static> {
-    internal: Vec<T>,
-}
-
-
 /// Series struct for containing underlying Array and other meta data.
 #[derive(Debug)]
 pub struct Series<T: BlackJackData> {
     
+    /// Name of the series, if added to a dataframe without a name, it will be assigned
+    /// a default name equalling the cound of columns in the dataframe.
+    pub name: Option<String>,
+
     /// ndarray attribute; the underlying values of the Series
     pub values: Array<T>
 }
 
+/// Constructor methods for `Series<T>`
 impl<T: BlackJackData> Series<T> {
 
     /// Create a new Series struct from an integer range with one step increments. 
@@ -63,7 +61,10 @@ impl<T: BlackJackData> Series<T> {
             Vec<T>: FromIterator<<Range<T> as Iterator>::Item>
     {
         let data: Vec<T> = (start..stop).collect();
-        Series { values: Array::from_vec(data) }
+        Series { 
+            name: None,
+            values: Array::from_vec(data), 
+        }
     }
 
     /// Create a new Series struct from a vector, where T is supported by [BlackJackData](trait.BlackJackData.html). 
@@ -75,7 +76,10 @@ impl<T: BlackJackData> Series<T> {
     /// let series: Series<i32> = Series::from_vec(vec![1, 2, 3]);
     /// ```
     pub fn from_vec(vec: Vec<T>) -> Self {
-        Series { values: Array::from_vec(vec) }
+        Series { 
+            name: None,
+            values: Array::from_vec(vec),
+        }
     }
 }
 
@@ -89,6 +93,22 @@ pub trait SeriesTrait: Debug + Sized + Any {
 
     /// The primitive associated with this Series; ie. `f64`
     type Item;
+
+    /// Set the name of a series
+    fn set_name(&mut self, name: &str) -> ();
+
+    /// Get the name of the series; Series may not be assigned a string, so an `Option` is returned.
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let mut series = Series::from_vec(vec![1, 2, 3]);
+    /// series.set_name("my-series");
+    /// 
+    /// assert_eq!(series.name(), Some("my-series".to_string()));
+    /// ```
+    fn name(&self) -> Option<String>;
 
     /// Sum a given series, yielding the same type as the elements stored in the series.
     fn sum(&self) -> Self::Item where Self::Item: Num + Clone;
@@ -104,6 +124,17 @@ impl<T: BlackJackData> SeriesTrait for Series<T> {
     type Container = VecStorage<Self>;
     type Item = T;
 
+    fn set_name(&mut self, name: &str) -> () {
+        self.name = Some(name.to_string());
+    }
+
+    fn name(&self) -> Option<String> {
+        match self.name {
+            Some(ref name) => Some(name.clone()),
+            None => None
+        }
+    }
+
     fn sum(&self) -> T  where T: Num + Clone {
         self.values.scalar_sum()
     }
@@ -112,13 +143,10 @@ impl<T: BlackJackData> SeriesTrait for Series<T> {
 }
 
 
-impl<T: Debug> Container<T> for VecStorage<T> {
-    fn new() -> Self {
-        Self { internal: Vec::new() }
-    }
-    fn insert(&mut self, value: T) {
-        self.internal.push(value);
-    }
+/// Container for storing Series objects of the same type
+#[derive(Debug)]
+pub struct VecStorage<T: Debug + 'static> {
+    internal: Vec<T>,
 }
 
 /// Container behavior for creating and inserting new storage containers. 
@@ -131,5 +159,11 @@ pub trait Container<T: Debug>: Debug + Any {
     fn insert(&mut self, value: T);
 }
 
-
-
+impl<T: Debug> Container<T> for VecStorage<T> {
+    fn new() -> Self {
+        Self { internal: Vec::new() }
+    }
+    fn insert(&mut self, value: T) {
+        self.internal.push(value);
+    }
+}

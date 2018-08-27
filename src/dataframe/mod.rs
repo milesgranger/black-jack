@@ -40,7 +40,7 @@ impl DataFrame {
 
     /// Get a new mutable container given type annocation. ie. `df.get_container_mut::<Series<i32>>()` 
     /// yielding a mutable reference to the dataframes's  `Vec<Series<i32>>`
-    pub fn get_container_mut<C: SeriesTrait>(&mut self) -> &mut <C as SeriesTrait>::Container {
+    fn get_container_mut<C: SeriesTrait>(&mut self) -> &mut <C as SeriesTrait>::Container {
         let type_id = TypeId::of::<C>();
 
         // Add a storage if it doesn't exist yet
