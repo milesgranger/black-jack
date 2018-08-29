@@ -87,10 +87,6 @@ impl<T: BlackJackData> Series<T> {
 /// Define the behavior of a Series object.
 pub trait SeriesTrait: Debug + Sized + Any {
 
-    /// The container storage for which any series objects will be stored into; used by the [DataFrame](struct.DataFrame.html)
-    /// to dynamically create new containers if a [Series](struct.Series.html) is added and needs a proper `Vec<T>` for storage
-    type Container: Container<Self>;
-
     /// The primitive associated with this Series; ie. `f64`
     type Item;
 
@@ -121,8 +117,6 @@ pub trait SeriesTrait: Debug + Sized + Any {
 }
 
 impl<T: BlackJackData> SeriesTrait for Series<T> {
-    
-    type Container = VecStorage<Self>;
     type Item = T;
 
     fn set_name(&mut self, name: &str) -> () {
@@ -144,42 +138,4 @@ impl<T: BlackJackData> SeriesTrait for Series<T> {
 }
 
 
-/// Container for storing Series objects of the same type
-#[derive(Debug)]
-pub struct VecStorage<T: Debug + 'static> {
-    internal: Vec<T>,
-}
 
-/// Container behavior for creating and inserting new storage containers. 
-pub trait Container<T: Debug>: Debug + Any {
-
-    /// Create a new container
-    fn new() -> Self where Self: Sized;
-
-    /// Insert a new value into this container
-    fn insert(&mut self, value: T);
-
-    /// Get a reference to a series held in the container
-    fn get_ref(&self, search_name: &String) -> Option<&T> where T: SeriesTrait;
-}
-
-impl<T: Debug> Container<T> for VecStorage<T> {
-    fn new() -> Self {
-        Self { internal: Vec::new() }
-    }
-    fn insert(&mut self, value: T) {
-        self.internal.push(value);
-    }
-
-    fn get_ref(&self, search_name: &String) -> Option<&T>
-        where T: SeriesTrait
-    {
-        for series in self.internal.iter() {
-            match series.name() {
-                Some(name) => if &name == search_name { return Some(&series) },
-                None => continue
-            }
-        }
-        None
-    }
-}

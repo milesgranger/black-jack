@@ -13,11 +13,18 @@ fn test_new_dataframe() {
 fn test_add_columns() {
     let mut df = DataFrame::new();
 
-    let series1: Series<i32> = Series::arange(0, 5);
-    let series2: Series<f64> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+    let mut series1: Series<i32> = Series::arange(0, 5);
+    series1.set_name("series-1");
+
+    let mut series2: Series<f64> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+    series2.set_name("series-2");
 
     df.add_column(series1);
     df.add_column(series2);
+
+    df.get_column::<i32>("series-1").expect("No column named 'series-1'");
+    df.get_column::<f64>("series-2").expect("No column named 'series-2'");
+
 }
 
 #[test]
@@ -29,6 +36,6 @@ fn test_get_column_by_name() {
 
     df.add_column(series);
 
-    let series_ref = df.get_column_ref("test-series").expect("Unable to find column named 'test-series'");
+    let series_ref = df.get_column("test-series").expect("Unable to find column named 'test-series'");
     assert_eq!(*series_ref, series_clone);
 }
