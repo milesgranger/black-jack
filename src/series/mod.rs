@@ -22,13 +22,58 @@ use std::any::{Any};
 
 use ndarray::Array1 as Array;
 
+/// Possible DType returns, matches [BlackJackData](trait.BlackJackData.html)
+pub enum DType {
+
+    /// `f64`
+    F64,
+
+    /// `i64`
+    I64,
+
+    /// `f32`
+    F32,
+
+    /// `i32`
+    I32
+}
+
+/// Enum of all possible series types.
+// TODO: Rename to 'SeriesEnum' and include mutable refrences as well as owned Series.
+pub enum SeriesEnumRef<'a> {
+
+    /// `&Series<f64>` type
+    F64(&'a Series<f64>),
+
+    /// `&Series<i64>` type
+    I64(&'a Series<i64>),
+
+    /// `&Series<f32>` type
+    F32(&'a Series<f32>),
+
+    /// `&Series<i32>` type
+    I32(&'a Series<i32>),
+}
+
 
 /// Trait dictates the supported primitives for use in [Series](struct.Series.html) structs.
-pub trait BlackJackData: Debug + 'static {}
-impl BlackJackData for f64 {}
-impl BlackJackData for i64 {}
-impl BlackJackData for f32 {}
-impl BlackJackData for i32 {}
+pub trait BlackJackData: Debug + 'static {
+
+    /// Return the current [DType](enum.DType.html) for this type. 
+    fn dtype(&self) -> DType;
+}
+impl BlackJackData for f64 {
+    fn dtype(&self) -> DType { DType::F64 }
+}
+impl BlackJackData for i64 {
+    fn dtype(&self) -> DType { DType::I64 }
+}
+impl BlackJackData for f32 {
+    fn dtype(&self) -> DType { DType::F32 }
+}
+impl BlackJackData for i32 {
+    fn dtype(&self) -> DType { DType::I32 }
+}
 
 
 /// Series struct for containing underlying Array and other meta data.
@@ -89,7 +134,7 @@ impl<T: BlackJackData> Series<T> {
 pub trait SeriesTrait: Debug + Sized + Any {
 
     /// The primitive associated with this Series; ie. `f64`
-    type Item;
+    type Item: BlackJackData;
 
     /// Set the name of a series
     fn set_name(&mut self, name: &str) -> ();
@@ -115,6 +160,9 @@ pub trait SeriesTrait: Debug + Sized + Any {
 
     /// Determine if series is empty.
     fn is_empty(&self) -> bool { self.len() == 0 }
+
+    /// Get the dtype
+    fn dtype(&self) -> DType;
 }
 
 impl<T: BlackJackData> SeriesTrait for Series<T> {
@@ -136,6 +184,11 @@ impl<T: BlackJackData> SeriesTrait for Series<T> {
     }
 
     fn len(&self) -> usize { self.values.len() }
+
+    fn dtype(&self) -> DType { 
+        // TODO: Add len check, return Option instead.
+        self.values[0].dtype()
+     }
 }
 
 
