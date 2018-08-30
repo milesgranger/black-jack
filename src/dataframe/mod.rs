@@ -37,12 +37,44 @@ impl DataFrame {
     pub fn new() -> Self {
         Self { containers: HashMap::new() }
     }
+}
 
-    /// Get a new mutable container given type annocation. ie. `df.get_container_mut::<Series<i32>>()` 
-    /// yielding a mutable reference to the dataframes's  `Vec<Series<i32>>`
-    pub fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> () {
 
-        // Add a storage if it doesn't exist yet
+/// Define the behavior for managing columns/series within a dataframe
+pub trait ColumnManager {
+
+    /// Add a new series to the dataframe as a column.
+    fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> ();
+
+    /// Get a reference to a series by name, will also have to know the primitive type stored.
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let mut df = DataFrame::new();
+    /// let mut series = Series::from_vec(vec![1, 2, 3]);
+    /// series.set_name("series1");
+    /// 
+    /// let series_clone = series.clone(); // Create a clone to compare later
+    /// 
+    /// df.add_column(series);  // Add the column to dataframe
+    /// 
+    /// let series_ref: &Series<i32> = df.get_column("series1").unwrap();  // Fetch the column back as a reference.
+    /// 
+    /// assert_eq!(*series_ref, series_clone)  // ensure they equal.
+    /// ```
+    fn get_column<T: BlackJackData>(&self, name: &str) -> Option<&Series<T>>;
+
+    /// Get the number of columns
+    fn n_columns(&self) -> usize;
+
+}
+
+impl ColumnManager for DataFrame {
+
+    fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> () {
+
         self.containers
             .entry(series.name().unwrap_or("new-name".to_string()))  // TODO: Pick a name based on number of columns, if no name is provided..
             .or_insert_with(
@@ -50,9 +82,9 @@ impl DataFrame {
             );
     }
 
-    /// Get a reference to a series by name
-    pub fn get_column<T: BlackJackData>(&self, name: &str) -> Option<&Series<T>> {
+    fn get_column<T: BlackJackData>(&self, name: &str) -> Option<&Series<T>> {
         let name = name.to_string();
+
         let series = self.containers.get(&name).unwrap();
         match series.downcast_ref::<Series<T>>() {
             Some(series) => Some(series),
@@ -60,4 +92,7 @@ impl DataFrame {
         }
     }
 
+    fn n_columns(&self) -> usize {
+        self.containers.len() as usize
+    }
 }

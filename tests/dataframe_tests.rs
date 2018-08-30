@@ -22,8 +22,10 @@ fn test_add_columns() {
     df.add_column(series1);
     df.add_column(series2);
 
-    df.get_column::<i32>("series-1").expect("No column named 'series-1'");
-    df.get_column::<f64>("series-2").expect("No column named 'series-2'");
+    let _series1ref: &Series<i32> = df.get_column("series-1").expect("No column named 'series-1'");
+    let _series2ref: &Series<f64> = df.get_column("series-2").expect("No column named 'series-2'");
+
+    assert_eq!(df.n_columns(), 2);
 
 }
 

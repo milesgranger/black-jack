@@ -33,8 +33,7 @@ extern crate num;
 extern crate libc;
 extern crate num_traits;
 
-#[macro_use]
-pub mod macros;
+#[macro_use] pub mod macros;
 
 pub mod series;
 pub mod dataframe;

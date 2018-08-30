@@ -22,6 +22,7 @@ use std::any::{Any};
 
 use ndarray::Array1 as Array;
 
+
 /// Trait dictates the supported primitives for use in [Series](struct.Series.html) structs.
 pub trait BlackJackData: Debug + 'static {}
 impl BlackJackData for f64 {}
