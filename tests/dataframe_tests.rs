@@ -10,7 +10,7 @@ fn test_new_dataframe() {
 }
 
 #[test]
-fn test_add_columns() {
+fn test_add_columns_known_types() {
     let mut df = DataFrame::new();
 
     let mut series1: Series<i32> = Series::arange(0, 5);
@@ -30,6 +30,25 @@ fn test_add_columns() {
 }
 
 #[test]
+fn test_add_columns_unknown_types() {
+    let mut df = DataFrame::new();
+
+    let mut series: Series<i32> = Series::arange(0, 5);
+    series.set_name("series-1");
+
+    df.add_column(series);
+
+    let seriesenum: SeriesEnumRef = df.get_column_unknown_type("series-1").expect("No column named 'series-1'");
+
+    if let SeriesEnumRef::I32(series) = seriesenum {
+        assert_eq!(series.sum(), 10);
+    } else {
+        panic!("Expected series of I32 but got something else!");
+    }
+
+}
+
+#[test]
 fn test_get_column_by_name() {
     let mut df = DataFrame::new();
     let mut series: Series<i32> = Series::arange(0, 5);
@@ -38,6 +57,6 @@ fn test_get_column_by_name() {
 
     df.add_column(series);
 
-    let series_ref = df.get_column("test-series").expect("Unable to find column named 'test-series'");
+    let series_ref: &Series<i32> = df.get_column("test-series").expect("Unable to find column named 'test-series'");
     assert_eq!(*series_ref, series_clone);
 }
