@@ -19,11 +19,14 @@ addons:
       - libssl-dev
 
 script:
-  - cargo build
-  - cargo test
+  - make build
+  - make test
 
-after_success: |
-  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
-    RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin 
-    cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
-  fi
+deploy:
+  script: |
+    if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+      RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin 
+      cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+    fi
+  on:
+    tags: true

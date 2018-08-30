@@ -9,10 +9,20 @@
 //! ```
 //! use blackjack::prelude::*;
 //! 
+//! // Dataframe; container for series objects.
 //! let mut df = DataFrame::new();
-//! let series_i32: Series<i32> = Series::arange(0, 5);
-//! let series_f64: Series<f64> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
 //! 
+//! // Make some series
+//! let series_i32: Series<i32> = Series::arange(0, 5);
+//! let mut series_f64: Series<f64> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+//! 
+//! // You can set a series name!
+//! series_f64.set_name("my-float-series");
+//! 
+//! // Or not... 
+//! assert_eq!(series_i32.name(), None);
+//! 
+//! // Add columns (of different types) to a dataframe
 //! df.add_column(series_i32);
 //! df.add_column(series_f64);
 //! 
@@ -23,8 +33,7 @@ extern crate num;
 extern crate libc;
 extern crate num_traits;
 
-#[macro_use]
-pub mod macros;
+#[macro_use] pub mod macros;
 
 pub mod series;
 pub mod dataframe;
