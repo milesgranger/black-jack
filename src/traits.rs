@@ -112,7 +112,27 @@ pub trait SeriesTrait: Debug + Sized + Any {
     fn name(&self) -> Option<String>;
 
     /// Sum a given series, yielding the same type as the elements stored in the series.
-    fn sum(&self) -> Self::Item where Self::Item: Num + Clone;
+    fn sum(&self) -> Self::Item 
+        where Self::Item: Num + Clone;
+
+    /// Average / Mean of a given series - Requires specifying desired float return annotation 
+    /// 
+    /// ## Example:
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::arange(0, 5);
+    /// let mean = series.mean::<f64>();
+    /// 
+    /// match mean {
+    ///     Ok(result) => println!("Result is: {}", result),
+    ///     Err(err) => println!("Was unable to compute mean, error: {}", err)
+    /// }
+    /// ```
+    fn mean<A>(&self) -> Result<A, &'static str> 
+        where 
+            A: Float, 
+            Self::Item: Num + Clone + ToPrimitive;
 
     /// Determine the length of the Series
     fn len(&self) -> usize;
@@ -124,13 +144,12 @@ pub trait SeriesTrait: Debug + Sized + Any {
     fn dtype(&self) -> DType;
 
     /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or `SeriesTrait::from_raw(*mut Self)`
-    fn into_raw(self) -> *mut Self {
-        Box::into_raw(Box::new(self))
+    fn into_raw(self) -> *mut Self { 
+        Box::into_raw(Box::new(self)) 
     }
 
     /// Create from raw pointer
-    fn from_raw(ptr: *mut Self) -> Self {
-        let obj = unsafe { Box::from_raw(ptr) };
-        *obj
+    fn from_raw(ptr: *mut Self) -> Self { 
+        unsafe { *Box::from_raw(ptr) } 
     }
 }
