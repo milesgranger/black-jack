@@ -38,3 +38,5 @@ extern crate num_traits;
 pub mod series;
 pub mod dataframe;
 pub mod prelude;
+pub mod enums;
+pub mod traits;

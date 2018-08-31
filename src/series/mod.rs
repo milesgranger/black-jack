@@ -17,63 +17,12 @@
 use num::*;
 use std::ops::Range;
 use std::iter::{FromIterator};
-use std::fmt::Debug;
-use std::any::{Any};
 
 use ndarray::Array1 as Array;
 
-/// Possible DType returns, matches [BlackJackData](trait.BlackJackData.html)
-pub enum DType {
+pub mod traits;
+use prelude::*;
 
-    /// `f64`
-    F64,
-
-    /// `i64`
-    I64,
-
-    /// `f32`
-    F32,
-
-    /// `i32`
-    I32
-}
-
-/// Enum of all possible series types.
-// TODO: Rename to 'SeriesEnum' and include mutable refrences as well as owned Series.
-pub enum SeriesEnumRef<'a> {
-
-    /// `&Series<f64>` type
-    F64(&'a Series<f64>),
-
-    /// `&Series<i64>` type
-    I64(&'a Series<i64>),
-
-    /// `&Series<f32>` type
-    F32(&'a Series<f32>),
-
-    /// `&Series<i32>` type
-    I32(&'a Series<i32>),
-}
-
-
-/// Trait dictates the supported primitives for use in [Series](struct.Series.html) structs.
-pub trait BlackJackData: Debug + 'static {
-
-    /// Return the current [DType](enum.DType.html) for this type. 
-    fn dtype(&self) -> DType;
-}
-impl BlackJackData for f64 {
-    fn dtype(&self) -> DType { DType::F64 }
-}
-impl BlackJackData for i64 {
-    fn dtype(&self) -> DType { DType::I64 }
-}
-impl BlackJackData for f32 {
-    fn dtype(&self) -> DType { DType::F32 }
-}
-impl BlackJackData for i32 {
-    fn dtype(&self) -> DType { DType::I32 }
-}
 
 
 /// Series struct for containing underlying Array and other meta data.
@@ -130,42 +79,10 @@ impl<T: BlackJackData> Series<T> {
 }
 
 
-/// Define the behavior of a Series object.
-pub trait SeriesTrait: Debug + Sized + Any {
 
-    /// The primitive associated with this Series; ie. `f64`
-    type Item: BlackJackData;
-
-    /// Set the name of a series
-    fn set_name(&mut self, name: &str) -> ();
-
-    /// Get the name of the series; Series may not be assigned a string, so an `Option` is returned.
-    /// 
-    /// ## Example
-    /// ```
-    /// use blackjack::prelude::*;
-    /// 
-    /// let mut series = Series::from_vec(vec![1, 2, 3]);
-    /// series.set_name("my-series");
-    /// 
-    /// assert_eq!(series.name(), Some("my-series".to_string()));
-    /// ```
-    fn name(&self) -> Option<String>;
-
-    /// Sum a given series, yielding the same type as the elements stored in the series.
-    fn sum(&self) -> Self::Item where Self::Item: Num + Clone;
-
-    /// Determine the length of the Series
-    fn len(&self) -> usize;
-
-    /// Determine if series is empty.
-    fn is_empty(&self) -> bool { self.len() == 0 }
-
-    /// Get the dtype
-    fn dtype(&self) -> DType;
-}
 
 impl<T: BlackJackData> SeriesTrait for Series<T> {
+    
     type Item = T;
 
     fn set_name(&mut self, name: &str) -> () {
@@ -189,7 +106,5 @@ impl<T: BlackJackData> SeriesTrait for Series<T> {
         // TODO: Add len check, return Option instead.
         self.values[0].dtype()
      }
+
 }
-
-
-
