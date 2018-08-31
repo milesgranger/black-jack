@@ -30,11 +30,11 @@
 
 extern crate ndarray;
 extern crate num;
-extern crate libc;
-extern crate num_traits;
 
 #[macro_use] pub mod macros;
 
 pub mod series;
 pub mod dataframe;
 pub mod prelude;
+pub mod enums;
+pub mod traits;

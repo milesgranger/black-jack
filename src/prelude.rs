@@ -1,4 +1,6 @@
 //! Default and recommended imports for functionality of crate.
 
-pub use series::{SeriesTrait, Series, SeriesEnumRef};
-pub use dataframe::{DataFrame, ColumnManager};
+pub use traits::*;
+pub use enums::*;
+pub use series::{Series};
+pub use dataframe::{DataFrame};

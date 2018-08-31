@@ -21,11 +21,19 @@ fn test_add_columns_known_types() {
 
     df.add_column(series1);
     df.add_column(series2);
+    
+    {
+        let _series1ref: &Series<i32> = df.get_column("series-1").expect("No column named 'series-1'");
+        let _series2ref: &Series<f64> = df.get_column("series-2").expect("No column named 'series-2'");
 
-    let _series1ref: &Series<i32> = df.get_column("series-1").expect("No column named 'series-1'");
-    let _series2ref: &Series<f64> = df.get_column("series-2").expect("No column named 'series-2'");
+        assert_eq!(df.n_columns(), 2);
+    }
 
+    // Test into and from raw pointer 
+    let ptr = df.into_raw();
+    let df  = DataFrame::from_raw(ptr);
     assert_eq!(df.n_columns(), 2);
+
 
 }
 
@@ -38,9 +46,9 @@ fn test_add_columns_unknown_types() {
 
     df.add_column(series);
 
-    let seriesenum: SeriesEnumRef = df.get_column_unknown_type("series-1").expect("No column named 'series-1'");
+    let seriesenum: SeriesEnum = df.get_column_unknown_type("series-1").expect("No column named 'series-1'");
 
-    if let SeriesEnumRef::I32(series) = seriesenum {
+    if let SeriesEnum::I32(series) = seriesenum {
         assert_eq!(series.sum(), 10);
     } else {
         panic!("Expected series of I32 but got something else!");

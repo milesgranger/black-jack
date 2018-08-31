@@ -15,7 +15,8 @@
 use std::any::Any;
 use std::collections::HashMap;
 
-use series::{BlackJackData, Series, SeriesTrait, SeriesEnumRef};
+use prelude::*;
+
 
 /// Struct for holding [Series](struct.Series.html) or [SeriesTrait](trait.SeriesTrait.html) like objects.
 /// as well as adding some additional functionality by grouping them.
@@ -40,39 +41,9 @@ impl DataFrame {
     }
 }
 
-/// Define the behavior for managing columns/series within a dataframe
-pub trait ColumnManager {
-    /// Add a new series to the dataframe as a column.
-    fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> ();
 
-    /// Get a reference to a series by name, **will also have to know the primitive type stored**.
-    ///
-    /// ## Example
-    /// ```
-    /// use blackjack::prelude::*;
-    ///
-    /// let mut df = DataFrame::new();
-    /// let mut series = Series::from_vec(vec![1, 2, 3]);
-    /// series.set_name("series1");
-    ///
-    /// let series_clone = series.clone(); // Create a clone to compare later
-    ///
-    /// df.add_column(series);  // Add the column to dataframe
-    ///
-    /// let series_ref: &Series<i32> = df.get_column("series1").unwrap();  // Fetch the column back as a reference.
-    ///
-    /// assert_eq!(*series_ref, series_clone)  // ensure they equal.
-    /// ```
-    fn get_column<T: BlackJackData>(&self, name: &str) -> Option<&Series<T>>;
+impl DataFrameBehavior for DataFrame {}
 
-    /// Get a column of which the type is unknown
-    /// Returns a [SeriesEnum](enum.SeriesEnum.html) of which will need to `match` the 
-    /// resulting series type and deal with accordingly.
-    fn get_column_unknown_type(&self, name: &str) -> Option<SeriesEnumRef>;
-
-    /// Get the number of columns
-    fn n_columns(&self) -> usize;
-}
 
 impl ColumnManager for DataFrame {
 
@@ -93,7 +64,7 @@ impl ColumnManager for DataFrame {
         }
     }
 
-    fn get_column_unknown_type(&self, name: &str) -> Option<SeriesEnumRef> {
+    fn get_column_unknown_type(&self, name: &str) -> Option<SeriesEnum> {
         /*
             Only way (AFAIK) how to return a Series without requiring the user to specify the type in the call. 
         */
@@ -103,16 +74,16 @@ impl ColumnManager for DataFrame {
 
         // TODO: Better way?
         match series_ref.downcast_ref::<Series<f64>>() {
-            Some(series) => Some(SeriesEnumRef::F64(series)),
+            Some(series) => Some(SeriesEnum::F64(series)),
 
             None => match series_ref.downcast_ref::<Series<i64>>() {
-                Some(series) => Some(SeriesEnumRef::I64(series)),
+                Some(series) => Some(SeriesEnum::I64(series)),
             
                 None => match series_ref.downcast_ref::<Series<f32>>() {
-                    Some(series) => Some(SeriesEnumRef::F32(series)),
+                    Some(series) => Some(SeriesEnum::F32(series)),
             
                     None => match series_ref.downcast_ref::<Series<i32>>() {
-                        Some(series) => Some(SeriesEnumRef::I32(series)),
+                        Some(series) => Some(SeriesEnum::I32(series)),
                         None => None,
                     },
                 },
