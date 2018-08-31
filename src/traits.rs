@@ -7,6 +7,10 @@ use std::any::{Any};
 use num::*;
 use prelude::*;
 
+/* 
+    Traits used throughout crate
+*/
+
 /// Trait dictates the supported primitives for use in [Series](struct.Series.html) structs.
 pub trait BlackJackData: Debug + 'static {
 
@@ -25,6 +29,11 @@ impl BlackJackData for f32 {
 impl BlackJackData for i32 {
     fn dtype(&self) -> DType { DType::I32 }
 }
+
+
+/*
+    DataFrame Traits
+*/
 
 
 /// Define the behavior for managing columns/series within a dataframe
@@ -60,6 +69,25 @@ pub trait ColumnManager {
     /// Get the number of columns
     fn n_columns(&self) -> usize;
 }
+
+/// DataFrame behavior
+pub trait DataFrameBehavior: Sized {
+
+    /// Transform into a raw pointer
+    fn into_raw(self) -> *mut Self {
+        Box::into_raw(Box::new(self))
+    }
+
+    /// Get a DataFrame from raw pointer
+    fn from_raw(ptr: *mut Self) -> Self {
+        unsafe { *Box::from_raw(ptr) }
+    }
+}
+
+
+/* 
+    Series traits
+*/
 
 /// Define the behavior of a Series object.
 pub trait SeriesTrait: Debug + Sized + Any {

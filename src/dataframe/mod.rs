@@ -42,6 +42,9 @@ impl DataFrame {
 }
 
 
+impl DataFrameBehavior for DataFrame {}
+
+
 impl ColumnManager for DataFrame {
 
     fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> () {

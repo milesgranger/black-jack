@@ -21,11 +21,19 @@ fn test_add_columns_known_types() {
 
     df.add_column(series1);
     df.add_column(series2);
+    
+    {
+        let _series1ref: &Series<i32> = df.get_column("series-1").expect("No column named 'series-1'");
+        let _series2ref: &Series<f64> = df.get_column("series-2").expect("No column named 'series-2'");
 
-    let _series1ref: &Series<i32> = df.get_column("series-1").expect("No column named 'series-1'");
-    let _series2ref: &Series<f64> = df.get_column("series-2").expect("No column named 'series-2'");
+        assert_eq!(df.n_columns(), 2);
+    }
 
+    // Test into and from raw pointer 
+    let ptr = df.into_raw();
+    let df  = DataFrame::from_raw(ptr);
     assert_eq!(df.n_columns(), 2);
+
 
 }
 
