@@ -30,8 +30,6 @@
 
 extern crate ndarray;
 extern crate num;
-extern crate libc;
-extern crate num_traits;
 
 #[macro_use] pub mod macros;
 

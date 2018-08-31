@@ -19,8 +19,6 @@ use std::ops::Range;
 use std::iter::{FromIterator};
 
 use ndarray::Array1 as Array;
-
-pub mod traits;
 use prelude::*;
 
 

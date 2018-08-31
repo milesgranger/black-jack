@@ -16,7 +16,6 @@ use std::any::Any;
 use std::collections::HashMap;
 
 use prelude::*;
-pub mod traits;
 
 
 /// Struct for holding [Series](struct.Series.html) or [SeriesTrait](trait.SeriesTrait.html) like objects.
@@ -62,7 +61,7 @@ impl ColumnManager for DataFrame {
         }
     }
 
-    fn get_column_unknown_type(&self, name: &str) -> Option<SeriesEnumRef> {
+    fn get_column_unknown_type(&self, name: &str) -> Option<SeriesEnum> {
         /*
             Only way (AFAIK) how to return a Series without requiring the user to specify the type in the call. 
         */
@@ -72,16 +71,16 @@ impl ColumnManager for DataFrame {
 
         // TODO: Better way?
         match series_ref.downcast_ref::<Series<f64>>() {
-            Some(series) => Some(SeriesEnumRef::F64(series)),
+            Some(series) => Some(SeriesEnum::F64(series)),
 
             None => match series_ref.downcast_ref::<Series<i64>>() {
-                Some(series) => Some(SeriesEnumRef::I64(series)),
+                Some(series) => Some(SeriesEnum::I64(series)),
             
                 None => match series_ref.downcast_ref::<Series<f32>>() {
-                    Some(series) => Some(SeriesEnumRef::F32(series)),
+                    Some(series) => Some(SeriesEnum::F32(series)),
             
                     None => match series_ref.downcast_ref::<Series<i32>>() {
-                        Some(series) => Some(SeriesEnumRef::I32(series)),
+                        Some(series) => Some(SeriesEnum::I32(series)),
                         None => None,
                     },
                 },

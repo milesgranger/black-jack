@@ -20,8 +20,8 @@ pub enum DType {
 }
 
 /// Enum of all possible series types.
-// TODO: Rename to 'SeriesEnum' and include mutable refrences as well as owned Series.
-pub enum SeriesEnumRef<'a> {
+// TODO: include mutable refrences as well as owned Series.
+pub enum SeriesEnum<'a> {
 
     /// `&Series<f64>` type
     F64(&'a Series<f64>),
