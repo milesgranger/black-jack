@@ -117,6 +117,16 @@ impl<T: BlackJackData> SeriesTrait for Series<T> {
         Ok(numerator / denominator)
     }
 
+    fn min(&self) -> Result<Self::Item, &'static str>
+        where Self::Item: Num + Clone + Ord 
+    {
+        let min = self.values.iter().min();
+        match min {
+            Some(m) => Ok(*m),
+            None => Err("Unable to find minimum of values, perhaps values is empty?")
+        }
+    }
+
     fn len(&self) -> usize { self.values.len() }
 
     fn dtype(&self) -> DType { 

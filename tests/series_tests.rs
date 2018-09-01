@@ -35,6 +35,9 @@ fn test_series_ops() {
     // Test mean
     assert_eq!(series.mean::<f32>().unwrap(), 2.0);
 
+    // Test min
+    assert_eq!(series.min(), Ok(0));
+
 }
 
 #[test]

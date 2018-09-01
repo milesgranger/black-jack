@@ -12,7 +12,7 @@ use prelude::*;
 */
 
 /// Trait dictates the supported primitives for use in [Series](struct.Series.html) structs.
-pub trait BlackJackData: Debug + 'static {
+pub trait BlackJackData: Copy + Debug + 'static {
 
     /// Return the current [DType](enum.DType.html) for this type. 
     fn dtype(&self) -> DType;
@@ -133,6 +133,20 @@ pub trait SeriesTrait: Debug + Sized + Any {
         where 
             A: Float, 
             Self::Item: Num + Clone + ToPrimitive;
+
+    /// Find the minimum of the series. If several elements are equally minimum, the first element is returned. 
+    /// If it it empty an Error will be returned
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series: Series<i64> = Series::arange(10, 100);
+    /// 
+    /// assert_eq!(series.min(), Ok(10));
+    /// ```
+    fn min(&self) -> Result<Self::Item, &'static str>
+        where Self::Item: Num + Clone + Ord;
 
     /// Determine the length of the Series
     fn len(&self) -> usize;
