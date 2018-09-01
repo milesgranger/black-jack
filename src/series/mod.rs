@@ -60,7 +60,7 @@ impl<T: BlackJackData> Series<T> {
         }
     }
 
-    /// Create a new Series struct from a vector, where T is supported by [BlackJackData](trait.BlackJackData.html). 
+    /// Create a new Series struct from a vector, where T is supported by [`BlackJackData`]. 
     /// 
     /// ## Example
     /// ```

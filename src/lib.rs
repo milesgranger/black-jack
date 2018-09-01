@@ -1,10 +1,10 @@
 #![warn(missing_docs)]
-//! This black-jack crate is meant as a Rust backend for the Python package "lumber-jack"
+//! Black-Jack is under development, and not meant to be used in any real capacity. 
 //! 
-//! Its main intention is to have a Python wrapper, but feel free
-//! to make use of it in other settings!
+//! The (_long term_) goal is to create a lightweight [Pandas](https://pandas.pydata.org/) equivelent 
+//! by and for the Rust community. Along with a Python wrapper: [Lumber-Jack](https://github.com/milesgranger/lumber-jack)
 //! 
-//! # Examples
+//! # Example use:
 //! 
 //! ```
 //! use blackjack::prelude::*;

@@ -11,10 +11,10 @@ use prelude::*;
     Traits used throughout crate
 */
 
-/// Trait dictates the supported primitives for use in [Series](struct.Series.html) structs.
+/// Trait dictates the supported primitives for use in [`Series`] structs.
 pub trait BlackJackData: Copy + Debug + 'static {
 
-    /// Return the current [DType](enum.DType.html) for this type. 
+    /// Return the current [`DType`] for this type. 
     fn dtype(&self) -> DType;
 }
 impl BlackJackData for f64 {
@@ -125,8 +125,13 @@ pub trait SeriesTrait: Debug + Sized + Any {
     /// let mean = series.mean::<f64>();
     /// 
     /// match mean {
-    ///     Ok(result) => println!("Result is: {}", result),
-    ///     Err(err) => println!("Was unable to compute mean, error: {}", err)
+    ///     Ok(result) => {
+    ///         println!("Result is: {}", &result);
+    ///         assert_eq!(result, 2.0);
+    ///     },
+    ///     Err(err) => {
+    ///         panic!("Was unable to compute mean, error: {}", err);
+    ///     }
     /// }
     /// ```
     fn mean<A>(&self) -> Result<A, &'static str> 
@@ -135,7 +140,7 @@ pub trait SeriesTrait: Debug + Sized + Any {
             Self::Item: Num + Clone + ToPrimitive;
 
     /// Find the minimum of the series. If several elements are equally minimum, the first element is returned. 
-    /// If it it empty an Error will be returned
+    /// If it's empty, an Error will be returned
     /// 
     /// ## Example
     /// ```

@@ -1,4 +1,4 @@
-//! A `DataFrame` represents a collection of varying types of `Series` objects.
+//! A [`DataFrame`] represents a collection of varying types of [`Series`] objects.
 //!
 //! ## Example use:
 //!
@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use prelude::*;
 
 
-/// Struct for holding [Series](struct.Series.html) or [SeriesTrait](trait.SeriesTrait.html) like objects.
+/// Struct for holding [`Series`] or [`SeriesTrait`] like objects.
 /// as well as adding some additional functionality by grouping them.
 #[derive(Default)]
 pub struct DataFrame {
