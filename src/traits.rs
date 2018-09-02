@@ -11,10 +11,10 @@ use prelude::*;
     Traits used throughout crate
 */
 
-/// Trait dictates the supported primitives for use in [Series](struct.Series.html) structs.
-pub trait BlackJackData: Debug + 'static {
+/// Trait dictates the supported primitives for use in [`Series`] structs.
+pub trait BlackJackData: Copy + Debug + 'static {
 
-    /// Return the current [DType](enum.DType.html) for this type. 
+    /// Return the current [`DType`] for this type. 
     fn dtype(&self) -> DType;
 }
 impl BlackJackData for f64 {
@@ -112,7 +112,50 @@ pub trait SeriesTrait: Debug + Sized + Any {
     fn name(&self) -> Option<String>;
 
     /// Sum a given series, yielding the same type as the elements stored in the series.
-    fn sum(&self) -> Self::Item where Self::Item: Num + Clone;
+    fn sum(&self) -> Self::Item 
+        where Self::Item: Num + Clone;
+
+    /// Average / Mean of a given series - Requires specifying desired float return annotation 
+    /// 
+    /// ## Example:
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::arange(0, 5);
+    /// let mean = series.mean::<f64>();
+    /// 
+    /// match mean {
+    ///     Ok(result) => {
+    ///         println!("Result is: {}", &result);
+    ///         assert_eq!(result, 2.0);
+    ///     },
+    ///     Err(err) => {
+    ///         panic!("Was unable to compute mean, error: {}", err);
+    ///     }
+    /// }
+    /// ```
+    fn mean<A>(&self) -> Result<A, &'static str> 
+        where 
+            A: Float, 
+            Self::Item: Num + Clone + ToPrimitive;
+
+    /// Find the minimum of the series. If several elements are equally minimum, the first element is returned. 
+    /// If it's empty, an Error will be returned
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series: Series<i64> = Series::arange(10, 100);
+    /// 
+    /// assert_eq!(series.min(), Ok(10));
+    /// ```
+    fn min(&self) -> Result<Self::Item, &'static str>
+        where Self::Item: Num + Clone + Ord;
+
+    /// Exibits the same behavior and usage of [`SeriesTrait::min`], only yielding the [`Result`] of a maximum.
+    fn max(&self) -> Result<Self::Item, &'static str>
+        where Self::Item: Num + Clone + Ord;
 
     /// Determine the length of the Series
     fn len(&self) -> usize;
@@ -124,13 +167,12 @@ pub trait SeriesTrait: Debug + Sized + Any {
     fn dtype(&self) -> DType;
 
     /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or `SeriesTrait::from_raw(*mut Self)`
-    fn into_raw(self) -> *mut Self {
-        Box::into_raw(Box::new(self))
+    fn into_raw(self) -> *mut Self { 
+        Box::into_raw(Box::new(self)) 
     }
 
     /// Create from raw pointer
-    fn from_raw(ptr: *mut Self) -> Self {
-        let obj = unsafe { Box::from_raw(ptr) };
-        *obj
+    fn from_raw(ptr: *mut Self) -> Self { 
+        unsafe { *Box::from_raw(ptr) } 
     }
 }

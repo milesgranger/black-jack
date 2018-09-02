@@ -32,6 +32,14 @@ fn test_series_ops() {
     // Test sum
     assert_eq!(series.sum(), 10_i32);
 
+    // Test mean
+    assert_eq!(series.mean::<f32>().unwrap(), 2.0);
+
+    // Test min
+    assert_eq!(series.min(), Ok(0));
+
+    // Test max
+    assert_eq!(series.max(), Ok(4));
 
 }
 

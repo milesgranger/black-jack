@@ -15,7 +15,7 @@
 //! ```
 
 use num::*;
-use std::ops::Range;
+use std::ops::{Range};
 use std::iter::{FromIterator};
 
 use ndarray::Array1 as Array;
@@ -60,7 +60,7 @@ impl<T: BlackJackData> Series<T> {
         }
     }
 
-    /// Create a new Series struct from a vector, where T is supported by [BlackJackData](trait.BlackJackData.html). 
+    /// Create a new Series struct from a vector, where T is supported by [`BlackJackData`]. 
     /// 
     /// ## Example
     /// ```
@@ -96,6 +96,45 @@ impl<T: BlackJackData> SeriesTrait for Series<T> {
 
     fn sum(&self) -> T  where T: Num + Clone {
         self.values.scalar_sum()
+    }
+
+    fn mean<A>(&self) -> Result<A, &'static str>
+        where A: Float, Self::Item: Num + Clone + ToPrimitive 
+    {
+        // Ensure we can get the numerator (sum of series) as a float
+        let numerator = match A::from(self.sum()) {
+            Some(num) => num,
+            None => return Err("Unable to convert series sum to Float in preparation for computing mean!")
+        };
+
+        // Ensure we can get the denominator (series length) as a float
+        let denominator = match A::from(self.len()) {
+            Some(denom) => denom,
+            None => return Err("Unable to convert usize of '{:?}' to Float trait in preparation for computing mean.")
+        };
+
+        // Perform calculation
+        Ok(numerator / denominator)
+    }
+
+    fn min(&self) -> Result<Self::Item, &'static str>
+        where Self::Item: Num + Clone + Ord 
+    {
+        let min = self.values.iter().min();
+        match min {
+            Some(m) => Ok(*m),
+            None => Err("Unable to find minimum of values, perhaps values is empty?")
+        }
+    }
+
+    fn max(&self) -> Result<Self::Item, &'static str>
+        where Self::Item: Num + Clone + Ord 
+    {
+        let max = self.values.iter().max();
+        match max {
+            Some(m) => Ok(*m),
+            None => Err("Unable to find maximum of values, perhaps values is empty?")
+        }
     }
 
     fn len(&self) -> usize { self.values.len() }

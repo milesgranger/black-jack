@@ -2,7 +2,7 @@
 
 use prelude::*;
 
-/// Possible DType returns, matches [BlackJackData](trait.BlackJackData.html)
+/// Possible DType returns, matches [`BlackJackData`]
 #[derive(Debug, PartialEq)]
 pub enum DType {
 
