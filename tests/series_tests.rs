@@ -38,6 +38,9 @@ fn test_series_ops() {
     // Test min
     assert_eq!(series.min(), Ok(0));
 
+    // Test max
+    assert_eq!(series.max(), Ok(4));
+
 }
 
 #[test]

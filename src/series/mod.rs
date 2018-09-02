@@ -127,6 +127,16 @@ impl<T: BlackJackData> SeriesTrait for Series<T> {
         }
     }
 
+    fn max(&self) -> Result<Self::Item, &'static str>
+        where Self::Item: Num + Clone + Ord 
+    {
+        let max = self.values.iter().max();
+        match max {
+            Some(m) => Ok(*m),
+            None => Err("Unable to find maximum of values, perhaps values is empty?")
+        }
+    }
+
     fn len(&self) -> usize { self.values.len() }
 
     fn dtype(&self) -> DType { 

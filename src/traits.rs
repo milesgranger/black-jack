@@ -153,6 +153,10 @@ pub trait SeriesTrait: Debug + Sized + Any {
     fn min(&self) -> Result<Self::Item, &'static str>
         where Self::Item: Num + Clone + Ord;
 
+    /// Exibits the same behavior and usage of [`SeriesTrait::min`], only yielding the [`Result`] of a maximum.
+    fn max(&self) -> Result<Self::Item, &'static str>
+        where Self::Item: Num + Clone + Ord;
+
     /// Determine the length of the Series
     fn len(&self) -> usize;
 
