@@ -3,6 +3,7 @@
 
 use std::fmt::Debug;
 use std::any::{Any};
+use std::iter::{Sum};
 
 use num::*;
 use prelude::*;
@@ -12,7 +13,7 @@ use prelude::*;
 */
 
 /// Trait dictates the supported primitives for use in [`Series`] structs.
-pub trait BlackJackData: Copy + Debug + 'static {
+pub trait BlackJackData: Copy + Debug + ToPrimitive {
 
     /// Return the current [`DType`] for this type. 
     fn dtype(&self) -> DType;
@@ -39,7 +40,7 @@ impl BlackJackData for i32 {
 /// Define the behavior for managing columns/series within a dataframe
 pub trait ColumnManager {
     /// Add a new series to the dataframe as a column.
-    fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> ();
+    fn add_column(&mut self, series: Series) -> ();
 
     /// Get a reference to a series by name, **will also have to know the primitive type stored**.
     ///
@@ -55,16 +56,11 @@ pub trait ColumnManager {
     ///
     /// df.add_column(series);  // Add the column to dataframe
     ///
-    /// let series_ref: &Series<i32> = df.get_column("series1").unwrap();  // Fetch the column back as a reference.
+    /// let series_ref: &Series = df.get_column("series1").unwrap();  // Fetch the column back as a reference.
     ///
     /// assert_eq!(*series_ref, series_clone)  // ensure they equal.
     /// ```
-    fn get_column<T: BlackJackData>(&self, name: &str) -> Option<&Series<T>>;
-
-    /// Get a column of which the type is unknown
-    /// Returns a [SeriesEnum](enum.SeriesEnum.html) of which will need to `match` the 
-    /// resulting series type and deal with accordingly.
-    fn get_column_unknown_type(&self, name: &str) -> Option<SeriesEnum>;
+    fn get_column(&self, name: &str) -> Option<&Series>;
 
     /// Get the number of columns
     fn n_columns(&self) -> usize;
@@ -92,9 +88,6 @@ pub trait DataFrameBehavior: Sized {
 /// Define the behavior of a Series object.
 pub trait SeriesTrait: Debug + Sized + Any {
 
-    /// The primitive associated with this Series; ie. `f64`
-    type Item: BlackJackData;
-
     /// Set the name of a series
     fn set_name(&mut self, name: &str) -> ();
 
@@ -112,8 +105,8 @@ pub trait SeriesTrait: Debug + Sized + Any {
     fn name(&self) -> Option<String>;
 
     /// Sum a given series, yielding the same type as the elements stored in the series.
-    fn sum(&self) -> Self::Item 
-        where Self::Item: Num + Clone;
+    fn sum<T>(&self) -> T
+        where T: Num + Clone + From<DataElement> + Sum;
 
     /// Average / Mean of a given series - Requires specifying desired float return annotation 
     /// 
@@ -122,7 +115,7 @@ pub trait SeriesTrait: Debug + Sized + Any {
     /// use blackjack::prelude::*;
     /// 
     /// let series = Series::arange(0, 5);
-    /// let mean = series.mean::<f64>();
+    /// let mean = series.mean();
     /// 
     /// match mean {
     ///     Ok(result) => {
@@ -134,10 +127,7 @@ pub trait SeriesTrait: Debug + Sized + Any {
     ///     }
     /// }
     /// ```
-    fn mean<A>(&self) -> Result<A, &'static str> 
-        where 
-            A: Float, 
-            Self::Item: Num + Clone + ToPrimitive;
+    fn mean(&self) -> Result<f64, &'static str>;
 
     /// Find the minimum of the series. If several elements are equally minimum, the first element is returned. 
     /// If it's empty, an Error will be returned
@@ -146,16 +136,18 @@ pub trait SeriesTrait: Debug + Sized + Any {
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series: Series<i64> = Series::arange(10, 100);
+    /// let series: Series = Series::arange(10, 100);
     /// 
     /// assert_eq!(series.min(), Ok(10));
     /// ```
-    fn min(&self) -> Result<Self::Item, &'static str>
-        where Self::Item: Num + Clone + Ord;
+    fn min<T>(&self) -> Result<T, &'static str>
+        where 
+            T: Num + Clone + Ord + BlackJackData + From<DataElement>;
 
     /// Exibits the same behavior and usage of [`SeriesTrait::min`], only yielding the [`Result`] of a maximum.
-    fn max(&self) -> Result<Self::Item, &'static str>
-        where Self::Item: Num + Clone + Ord;
+    fn max<T>(&self) -> Result<T, &'static str>
+        where 
+            T: Num + Clone + Ord + From<DataElement>;
 
     /// Determine the length of the Series
     fn len(&self) -> usize;

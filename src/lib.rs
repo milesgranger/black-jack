@@ -13,8 +13,8 @@
 //! let mut df = DataFrame::new();
 //! 
 //! // Make some series
-//! let series_i32: Series<i32> = Series::arange(0, 5);
-//! let mut series_f64: Series<f64> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+//! let series_i32: Series = Series::arange(0, 5);
+//! let mut series_f64: Series = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
 //! 
 //! // You can set a series name!
 //! series_f64.set_name("my-float-series");
