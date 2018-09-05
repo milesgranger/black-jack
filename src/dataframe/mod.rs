@@ -49,10 +49,8 @@ impl ColumnManager for DataFrame {
 
     fn add_column(&mut self, series: Series) -> () {
         self.series_objects
-            .entry(series.name().unwrap_or("new-name".to_string()))  // TODO: Pick a name based on number of columns, if no name is provided..
-            .or_insert_with(
-                || series
-            );
+            .entry("new-name".to_string())  // TODO: Pick a name based on number of columns, if no name is provided..
+            .or_insert_with(|| series );
     }
 
     fn get_column(&self, name: &str) -> Option<&Series> {

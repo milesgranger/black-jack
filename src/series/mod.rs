@@ -103,8 +103,6 @@ impl Series {
 
 
 impl<T: BlackJackData> SeriesTrait<T> for Series {
-    
-    type Item = T;
 
     fn set_name(&mut self, name: &str) -> () {
         self.name = Some(name.to_string());
@@ -117,40 +115,26 @@ impl<T: BlackJackData> SeriesTrait<T> for Series {
         }
     }
 
-    fn sum(&self) -> Self::Item 
+    fn sum(&self) -> T
         where 
-            Self::Item: Num + Clone + From<DataElement> + Sum
+            T: Num + Clone + From<DataElement> + Sum
             
     {
-        self.values.iter().map(|v| Self::Item::from(*v)).sum()
+        self.values.iter().map(|v| T::from(*v)).sum()
     }
 
-    fn mean<A>(&self) -> Result<A, &'static str>
+    fn mean(&self) -> Result<f64, &'static str>
         where 
-            A: Float,
-            Self::Item: Num + Clone + ToPrimitive + From<DataElement> + Sum
+            T: Num + Clone + ToPrimitive + From<DataElement> + Sum,
+            f64: Sum<T>
     {
-        // Ensure we can get the numerator (sum of series) as a float
-        let sum: Self::Item = self.sum();
-        let numerator = match A::from(sum) {
-            Some(num) => num,
-            None => return Err("Unable to convert series sum to Float in preparation for computing mean!")
-        };
-
-        // Ensure we can get the denominator (series length) as a float
-        let len: usize = self.len();
-        let denominator = match A::from(len) {
-            Some(denom) => denom,
-            None => return Err("Unable to convert usize of '{:?}' to Float trait in preparation for computing mean.")
-        };
-
-        // Perform calculation
-        Ok(numerator / denominator)
+        let mean = self.values.iter().map(|v| T::from(*v)).sum::<f64>() / self.values.len() as f64;
+        Ok(mean)
     }
 
-    fn min(&self) -> Result<Self::Item, &'static str>
+    fn min(&self) -> Result<T, &'static str>
         where 
-            Self::Item: Num + Clone + Ord,
+            T: Num + Clone + Ord,
             T: From<DataElement>
     {
         let min = self.values.iter().map(|v| T::from(*v)).min();
@@ -160,9 +144,9 @@ impl<T: BlackJackData> SeriesTrait<T> for Series {
         }
     }
 
-    fn max(&self) -> Result<Self::Item, &'static str>
+    fn max(&self) -> Result<T, &'static str>
         where 
-            Self::Item: Num + Clone + Ord,
+            T: Num + Clone + Ord,
             T: From<DataElement>
     {
         let max = self.values.iter().map(|v| T::from(*v)).max();

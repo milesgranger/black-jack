@@ -86,10 +86,7 @@ pub trait DataFrameBehavior: Sized {
 */
 
 /// Define the behavior of a Series object.
-pub trait SeriesTrait<T>: Debug + Sized + Any {
-
-    /// The primitive associated with this Series; ie. `f64`
-    type Item: BlackJackData;
+pub trait SeriesTrait<T: BlackJackData>: Debug + Sized + Any {
 
     /// Set the name of a series
     fn set_name(&mut self, name: &str) -> ();
@@ -108,8 +105,8 @@ pub trait SeriesTrait<T>: Debug + Sized + Any {
     fn name(&self) -> Option<String>;
 
     /// Sum a given series, yielding the same type as the elements stored in the series.
-    fn sum(&self) -> Self::Item 
-        where Self::Item: Num + Clone + From<DataElement> + Sum;
+    fn sum(&self) -> T
+        where T: Num + Clone + From<DataElement> + Sum;
 
     /// Average / Mean of a given series - Requires specifying desired float return annotation 
     /// 
@@ -130,10 +127,10 @@ pub trait SeriesTrait<T>: Debug + Sized + Any {
     ///     }
     /// }
     /// ```
-    fn mean<A>(&self) -> Result<A, &'static str> 
+    fn mean(&self) -> Result<f64, &'static str> 
         where 
-            A: Float, 
-            Self::Item: Num + Clone + ToPrimitive + From<DataElement> + Sum;
+            T: Num + Clone + ToPrimitive + From<DataElement> + Sum,
+            f64: Sum<T>;
 
     /// Find the minimum of the series. If several elements are equally minimum, the first element is returned. 
     /// If it's empty, an Error will be returned
@@ -146,16 +143,14 @@ pub trait SeriesTrait<T>: Debug + Sized + Any {
     /// 
     /// assert_eq!(series.min(), Ok(10));
     /// ```
-    fn min(&self) -> Result<Self::Item, &'static str>
+    fn min(&self) -> Result<T, &'static str>
         where 
-            Self::Item: Num + Clone + Ord, 
-            T: From<DataElement>;
+            T: Num + Clone + Ord + From<DataElement>;
 
     /// Exibits the same behavior and usage of [`SeriesTrait::min`], only yielding the [`Result`] of a maximum.
-    fn max(&self) -> Result<Self::Item, &'static str>
+    fn max(&self) -> Result<T, &'static str>
         where 
-            Self::Item: Num + Clone + Ord, 
-            T: From<DataElement>;
+            T: Num + Clone + Ord + From<DataElement>;
 
     /// Determine the length of the Series
     fn len(&self) -> usize;
