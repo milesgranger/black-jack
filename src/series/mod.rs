@@ -16,7 +16,7 @@
 
 use num::*;
 use std::ops::{Range};
-use std::iter::{FromIterator};
+use std::iter::{FromIterator, Sum};
 
 use ndarray::Array1 as Array;
 use prelude::*;
@@ -38,23 +38,6 @@ impl<T: BlackJackData + ToPrimitive> From<T> for DataElement {
             DType::I32 => DataElement::I32(val.to_i32().unwrap_or_else(|| panic!("Unable to convert value to i32"))),
             DType::F32 => DataElement::F32(val.to_f32().unwrap_or_else(|| panic!("Unable to convert value to f32"))),
         }
-    }
-}
-
-impl<T: BlackJackData + ToPrimitive> FromIterator<<Range<T> as Iterator>::Item> for Vec<DataElement> {
-    fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
-        let mut vec = Vec::new();
-
-        for i in iter {
-            let val = match i.dtype() {
-                DType::I64 => DataElement::I64(i.to_i64().unwrap_or_else(|| panic!("Unable to convert value to i64"))),
-                DType::F64 => DataElement::F64(i.to_f64().unwrap_or_else(|| panic!("Unable to convert value to f64"))),
-                DType::I32 => DataElement::I32(i.to_i32().unwrap_or_else(|| panic!("Unable to convert value to i32"))),
-                DType::F32 => DataElement::F32(i.to_f32().unwrap_or_else(|| panic!("Unable to convert value to f32"))),
-            };
-            vec.push(val);
-        }
-        vec
     }
 }
 
@@ -136,23 +119,27 @@ impl<T: BlackJackData> SeriesTrait<T> for Series {
 
     fn sum(&self) -> Self::Item 
         where 
-            Self::Item: Num + Clone,
-            DataElement: Into<T> + Zero
+            Self::Item: Num + Clone + From<DataElement> + Sum
+            
     {
-        self.values.scalar_sum().into()
+        self.values.iter().map(|v| Self::Item::from(*v)).sum()
     }
 
     fn mean<A>(&self) -> Result<A, &'static str>
-        where A: Float, Self::Item: Num + Clone + ToPrimitive 
+        where 
+            A: Float,
+            Self::Item: Num + Clone + ToPrimitive + From<DataElement> + Sum
     {
         // Ensure we can get the numerator (sum of series) as a float
-        let numerator = match A::from(self.sum()) {
+        let sum: Self::Item = self.sum();
+        let numerator = match A::from(sum) {
             Some(num) => num,
             None => return Err("Unable to convert series sum to Float in preparation for computing mean!")
         };
 
         // Ensure we can get the denominator (series length) as a float
-        let denominator = match A::from(self.len()) {
+        let len: usize = self.len();
+        let denominator = match A::from(len) {
             Some(denom) => denom,
             None => return Err("Unable to convert usize of '{:?}' to Float trait in preparation for computing mean.")
         };
@@ -164,12 +151,11 @@ impl<T: BlackJackData> SeriesTrait<T> for Series {
     fn min(&self) -> Result<Self::Item, &'static str>
         where 
             Self::Item: Num + Clone + Ord,
-            T: From<DataElement>,
-            DataElement: Ord
+            T: From<DataElement>
     {
-        let min = self.values.iter().min();
+        let min = self.values.iter().map(|v| T::from(*v)).min();
         match min {
-            Some(m) => Ok(T::from(*m)),
+            Some(m) => Ok(m),
             None => Err("Unable to find minimum of values, perhaps values is empty?")
         }
     }
@@ -177,12 +163,11 @@ impl<T: BlackJackData> SeriesTrait<T> for Series {
     fn max(&self) -> Result<Self::Item, &'static str>
         where 
             Self::Item: Num + Clone + Ord,
-            T: From<DataElement>,
-            DataElement: Ord
+            T: From<DataElement>
     {
-        let max = self.values.iter().max();
+        let max = self.values.iter().map(|v| T::from(*v)).max();
         match max {
-            Some(m) => Ok(T::from(*m)),
+            Some(m) => Ok(m),
             None => Err("Unable to find maximum of values, perhaps values is empty?")
         }
     }

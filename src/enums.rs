@@ -18,20 +18,3 @@ pub enum DType {
     /// `i32`
     I32
 }
-
-/// Enum of all possible series types.
-// TODO: include mutable refrences as well as owned Series.
-pub enum SeriesEnum<'a> {
-
-    /// `&Series<f64>` type
-    F64(&'a Series<f64>),
-
-    /// `&Series<i64>` type
-    I64(&'a Series<i64>),
-
-    /// `&Series<f32>` type
-    F32(&'a Series<f32>),
-
-    /// `&Series<i32>` type
-    I32(&'a Series<i32>),
-}

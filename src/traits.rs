@@ -3,6 +3,7 @@
 
 use std::fmt::Debug;
 use std::any::{Any};
+use std::iter::{Sum};
 
 use num::*;
 use prelude::*;
@@ -39,7 +40,7 @@ impl BlackJackData for i32 {
 /// Define the behavior for managing columns/series within a dataframe
 pub trait ColumnManager {
     /// Add a new series to the dataframe as a column.
-    fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> ();
+    fn add_column(&mut self, series: Series) -> ();
 
     /// Get a reference to a series by name, **will also have to know the primitive type stored**.
     ///
@@ -59,12 +60,7 @@ pub trait ColumnManager {
     ///
     /// assert_eq!(*series_ref, series_clone)  // ensure they equal.
     /// ```
-    fn get_column<T: BlackJackData>(&self, name: &str) -> Option<&Series<T>>;
-
-    /// Get a column of which the type is unknown
-    /// Returns a [SeriesEnum](enum.SeriesEnum.html) of which will need to `match` the 
-    /// resulting series type and deal with accordingly.
-    fn get_column_unknown_type(&self, name: &str) -> Option<SeriesEnum>;
+    fn get_column(&self, name: &str) -> Option<&Series>;
 
     /// Get the number of columns
     fn n_columns(&self) -> usize;
@@ -113,7 +109,7 @@ pub trait SeriesTrait<T>: Debug + Sized + Any {
 
     /// Sum a given series, yielding the same type as the elements stored in the series.
     fn sum(&self) -> Self::Item 
-        where Self::Item: Num + Clone;
+        where Self::Item: Num + Clone + From<DataElement> + Sum;
 
     /// Average / Mean of a given series - Requires specifying desired float return annotation 
     /// 
@@ -137,7 +133,7 @@ pub trait SeriesTrait<T>: Debug + Sized + Any {
     fn mean<A>(&self) -> Result<A, &'static str> 
         where 
             A: Float, 
-            Self::Item: Num + Clone + ToPrimitive;
+            Self::Item: Num + Clone + ToPrimitive + From<DataElement> + Sum;
 
     /// Find the minimum of the series. If several elements are equally minimum, the first element is returned. 
     /// If it's empty, an Error will be returned
@@ -151,11 +147,15 @@ pub trait SeriesTrait<T>: Debug + Sized + Any {
     /// assert_eq!(series.min(), Ok(10));
     /// ```
     fn min(&self) -> Result<Self::Item, &'static str>
-        where Self::Item: Num + Clone + Ord;
+        where 
+            Self::Item: Num + Clone + Ord, 
+            T: From<DataElement>;
 
     /// Exibits the same behavior and usage of [`SeriesTrait::min`], only yielding the [`Result`] of a maximum.
     fn max(&self) -> Result<Self::Item, &'static str>
-        where Self::Item: Num + Clone + Ord;
+        where 
+            Self::Item: Num + Clone + Ord, 
+            T: From<DataElement>;
 
     /// Determine the length of the Series
     fn len(&self) -> usize;
