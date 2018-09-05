@@ -6,7 +6,7 @@ use blackjack::prelude::*;
 
 #[test]
 fn test_series_arange() {
-    let series: Series<i32> = Series::arange(0, 10);
+    let series: Series = Series::arange(0, 10);
     assert_eq!(series.len(), 10);
     assert_eq!(series.dtype(), DType::I32);
 }
@@ -27,25 +27,25 @@ fn test_series_naming() {
 
 #[test]
 fn test_series_ops() {
-    let series: Series<i32> = Series::arange(0, 5);
+    let series: Series = Series::arange(0, 5);
 
     // Test sum
-    assert_eq!(series.sum(), 10_i32);
+    assert_eq!(series.sum::<f64>(), 10_f64);
 
     // Test mean
-    assert_eq!(series.mean::<f32>().unwrap(), 2.0);
+    assert_eq!(series.mean(), Ok(2.0));
 
     // Test min
-    assert_eq!(series.min(), Ok(0));
+    assert_eq!(series.min(), Ok(0_i32));
 
     // Test max
-    assert_eq!(series.max(), Ok(4));
+    assert_eq!(series.max(), Ok(4_i32));
 
 }
 
 #[test]
 fn test_into_from_raw() {
-    let series: Series<i64> = Series::arange(0, 5);
+    let series: Series = Series::arange(0, 5);
     let series_clone = series.clone();
 
     let ptr = series.into_raw();

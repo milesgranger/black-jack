@@ -13,7 +13,7 @@ use prelude::*;
 */
 
 /// Trait dictates the supported primitives for use in [`Series`] structs.
-pub trait BlackJackData: Copy + Debug + 'static {
+pub trait BlackJackData: Copy + Debug + ToPrimitive {
 
     /// Return the current [`DType`] for this type. 
     fn dtype(&self) -> DType;
@@ -56,7 +56,7 @@ pub trait ColumnManager {
     ///
     /// df.add_column(series);  // Add the column to dataframe
     ///
-    /// let series_ref: &Series<i32> = df.get_column("series1").unwrap();  // Fetch the column back as a reference.
+    /// let series_ref: &Series = df.get_column("series1").unwrap();  // Fetch the column back as a reference.
     ///
     /// assert_eq!(*series_ref, series_clone)  // ensure they equal.
     /// ```
@@ -86,7 +86,7 @@ pub trait DataFrameBehavior: Sized {
 */
 
 /// Define the behavior of a Series object.
-pub trait SeriesTrait<T: BlackJackData>: Debug + Sized + Any {
+pub trait SeriesTrait: Debug + Sized + Any {
 
     /// Set the name of a series
     fn set_name(&mut self, name: &str) -> ();
@@ -105,7 +105,7 @@ pub trait SeriesTrait<T: BlackJackData>: Debug + Sized + Any {
     fn name(&self) -> Option<String>;
 
     /// Sum a given series, yielding the same type as the elements stored in the series.
-    fn sum(&self) -> T
+    fn sum<T>(&self) -> T
         where T: Num + Clone + From<DataElement> + Sum;
 
     /// Average / Mean of a given series - Requires specifying desired float return annotation 
@@ -115,7 +115,7 @@ pub trait SeriesTrait<T: BlackJackData>: Debug + Sized + Any {
     /// use blackjack::prelude::*;
     /// 
     /// let series = Series::arange(0, 5);
-    /// let mean = series.mean::<f64>();
+    /// let mean = series.mean();
     /// 
     /// match mean {
     ///     Ok(result) => {
@@ -127,10 +127,7 @@ pub trait SeriesTrait<T: BlackJackData>: Debug + Sized + Any {
     ///     }
     /// }
     /// ```
-    fn mean(&self) -> Result<f64, &'static str> 
-        where 
-            T: Num + Clone + ToPrimitive + From<DataElement> + Sum,
-            f64: Sum<T>;
+    fn mean(&self) -> Result<f64, &'static str>;
 
     /// Find the minimum of the series. If several elements are equally minimum, the first element is returned. 
     /// If it's empty, an Error will be returned
@@ -139,16 +136,16 @@ pub trait SeriesTrait<T: BlackJackData>: Debug + Sized + Any {
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series: Series<i64> = Series::arange(10, 100);
+    /// let series: Series = Series::arange(10, 100);
     /// 
     /// assert_eq!(series.min(), Ok(10));
     /// ```
-    fn min(&self) -> Result<T, &'static str>
+    fn min<T>(&self) -> Result<T, &'static str>
         where 
-            T: Num + Clone + Ord + From<DataElement>;
+            T: Num + Clone + Ord + BlackJackData + From<DataElement>;
 
     /// Exibits the same behavior and usage of [`SeriesTrait::min`], only yielding the [`Result`] of a maximum.
-    fn max(&self) -> Result<T, &'static str>
+    fn max<T>(&self) -> Result<T, &'static str>
         where 
             T: Num + Clone + Ord + From<DataElement>;
 

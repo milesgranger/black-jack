@@ -12,7 +12,6 @@
 //! ```
 //!
 
-use std::any::Any;
 use std::collections::HashMap;
 
 use prelude::*;
@@ -48,8 +47,10 @@ impl DataFrameBehavior for DataFrame {}
 impl ColumnManager for DataFrame {
 
     fn add_column(&mut self, series: Series) -> () {
+        let n_cols = self.n_columns();
         self.series_objects
-            .entry("new-name".to_string())  // TODO: Pick a name based on number of columns, if no name is provided..
+            .entry(series.name()
+                    .unwrap_or_else(|| format!("COL_{}", n_cols) ))
             .or_insert_with(|| series );
     }
 

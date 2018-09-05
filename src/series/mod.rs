@@ -10,36 +10,20 @@
 //! 
 //! let series = Series::arange(0, 5);
 //! 
-//! assert_eq!(series.sum(), 10);
+//! assert_eq!(series.sum::<i32>(), 10);
 //! assert_eq!(series.len(), 5);
 //! ```
 
 use num::*;
 use std::ops::{Range};
 use std::iter::{FromIterator, Sum};
+use std::convert::From;
 
 use ndarray::Array1 as Array;
 use prelude::*;
 
 
-#[derive(Debug, PartialEq, Clone, PartialOrd, Copy)]
-pub enum DataElement {
-    I64(i64),
-    F64(f64),
-    I32(i32),
-    F32(f32)
-}
 
-impl<T: BlackJackData + ToPrimitive> From<T> for DataElement {
-    fn from(val: T) -> Self {
-        match val.dtype() {
-            DType::I64 => DataElement::I64(val.to_i64().unwrap_or_else(|| panic!("Unable to convert value to i64"))),
-            DType::F64 => DataElement::F64(val.to_f64().unwrap_or_else(|| panic!("Unable to convert value to f64"))),
-            DType::I32 => DataElement::I32(val.to_i32().unwrap_or_else(|| panic!("Unable to convert value to i32"))),
-            DType::F32 => DataElement::F32(val.to_f32().unwrap_or_else(|| panic!("Unable to convert value to f32"))),
-        }
-    }
-}
 
 /// Series struct for containing underlying Array and other meta data.
 #[derive(Debug, Clone, PartialEq)]
@@ -62,19 +46,19 @@ impl Series {
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series: Series<i32> = Series::arange(0, 10);
+    /// let series: Series = Series::arange(0, 10);
     /// ```
     pub fn arange<T>(start: T, stop: T) -> Self 
         where
-            T: Integer, 
-            Self: Sized,
+            T: Integer + BlackJackData,
             Range<T>: Iterator, 
-            Vec<DataElement>: FromIterator<<Range<T> as Iterator>::Item>
+            Vec<T>: FromIterator<<Range<T> as Iterator>::Item>
     {
-        let data: Vec<DataElement> = (start..stop).collect();
+        let data: Vec<T> = (start..stop).collect();
+        let vec: Vec<DataElement> = data.into_iter().map(|v| DataElement::from(v)).collect();
         Series { 
             name: None,
-            values: Array::from_vec(data), 
+            values: Array::from_vec(vec), 
         }
     }
 
@@ -84,7 +68,7 @@ impl Series {
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series: Series<i32> = Series::from_vec(vec![1, 2, 3]);
+    /// let series: Series = Series::from_vec(vec![1, 2, 3]);
     /// ```
     pub fn from_vec<T>(vec: Vec<T>) -> Self 
         where 
@@ -102,7 +86,7 @@ impl Series {
 
 
 
-impl<T: BlackJackData> SeriesTrait<T> for Series {
+impl SeriesTrait for Series {
 
     fn set_name(&mut self, name: &str) -> () {
         self.name = Some(name.to_string());
@@ -115,7 +99,7 @@ impl<T: BlackJackData> SeriesTrait<T> for Series {
         }
     }
 
-    fn sum(&self) -> T
+    fn sum<T>(&self) -> T
         where 
             T: Num + Clone + From<DataElement> + Sum
             
@@ -124,18 +108,15 @@ impl<T: BlackJackData> SeriesTrait<T> for Series {
     }
 
     fn mean(&self) -> Result<f64, &'static str>
-        where 
-            T: Num + Clone + ToPrimitive + From<DataElement> + Sum,
-            f64: Sum<T>
     {
-        let mean = self.values.iter().map(|v| T::from(*v)).sum::<f64>() / self.values.len() as f64;
-        Ok(mean)
+        let total: f64 = self.sum();
+        let count: f64 = self.len() as f64;
+        Ok(total / count)
     }
 
-    fn min(&self) -> Result<T, &'static str>
+    fn min<T>(&self) -> Result<T, &'static str>
         where 
-            T: Num + Clone + Ord,
-            T: From<DataElement>
+            T: Num + Clone + Ord + BlackJackData + From<DataElement>
     {
         let min = self.values.iter().map(|v| T::from(*v)).min();
         match min {
@@ -144,7 +125,7 @@ impl<T: BlackJackData> SeriesTrait<T> for Series {
         }
     }
 
-    fn max(&self) -> Result<T, &'static str>
+    fn max<T>(&self) -> Result<T, &'static str>
         where 
             T: Num + Clone + Ord,
             T: From<DataElement>
