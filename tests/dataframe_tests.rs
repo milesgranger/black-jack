@@ -10,22 +10,30 @@ fn test_new_dataframe() {
 }
 
 #[test]
-fn test_add_columns_known_types() {
+fn test_add_columns() {
     let mut df = DataFrame::new();
 
     let mut series1: Series = Series::arange(0, 5);
     series1.set_name("series-1");
+    let series1_clone = series1.clone();
 
     let mut series2: Series = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
     series2.set_name("series-2");
+    let series2_clone = series2.clone();
 
-    df.add_column(series1);
-    df.add_column(series2);
+    // Add both columns
+    df.add_column(series1);   // Add by method
+    df["series-2"] = series2; // Add by IndexMut
     
     {
-        let _series1ref: &Series = df.get_column("series-1").expect("No column named 'series-1'");
-        let _series2ref: &Series = df.get_column("series-2").expect("No column named 'series-2'");
+        // Test the columns match
+        let series1ref: &Series = df.get_column("series-1").expect("No column named 'series-1'");
+        assert_eq!(*series1ref, series1_clone);
 
+        let series2ref: &Series = df.get_column("series-2").expect("No column named 'series-2'");
+        assert_eq!(*series2ref, series2_clone);
+
+        // Just sanity check two columns are still there.
         assert_eq!(df.n_columns(), 2);
     }
 
@@ -47,5 +55,8 @@ fn test_get_column_by_name() {
     df.add_column(series);
 
     let series_ref: &Series = df.get_column("test-series").expect("Unable to find column named 'test-series'");
+    assert_eq!(*series_ref, series_clone);
+
+    let series_ref: &Series = &df["test-series"];
     assert_eq!(*series_ref, series_clone);
 }

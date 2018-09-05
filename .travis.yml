@@ -19,8 +19,8 @@ addons:
       - libssl-dev
 
 script:
-  - make build
-  - make test
+  - cargo build
+  - cargo test
 
 deploy:
   script: |
