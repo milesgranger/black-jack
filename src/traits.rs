@@ -90,7 +90,7 @@ pub trait DataFrameBehavior: Sized {
 */
 
 /// Define the behavior of a Series object.
-pub trait SeriesTrait: Debug + Sized + Any {
+pub trait SeriesTrait<T>: Debug + Sized + Any {
 
     /// The primitive associated with this Series; ie. `f64`
     type Item: BlackJackData;
