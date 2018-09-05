@@ -13,6 +13,7 @@
 //!
 
 use std::collections::HashMap;
+use std::ops::{Index};
 
 use prelude::*;
 
@@ -61,5 +62,19 @@ impl ColumnManager for DataFrame {
 
     fn n_columns(&self) -> usize {
         self.series_objects.len() as usize
+    }
+}
+
+
+impl<S: Into<String>> Index<S> for DataFrame {
+    type Output = Series;
+
+    fn index(&self, name: S) -> &Series {
+        let name: String = name.into();
+        
+        match self.get_column(&name) {
+            Some(series) => series,
+            None => panic!("No column named: '{}'", name)
+        }
     }
 }

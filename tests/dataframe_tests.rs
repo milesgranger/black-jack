@@ -48,4 +48,7 @@ fn test_get_column_by_name() {
 
     let series_ref: &Series = df.get_column("test-series").expect("Unable to find column named 'test-series'");
     assert_eq!(*series_ref, series_clone);
+
+    let series_ref: &Series = &df["test-series"];
+    assert_eq!(*series_ref, series_clone);
 }

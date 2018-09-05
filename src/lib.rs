@@ -26,6 +26,9 @@
 //! df.add_column(series_i32);
 //! df.add_column(series_f64);
 //! 
+//! // Get columns by either method or indexing it
+//! let series_ref: Option<&Series> = df.get_column("my-float-series");
+//! let series_ref: &Series = &df["my-float-series"];  // panics if series name does not exist in dataframe!
 //! ```
 
 extern crate ndarray;
