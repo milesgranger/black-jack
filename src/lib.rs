@@ -22,9 +22,9 @@
 //! // Or not... 
 //! assert_eq!(series_i32.name(), None);
 //! 
-//! // Add columns (of different types) to a dataframe
+//! // Add columns (of different types) to a dataframe, by method or index assignment
 //! df.add_column(series_i32);
-//! df.add_column(series_f64);
+//! df["my-float-series"] = series_f64;
 //! 
 //! // Get columns by either method or indexing it
 //! let series_ref: Option<&Series> = df.get_column("my-float-series");

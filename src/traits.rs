@@ -62,6 +62,9 @@ pub trait ColumnManager {
     /// ```
     fn get_column(&self, name: &str) -> Option<&Series>;
 
+    /// Same as [`ColumnManager::get_column`] but as a `mut` reference.
+    fn get_column_mut(&mut self, name: &str) -> Option<&mut Series>;
+
     /// Get the number of columns
     fn n_columns(&self) -> usize;
 }
