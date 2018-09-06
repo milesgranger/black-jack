@@ -24,7 +24,7 @@ macro_rules! impl_FROM_DataElement_for_primitive {
                         DataElement::F64(v) => v as $primitive,
                         DataElement::I32(v) => v as $primitive,
                         DataElement::F32(v) => v as $primitive,
-                        _ => panic!("Unable to implement From<DataElement>")
+                        _ => panic!("Unable to implement From<DataElement>, is primitive a String?")
                     }    
                 }
             }

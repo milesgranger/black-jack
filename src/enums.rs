@@ -61,13 +61,38 @@ pub enum DataElement {
     STRING(String)
 }
 
-impl<T: BlackJackData + ToPrimitive + ToString> From<T> for DataElement {
+impl DataElement {
+
+    /// Get a [`DataElement`] from a `&str` value.
+    pub fn from_parse(val: &str) -> DataElement {
+        
+        // Attempt i64
+        match val.parse::<i64>().ok() {
+            Some(v) => DataElement::from(v),
+
+            // Attempt for f64
+            None => match val.parse::<f64>().ok() {
+                Some(v) => DataElement::from(v),
+
+                // Attempt for String
+                None => match val.parse::<String>().ok() {
+                    Some(v) => DataElement::from(v),
+                    None => panic!("Unable to parse value!")
+                }
+            }
+        }
+    }
+
+}
+
+
+impl<T: BlackJackData + ToString> From<T> for DataElement {
     fn from(val: T) -> Self {
         match val.dtype() {
-            DType::I64 => DataElement::I64(val.to_i64().unwrap_or_else(|| panic!("Unable to convert value to i64"))),
-            DType::F64 => DataElement::F64(val.to_f64().unwrap_or_else(|| panic!("Unable to convert value to f64"))),
-            DType::I32 => DataElement::I32(val.to_i32().unwrap_or_else(|| panic!("Unable to convert value to i32"))),
-            DType::F32 => DataElement::F32(val.to_f32().unwrap_or_else(|| panic!("Unable to convert value to f32"))),
+            DType::I64 => DataElement::I64(val.to_string().parse::<i64>().unwrap_or_else(|_| panic!("Unable to convert value to i64"))),
+            DType::F64 => DataElement::F64(val.to_string().parse::<f64>().unwrap_or_else(|_| panic!("Unable to convert value to f64"))),
+            DType::I32 => DataElement::I32(val.to_string().parse::<i32>().unwrap_or_else(|_| panic!("Unable to convert value to i32"))),
+            DType::F32 => DataElement::F32(val.to_string().parse::<f32>().unwrap_or_else(|_| panic!("Unable to convert value to f32"))),
             DType::STRING => DataElement::STRING(val.to_string())
         }
     }
