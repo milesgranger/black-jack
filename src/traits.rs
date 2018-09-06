@@ -4,6 +4,8 @@
 use std::fmt::Debug;
 use std::any::{Any};
 use std::iter::{Sum};
+use std::path::Path;
+use std::error::Error;
 
 use num::*;
 use prelude::*;
@@ -13,7 +15,7 @@ use prelude::*;
 */
 
 /// Trait dictates the supported primitives for use in [`Series`] structs.
-pub trait BlackJackData: Copy + Debug + ToPrimitive {
+pub trait BlackJackData: Debug + ToString {
 
     /// Return the current [`DType`] for this type. 
     fn dtype(&self) -> DType;
@@ -29,6 +31,9 @@ impl BlackJackData for f32 {
 }
 impl BlackJackData for i32 {
     fn dtype(&self) -> DType { DType::I32 }
+}
+impl BlackJackData for String {
+    fn dtype(&self) -> DType { DType::STRING }
 }
 
 
@@ -67,6 +72,13 @@ pub trait ColumnManager {
 
     /// Get the number of columns
     fn n_columns(&self) -> usize;
+}
+
+/// Represents behavior for [`DataFrame`] io behavior
+pub trait DataFrameIO: Sized {
+
+    /// Read a CSV file into a [`DataFrame`] where each column represents a Series
+    fn read_csv<S: AsRef<Path>>(path: S) -> Result<Self, Box<Error>>;
 }
 
 /// DataFrame behavior
@@ -109,7 +121,7 @@ pub trait SeriesTrait: Debug + Sized + Any {
 
     /// Sum a given series, yielding the same type as the elements stored in the series.
     fn sum<T>(&self) -> T
-        where T: Num + Clone + From<DataElement> + Sum;
+        where T: Num + Clone + From<DataElement> + Sum + Copy;
 
     /// Average / Mean of a given series - Requires specifying desired float return annotation 
     /// 

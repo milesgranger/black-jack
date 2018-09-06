@@ -14,13 +14,18 @@
 
 use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
+use std::path::Path;
+use std::error::Error;
+
+use ndarray::Array1 as Array;
+use csv;
 
 use prelude::*;
 
 
 /// Struct for holding [`Series`] or [`SeriesTrait`] like objects.
 /// as well as adding some additional functionality by grouping them.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct DataFrame {
     series_objects: HashMap<String, Series>,
 }
@@ -44,6 +49,54 @@ impl DataFrame {
 
 impl DataFrameBehavior for DataFrame {}
 
+impl DataFrameIO for DataFrame {
+
+    fn read_csv<S: AsRef<Path>>(path: S) -> Result<Self, Box<Error>> {
+        let mut reader = csv::Reader::from_path(path)?;
+
+        let headers = reader.headers()?.clone();  // TODO: Don't fail on non existant headers -> give 'col0', 'col1', etc.
+        println!("Header list: {:?}", headers);
+
+        // Containers for storing column data
+        let mut vecs: Vec<Vec<DataElement>> = (0..headers.len()).map(|_| Vec::new()).collect();
+
+        for record in reader.records() {
+
+            match record {
+
+                Ok(rec) => { 
+                    println!("Record: {:?}", &rec);
+                    for (field, container) in rec.iter().zip(&mut vecs) {
+                        container.push(
+                            DataElement::from_parse(field)
+                        );
+                    };
+                },
+
+                // TODO: Process for dealing with invalid records.
+                Err(err) => println!("Unable to read record: '{}'", err)
+            }
+        }
+
+        println!("Built these vectors: {:?}", vecs);
+
+        // TODO: Place into Series and start converting and comparing against primitives.. 
+        // for example, convert to f64 and see if that is partially equal to i64, if so, keep i64
+        // if all numeric conversion trials fail, assume strings.
+        let mut df = DataFrame::new();
+        for (header, vec) in headers.into_iter().zip(vecs) {
+
+            let series = Series{ 
+                name: Some(header.into()),
+                values: Array::from_vec(vec) 
+            };
+            df.add_column(series);
+
+        }
+
+        Ok(df)
+    }
+}
 
 impl ColumnManager for DataFrame {
 

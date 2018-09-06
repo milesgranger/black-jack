@@ -5,8 +5,20 @@ use blackjack::prelude::*;
 
 
 #[test]
-fn test_new_dataframe() {
-    println!("Working!");
+fn test_read_csv() {
+    
+    let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
+    println!("Using path: {}", &path);
+    let df = DataFrame::read_csv(&path).expect("Unable to read file!");
+    println!("Resulting DataFrame: {:?}", df);
+
+}
+
+#[test]
+#[should_panic(expected = "No column")]
+fn test_fail_index_column() {
+    let df = DataFrame::new();
+    let _series = &df["col doesn't exist!"];
 }
 
 #[test]
