@@ -4,6 +4,8 @@
 use std::fmt::Debug;
 use std::any::{Any};
 use std::iter::{Sum};
+use std::path::Path;
+use std::error::Error;
 
 use num::*;
 use prelude::*;
@@ -67,6 +69,13 @@ pub trait ColumnManager {
 
     /// Get the number of columns
     fn n_columns(&self) -> usize;
+}
+
+/// Represents behavior for [`DataFrame`] io behavior
+pub trait DataFrameIO: Sized {
+
+    /// Read a CSV file into a [`DataFrame`] where each column represents a Series
+    fn read_csv<S: AsRef<Path>>(path: S) -> Result<Self, Box<Error>>;
 }
 
 /// DataFrame behavior

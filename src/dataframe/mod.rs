@@ -14,6 +14,10 @@
 
 use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
+use std::path::Path;
+use std::error::Error;
+
+use csv;
 
 use prelude::*;
 
@@ -44,6 +48,42 @@ impl DataFrame {
 
 impl DataFrameBehavior for DataFrame {}
 
+impl DataFrameIO for DataFrame {
+
+    fn read_csv<S: AsRef<Path>>(path: S) -> Result<Self, Box<Error>> {
+        let mut reader = csv::Reader::from_path(path)?;
+
+        let headers = reader.headers()?.clone();  // TODO: Don't fail on non existant headers -> give 'col0', 'col1', etc.
+        println!("Header list: {:?}", headers);
+
+        // Containers for storing column data
+        let mut vecs: Vec<Vec<String>> = (0..headers.len()).map(|_| Vec::new()).collect();
+
+        for record in reader.records() {
+
+            match record {
+
+                Ok(rec) => { 
+                    println!("Record: {:?}", &rec);
+                    for (field, container) in rec.iter().zip(&mut vecs) {
+                        container.push(field.into());
+                    };
+                },
+
+                // TODO: Process for dealing with invalid records.
+                Err(err) => println!("Unable to read record: '{}'", err)
+            }
+        }
+
+        println!("Built these vectors: {:?}", vecs);
+
+        // TODO: Place into Series and start converting and comparing against primitives.. 
+        // for example, convert to f64 and see if that is partially equal to i64, if so, keep i64
+        // if all numeric conversion trials fail, assume strings.
+
+        Ok(DataFrame::new())
+    }
+}
 
 impl ColumnManager for DataFrame {
 
