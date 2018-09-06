@@ -15,7 +15,7 @@ use prelude::*;
 */
 
 /// Trait dictates the supported primitives for use in [`Series`] structs.
-pub trait BlackJackData: Copy + Debug + ToPrimitive {
+pub trait BlackJackData: Debug + ToString {
 
     /// Return the current [`DType`] for this type. 
     fn dtype(&self) -> DType;
@@ -31,6 +31,9 @@ impl BlackJackData for f32 {
 }
 impl BlackJackData for i32 {
     fn dtype(&self) -> DType { DType::I32 }
+}
+impl BlackJackData for String {
+    fn dtype(&self) -> DType { DType::STRING }
 }
 
 
@@ -118,7 +121,7 @@ pub trait SeriesTrait: Debug + Sized + Any {
 
     /// Sum a given series, yielding the same type as the elements stored in the series.
     fn sum<T>(&self) -> T
-        where T: Num + Clone + From<DataElement> + Sum;
+        where T: Num + Clone + From<DataElement> + Sum + Copy;
 
     /// Average / Mean of a given series - Requires specifying desired float return annotation 
     /// 

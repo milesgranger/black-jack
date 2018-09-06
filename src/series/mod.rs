@@ -50,7 +50,7 @@ impl Series {
     /// ```
     pub fn arange<T>(start: T, stop: T) -> Self 
         where
-            T: Integer + BlackJackData,
+            T: Integer + BlackJackData + ToPrimitive,
             Range<T>: Iterator, 
             Vec<T>: FromIterator<<Range<T> as Iterator>::Item>
     {
@@ -101,10 +101,10 @@ impl SeriesTrait for Series {
 
     fn sum<T>(&self) -> T
         where 
-            T: Num + Clone + From<DataElement> + Sum
+            T: Num + Clone + From<DataElement> + Sum + Copy
             
     {
-        self.values.iter().map(|v| T::from(*v)).sum()
+        self.values.iter().map(|v| T::from(v.clone())).sum()
     }
 
     fn mean(&self) -> Result<f64, &'static str>
@@ -118,7 +118,7 @@ impl SeriesTrait for Series {
         where 
             T: Num + Clone + Ord + BlackJackData + From<DataElement>
     {
-        let min = self.values.iter().map(|v| T::from(*v)).min();
+        let min = self.values.iter().map(|v| T::from(v.clone())).min();
         match min {
             Some(m) => Ok(m),
             None => Err("Unable to find minimum of values, perhaps values is empty?")
@@ -130,7 +130,7 @@ impl SeriesTrait for Series {
             T: Num + Clone + Ord,
             T: From<DataElement>
     {
-        let max = self.values.iter().map(|v| T::from(*v)).max();
+        let max = self.values.iter().map(|v| T::from(v.clone())).max();
         match max {
             Some(m) => Ok(m),
             None => Err("Unable to find maximum of values, perhaps values is empty?")
@@ -145,7 +145,8 @@ impl SeriesTrait for Series {
             DataElement::I64(_) => DType::I64,
             DataElement::F64(_) => DType::F64,
             DataElement::I32(_) => DType::I32,
-            DataElement::F32(_) => DType::F32
+            DataElement::F32(_) => DType::F32,
+            DataElement::STRING(_) => DType::STRING
         }
      }
 

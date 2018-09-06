@@ -12,7 +12,7 @@ macro_rules! series_map {
 }
 
 #[macro_export]
-macro_rules! impl_DataElement_for_primitive {
+macro_rules! impl_FROM_DataElement_for_primitive {
 
     // Use: impl_DataElement_for_primitive!(f32)
 
@@ -24,6 +24,7 @@ macro_rules! impl_DataElement_for_primitive {
                         DataElement::F64(v) => v as $primitive,
                         DataElement::I32(v) => v as $primitive,
                         DataElement::F32(v) => v as $primitive,
+                        _ => panic!("Unable to implement From<DataElement>")
                     }    
                 }
             }
