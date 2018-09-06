@@ -1,7 +1,6 @@
 //! Enums to be used throughout the crate.
 
 use std::string::ToString;
-use num::*;
 use prelude::*;
 
 /// Possible DType returns, matches [`BlackJackData`]
@@ -64,8 +63,9 @@ pub enum DataElement {
 impl DataElement {
 
     /// Get a [`DataElement`] from a `&str` value.
+    // TODO: Add support for parsing f32 vs f64 and etc.
     pub fn from_parse(val: &str) -> DataElement {
-        
+
         // Attempt i64
         match val.parse::<i64>().ok() {
             Some(v) => DataElement::from(v),

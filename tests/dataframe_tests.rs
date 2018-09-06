@@ -14,6 +14,13 @@ fn test_read_csv() {
 }
 
 #[test]
+#[should_panic(expected = "No column")]
+fn test_fail_index_column() {
+    let df = DataFrame::new();
+    let _series = &df["col doesn't exist!"];
+}
+
+#[test]
 fn test_add_columns() {
     let mut df = DataFrame::new();
 
