@@ -9,7 +9,8 @@ fn test_read_csv() {
     
     let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
     println!("Using path: {}", &path);
-    let _df = DataFrame::read_csv(&path).expect("Unable to read file!");
+    let df = DataFrame::read_csv(&path).expect("Unable to read file!");
+    println!("Resulting DataFrame: {:?}", df);
 
 }
 
