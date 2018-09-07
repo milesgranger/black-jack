@@ -16,6 +16,7 @@ use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 use std::path::Path;
 use std::error::Error;
+use std::fmt;
 
 use ndarray::Array1 as Array;
 use csv;
@@ -43,6 +44,25 @@ impl DataFrame {
         Self {
             series_objects: HashMap::new(),
         }
+    }
+}
+
+
+impl fmt::Display for DataFrame {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut printed_series: Vec<Vec<String>> = Vec::new();
+        for series in self.series_objects.values() {
+            let stdout: Vec<String> = format!("{}", series).split("\n").map(|v| v.to_string()).collect();
+            printed_series.push(stdout);
+        }
+        let mut output: String = "\n".to_string();
+        for i in 0..printed_series[0].len() {
+            for ii in 0..printed_series.len() {
+                output.push_str(&printed_series[ii][i]);
+            }
+            output.push_str("\n");
+        }
+        write!(f, "{}", output)
     }
 }
 
@@ -77,8 +97,6 @@ impl DataFrameIO for DataFrame {
                 Err(err) => println!("Unable to read record: '{}'", err)
             }
         }
-
-        println!("Built these vectors: {:?}", vecs);
 
         // TODO: Place into Series and start converting and comparing against primitives.. 
         // for example, convert to f64 and see if that is partially equal to i64, if so, keep i64
@@ -149,9 +167,6 @@ impl<S: Into<String>> IndexMut<S> for DataFrame {
         self.add_column(series);
 
         // Fetch back the column as a mutable reference.
-        match self.get_column_mut(&name) {
-            Some(series) => series,
-            None => panic!("No column named '{}'", name)
-        }
+        self.get_column_mut(&name).unwrap()
     }
 }

@@ -18,6 +18,7 @@ use num::*;
 use std::ops::{Range};
 use std::iter::{FromIterator, Sum};
 use std::convert::From;
+use std::fmt;
 
 use ndarray::Array1 as Array;
 use prelude::*;
@@ -35,6 +36,41 @@ pub struct Series {
 
     /// ndarray attribute; the underlying values of the Series
     pub values: Array<DataElement>
+}
+
+impl fmt::Display for Series {
+
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+
+        let mut string = "".to_string();
+        let name = self.name().unwrap_or("None".to_string());
+        
+        // Write name inside column
+        let header = format!("| {} |\n", &name);
+        string.push_str(&header);
+
+        // Start writing rows... 
+        for val in &self.values {
+
+            let mut row_string = "|".to_string();
+            let val: String = val.clone().into();
+
+            while row_string.len() < (header.len() / 2) - val.len() as usize {
+                row_string.push_str(" ");
+            }
+
+            row_string.push_str(&val);
+            
+            while row_string.len() < header.len() - 2 {
+                row_string.push_str(" ");
+            }
+
+            row_string.push_str("|\n");
+            string.push_str(&row_string);
+        }
+
+        write!(f, "{}\n", string)
+    }
 }
 
 /// Constructor methods for `Series<T>`

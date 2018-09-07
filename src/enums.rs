@@ -29,12 +29,16 @@ impl_FROM_DataElement_for_primitive!(i64);
 impl_FROM_DataElement_for_primitive!(i32);
 impl_FROM_DataElement_for_primitive!(f32);
 
+
+
 impl From<DataElement> for String {
     fn from(val: DataElement) -> Self {
-        if let DataElement::STRING(string) = val {
-            string
-        } else {
-            panic!("Value is not a string!")
+        match val {
+            DataElement::F64(v) => v.to_string(),
+            DataElement::I64(v) => v.to_string(),
+            DataElement::F32(v) => v.to_string(),
+            DataElement::I32(v) => v.to_string(),
+            DataElement::STRING(v) => v.clone()
         }
     }
 }
