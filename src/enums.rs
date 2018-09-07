@@ -38,7 +38,6 @@ impl From<DataElement> for String {
             DataElement::I64(v) => v.to_string(),
             DataElement::F32(v) => v.to_string(),
             DataElement::I32(v) => v.to_string(),
-            DataElement::F32(v) => v.to_string(),
             DataElement::STRING(v) => v.clone()
         }
     }

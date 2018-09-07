@@ -5,12 +5,24 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_pretty_display() {
+    let mut df = DataFrame::new();
+    let s1 = Series::arange(0, 5);
+    let s2 = Series::arange(5, 10);
+
+    df["s1"] = s1;
+    df["s2"] = s2;
+
+    println!("{}", df);
+}
+
+#[test]
 fn test_read_csv() {
     
     let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
     println!("Using path: {}", &path);
     let df = DataFrame::read_csv(&path).expect("Unable to read file!");
-    println!("Resulting DataFrame: {:?}", df);
+    println!("Resulting DataFrame: {}", df);
 
 }
 
