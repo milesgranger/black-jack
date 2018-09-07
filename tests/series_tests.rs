@@ -5,6 +5,13 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_display_series() {
+    let mut series = Series::arange(0, 10);
+    series.set_name("test-column");
+    println!("{}", series);
+}
+
+#[test]
 fn test_series_arange() {
     let series: Series = Series::arange(0, 10);
     assert_eq!(series.len(), 10);
