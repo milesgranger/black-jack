@@ -4,7 +4,7 @@ use std::string::ToString;
 use prelude::*;
 
 /// Possible DType returns, matches [`BlackJackData`]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum DType {
 
     /// `f64`
@@ -28,8 +28,6 @@ impl_FROM_DataElement_for_primitive!(f64);
 impl_FROM_DataElement_for_primitive!(i64);
 impl_FROM_DataElement_for_primitive!(i32);
 impl_FROM_DataElement_for_primitive!(f32);
-
-
 
 impl From<DataElement> for String {
     fn from(val: DataElement) -> Self {

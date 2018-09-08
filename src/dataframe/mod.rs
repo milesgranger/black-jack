@@ -103,13 +103,9 @@ impl DataFrameIO for DataFrame {
         // if all numeric conversion trials fail, assume strings.
         let mut df = DataFrame::new();
         for (header, vec) in headers.into_iter().zip(vecs) {
-
-            let series = Series{ 
-                name: Some(header.into()),
-                values: Array::from_vec(vec) 
-            };
+            let mut series = Series::from_data_elements(vec);
+            series.set_name(header);
             df.add_column(series);
-
         }
 
         Ok(df)

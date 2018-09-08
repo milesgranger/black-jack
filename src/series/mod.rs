@@ -35,7 +35,11 @@ pub struct Series {
     pub name: Option<String>,
 
     /// ndarray attribute; the underlying values of the Series
-    pub values: Array<DataElement>
+    pub values: Array<DataElement>,
+
+    // Only set if called by `.astype()` or parsing or raw data was able to
+    // confirm all `DataElement`s are of the same type.
+    dtype: Option<DType>
 }
 
 impl fmt::Display for Series {
@@ -90,10 +94,12 @@ impl Series {
             Range<T>: Iterator, 
             Vec<T>: FromIterator<<Range<T> as Iterator>::Item>
     {
+        let dtype = Some(start.dtype());
         let data: Vec<T> = (start..stop).collect();
         let vec: Vec<DataElement> = data.into_iter().map(|v| DataElement::from(v)).collect();
         Series { 
             name: None,
+            dtype,
             values: Array::from_vec(vec), 
         }
     }
@@ -111,9 +117,22 @@ impl Series {
             T: BlackJackData + ToPrimitive,
             DataElement: From<T>
     {
+        let dtype = if vec.len() > 0 { Some(vec[0].dtype()) } else  { None };
         let vec: Vec<DataElement> = vec.into_iter().map(|v| DataElement::from(v)).collect();
         Series { 
             name: None,
+            dtype,
+            values: Array::from_vec(vec),
+        }
+    }
+
+    /// Create series from a vector of [`DataElement`] enums. 
+    pub fn from_data_elements(vec: Vec<DataElement>) -> Self {
+
+        // TODO: Add check to see if all DataElements are of the same dtype.
+        Series {
+            name: None,
+            dtype: None,
             values: Array::from_vec(vec),
         }
     }
