@@ -18,9 +18,7 @@ use std::path::Path;
 use std::error::Error;
 use std::fmt;
 
-use ndarray::Array1 as Array;
 use csv;
-
 use prelude::*;
 
 

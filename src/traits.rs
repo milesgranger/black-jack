@@ -170,8 +170,17 @@ pub trait SeriesTrait: Debug + Sized + Any {
     /// Determine if series is empty.
     fn is_empty(&self) -> bool { self.len() == 0 }
 
-    /// Get the dtype
-    fn dtype(&self) -> DType;
+    /// Get the dtype, returns `None` if series dtype is unknown. 
+    /// in such a case, calling `.astype()` to coerce all types to a single
+    /// type in needed. 
+    fn dtype(&self) -> Option<DType>;
+
+    /// Cast all [`DataElement`]s within a series to a given [`DType`]
+    /// Will _NOT_ fail; elements which cannot be coerced into some type will
+    /// be given an `NaN` value as a result.
+    /// 
+    /// ie. "Hello" -> .astype([`DType::I64`]) -> `NaN`
+    fn astype(&mut self, dtype: DType) -> ();
 
     /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or `SeriesTrait::from_raw(*mut Self)`
     fn into_raw(self) -> *mut Self { 
