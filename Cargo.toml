@@ -21,3 +21,8 @@ csv = "^1.0.1"
 
 [dev-dependencies]
 float-cmp = "0.4.0"
+criterion = "0.2"
+
+[[bench]]
+name = "bench_marks"
+harness = false
