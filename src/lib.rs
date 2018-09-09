@@ -31,7 +31,6 @@
 //! let series_ref: &Series = &df["my-float-series"];  // panics if series name does not exist in dataframe!
 //! ```
 
-extern crate ndarray;
 extern crate num;
 extern crate csv;
 

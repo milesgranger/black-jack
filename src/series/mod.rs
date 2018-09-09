@@ -20,7 +20,6 @@ use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
 
-use ndarray::Array1 as Array;
 use prelude::*;
 
 
@@ -35,7 +34,7 @@ pub struct Series {
     pub name: Option<String>,
 
     /// ndarray attribute; the underlying values of the Series
-    pub values: Array<DataElement>,
+    pub values: Vec<DataElement>,
 
     // Only set if called by `.astype()` or parsing or raw data was able to
     // confirm all `DataElement`s are of the same type.
@@ -100,7 +99,7 @@ impl Series {
         Series { 
             name: None,
             dtype,
-            values: Array::from_vec(vec), 
+            values: vec, 
         }
     }
 
@@ -122,7 +121,7 @@ impl Series {
         Series { 
             name: None,
             dtype,
-            values: Array::from_vec(vec),
+            values: vec,
         }
     }
 
@@ -147,7 +146,7 @@ impl Series {
         Series {
             name: None,
             dtype: None,
-            values: Array::from_vec(vec),
+            values: vec,
         }
     }
 
