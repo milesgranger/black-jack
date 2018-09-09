@@ -35,7 +35,11 @@ pub struct Series {
     pub name: Option<String>,
 
     /// ndarray attribute; the underlying values of the Series
-    pub values: Array<DataElement>
+    pub values: Array<DataElement>,
+
+    // Only set if called by `.astype()` or parsing or raw data was able to
+    // confirm all `DataElement`s are of the same type.
+    dtype: Option<DType>
 }
 
 impl fmt::Display for Series {
@@ -90,10 +94,12 @@ impl Series {
             Range<T>: Iterator, 
             Vec<T>: FromIterator<<Range<T> as Iterator>::Item>
     {
+        let dtype = Some(start.dtype());
         let data: Vec<T> = (start..stop).collect();
         let vec: Vec<DataElement> = data.into_iter().map(|v| DataElement::from(v)).collect();
         Series { 
             name: None,
+            dtype,
             values: Array::from_vec(vec), 
         }
     }
@@ -111,11 +117,63 @@ impl Series {
             T: BlackJackData + ToPrimitive,
             DataElement: From<T>
     {
+        let dtype = if vec.len() > 0 { Some(vec[0].dtype()) } else  { None };
         let vec: Vec<DataElement> = vec.into_iter().map(|v| DataElement::from(v)).collect();
         Series { 
             name: None,
+            dtype,
             values: Array::from_vec(vec),
         }
+    }
+
+    /// Create series from a vector of [`DataElement`] enums. 
+    /// Useful in constructing a [`Vec`] from various data types.
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::from_data_elements(vec![
+    ///     DataElement::F64(1.0),
+    ///     DataElement::I32(2),
+    ///     DataElement::STRING("Hello there".to_string())
+    /// ]);
+    /// 
+    /// assert_eq!(series.len(), 3);
+    /// assert_eq!(series.dtype(), None); // DType is unknown, use `.astype()` for coercion
+    /// ```
+    pub fn from_data_elements(vec: Vec<DataElement>) -> Self {
+
+        // TODO: Add check to see if all DataElements are of the same dtype.
+        Series {
+            name: None,
+            dtype: None,
+            values: Array::from_vec(vec),
+        }
+    }
+
+    /// Convert the series to a [`Vec`]  
+    /// **Type Annotations required**
+    /// Will coerce elements into the desired [`DType`] primitive, just as
+    /// [`SeriesTrait::astype()`]. 
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::from_vec(vec![1_f64, 2_f64, 3_f64]);
+    /// 
+    /// assert_eq!(
+    ///     series.clone().to_vec::<i32>(), 
+    ///     vec![1_i32, 2_i32, 3_i32]
+    /// );
+    /// assert_eq!(
+    ///     series.to_vec::<String>(), 
+    ///     vec![1_f64.to_string(), 2_f64.to_string(), 3_f64.to_string()]
+    /// );
+    /// ```
+    pub fn to_vec<T: From<DataElement>>(self) -> Vec<T> {
+        let vec: Vec<T> = self.values.into_iter().map(|v| T::from(v.clone())).collect();
+        vec
     }
 }
 
@@ -175,15 +233,27 @@ impl SeriesTrait for Series {
 
     fn len(&self) -> usize { self.values.len() }
 
-    fn dtype(&self) -> DType { 
-        // TODO: Add len check, return Option instead.
-        match self.values[0] {
-            DataElement::I64(_) => DType::I64,
-            DataElement::F64(_) => DType::F64,
-            DataElement::I32(_) => DType::I32,
-            DataElement::F32(_) => DType::F32,
-            DataElement::STRING(_) => DType::STRING
-        }
+    fn dtype(&self) -> Option<DType> { 
+        self.dtype.clone()
+     }
+
+     fn astype(&mut self, dtype: DType) -> () {
+
+         // iterate over all elements currently held...
+         for val in &mut self.values {
+
+             // Convert the value to the desired dtype
+             match dtype {
+                 DType::F64 => *val = DataElement::F64(val.into()),
+                 DType::I64 => *val = DataElement::I64(val.into()),
+                 DType::F32 => *val = DataElement::F32(val.into()),
+                 DType::I32 => *val = DataElement::I32(val.into()),
+                 DType::STRING => *val = DataElement::STRING(val.into())
+             }
+         };
+
+         // Now all elements are converted, set `dtype`
+         self.dtype = Some(dtype);
      }
 
 }

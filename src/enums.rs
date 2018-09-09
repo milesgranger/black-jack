@@ -1,10 +1,11 @@
 //! Enums to be used throughout the crate.
 
 use std::string::ToString;
+use num::*;
 use prelude::*;
 
 /// Possible DType returns, matches [`BlackJackData`]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum DType {
 
     /// `f64`
@@ -29,10 +30,26 @@ impl_FROM_DataElement_for_primitive!(i64);
 impl_FROM_DataElement_for_primitive!(i32);
 impl_FROM_DataElement_for_primitive!(f32);
 
+impl_FROM_DataElement_for_primitive!(ref mut f64);
+impl_FROM_DataElement_for_primitive!(ref mut i64);
+impl_FROM_DataElement_for_primitive!(ref mut i32);
+impl_FROM_DataElement_for_primitive!(ref mut f32);
 
 
 impl From<DataElement> for String {
     fn from(val: DataElement) -> Self {
+        match val {
+            DataElement::F64(v) => v.to_string(),
+            DataElement::I64(v) => v.to_string(),
+            DataElement::F32(v) => v.to_string(),
+            DataElement::I32(v) => v.to_string(),
+            DataElement::STRING(v) => v.clone()
+        }
+    }
+}
+
+impl<'a> From<&'a mut DataElement> for String {
+    fn from(val: &mut DataElement) -> Self {
         match val {
             DataElement::F64(v) => v.to_string(),
             DataElement::I64(v) => v.to_string(),

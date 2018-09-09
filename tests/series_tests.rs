@@ -1,8 +1,42 @@
 extern crate blackjack;
 extern crate num;
+extern crate float_cmp;
 
+use num::*;
+use float_cmp::*;
 use blackjack::prelude::*;
 
+
+#[test]
+fn test_astype_conversions() {
+    let series_base = Series::from_data_elements(vec![
+        DataElement::I64(1_i64),
+        DataElement::F32(1_f32),
+        DataElement::STRING("Hello".to_string())
+    ]);
+    let nan: f64 = Float::nan();  // Can't make NaN an integer directly
+
+    // Test conversion to i64
+    let mut series = series_base.clone();
+    series.astype(DType::I64);
+    assert_eq!(series, Series::from_vec(vec![1_i64, 1_i64, nan as i64]));
+
+    // Test conversion to f64, special float comparison needed...
+    let mut series = series_base.clone();
+    series.astype(DType::F64);
+    let vec = series.to_vec::<f64>();
+    for (a, b) in vec.into_iter().zip(vec![1_f64, 1_f64, nan]) {
+        assert!(a.approx_eq(&b, 0.000001, 1));
+    }
+
+    // Test conversion to string
+    let mut series = series_base.clone();
+    series.astype(DType::STRING);
+    assert_eq!(
+        series.to_vec::<String>(), 
+        vec![1_i64.to_string(), 1_i64.to_string(), "Hello".to_string()]
+    );
+}
 
 #[test]
 fn test_display_series() {
@@ -15,7 +49,7 @@ fn test_display_series() {
 fn test_series_arange() {
     let series: Series = Series::arange(0, 10);
     assert_eq!(series.len(), 10);
-    assert_eq!(series.dtype(), DType::I32);
+    assert_eq!(series.dtype(), Some(DType::I32));
 }
 
 #[test]
