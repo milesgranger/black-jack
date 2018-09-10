@@ -5,13 +5,48 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_index_mut() {
+    let mut df = DataFrame::new();
+    let mut s1 = Series::arange(0, 5);
+    s1.set_name("s1");
+    df.add_column(s1);
+
+    let s1 = Series::arange(5, 10);
+    let sc = s1.clone();
+    df["s1"] = s1;
+
+    assert_eq!(&df["s1"], &sc);
+}
+
+#[test]
+fn test_column_names() {
+    use std::collections::HashSet;
+    use std::iter::FromIterator;
+
+    let mut s1 = Series::arange(0, 2);
+    let mut s2 = Series::arange(1, 3);
+
+    let mut df = DataFrame::new();
+
+    s1.set_name("s1");
+    s2.set_name("s2");
+    df.add_column(s1);
+    df.add_column(s2);
+
+    assert_eq!(
+        df.columns(), 
+        HashSet::from_iter(vec![&"s1".to_string(), &"s2".to_string()])
+    );
+}
+
+#[test]
 fn test_pretty_display() {
     let mut df = DataFrame::new();
     let s1 = Series::arange(0, 5);
     let s2 = Series::arange(5, 10);
 
-    df["s1"] = s1;
-    df["s2"] = s2;
+    df.add_column(s1);
+    df.add_column(s2);
 
     println!("{}", df);
 }
@@ -46,8 +81,8 @@ fn test_add_columns() {
     let series2_clone = series2.clone();
 
     // Add both columns
-    df.add_column(series1);   // Add by method
-    df["series-2"] = series2; // Add by IndexMut
+    df.add_column(series1);
+    df.add_column(series2);
     
     {
         // Test the columns match

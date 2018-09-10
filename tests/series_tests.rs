@@ -35,9 +35,18 @@ fn test_actions_on_various_element_series() {
         DataElement::STRING("hi".to_string())
     ]);
 
-    // Test that trying to convert series to Integer, containing a String, 
+    // Test that trying to convert series to I32, containing a String, 
     // results in an Error
     match series.astype(DType::I32) {
+        Ok(()) => {
+            panic!("Should not have been able to convert a String to NaN integer")
+        },
+        Err(_) => println!("Unable to convert String value to Integer! TEST PASSED!")
+    };
+
+    // Test that trying to convert series to I64, containing a String, 
+    // results in an Error
+    match series.astype(DType::I64) {
         Ok(()) => {
             panic!("Should not have been able to convert a String to NaN integer")
         },
