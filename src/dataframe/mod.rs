@@ -12,7 +12,7 @@
 //! ```
 //!
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ops::{Index, IndexMut};
 use std::path::Path;
 use std::error::Error;
@@ -133,6 +133,11 @@ impl ColumnManager for DataFrame {
     fn n_columns(&self) -> usize {
         self.series_objects.len() as usize
     }
+
+    fn columns(&self) -> HashSet<&String> {
+        let columns: HashSet<&String> = self.series_objects.keys().collect();
+        columns
+}
 }
 
 // Support `let series = &DataFrame["some-column-name"]`
@@ -152,15 +157,11 @@ impl<S: Into<String>> Index<S> for DataFrame {
 // Support `DataFrame["some-column-name"] = some_series;`
 impl<S: Into<String>> IndexMut<S> for DataFrame {
     fn index_mut(&mut self, name: S) -> &mut Series {
-        // TODO: Find a way to error if mismatch in series sizes.
         let name: String = name.into();
 
-        // Create a series and set the name to the name given here
-        let mut series = Series::arange(0, 10);
-        series.set_name(&name);
-        self.add_column(series);
-
-        // Fetch back the column as a mutable reference.
-        self.get_column_mut(&name).unwrap()
+        match self.get_column_mut(&name) {
+            Some(series) => series,
+            None => panic!("No column named: '{}'", name)
+        }
     }
 }

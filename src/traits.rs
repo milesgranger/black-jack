@@ -6,6 +6,7 @@ use std::any::{Any};
 use std::iter::{Sum};
 use std::path::Path;
 use std::error::Error;
+use std::collections::HashSet;
 
 use num::*;
 use prelude::*;
@@ -72,6 +73,9 @@ pub trait ColumnManager {
 
     /// Get the number of columns
     fn n_columns(&self) -> usize;
+
+    /// Return the current dataframe's columns
+    fn columns(&self) -> HashSet<&String>;
 }
 
 /// Represents behavior for [`DataFrame`] io behavior
