@@ -176,11 +176,11 @@ pub trait SeriesTrait: Debug + Sized + Any {
     fn dtype(&self) -> Option<DType>;
 
     /// Cast all [`DataElement`]s within a series to a given [`DType`]
-    /// Will _NOT_ fail; elements which cannot be coerced into some type will
-    /// be given an `NaN` value as a result.
+    /// Will fail if series contains a string and asking for an integer
     /// 
-    /// ie. "Hello" -> .astype([`DType::I64`]) -> `NaN`
-    fn astype(&mut self, dtype: DType) -> ();
+    /// ie. "Hello" -> .astype([`DType::I64`]) -> **Error!**
+    /// ie. "Hello" -> .astype([`DType::F64`]) -> `NaN`
+    fn astype(&mut self, dtype: DType) -> Result<(), &'static str>;
 
     /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or `SeriesTrait::from_raw(*mut Self)`
     fn into_raw(self) -> *mut Self { 

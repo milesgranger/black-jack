@@ -85,7 +85,9 @@ impl DataElement {
 
     /// Get a [`DataElement`] from a `&str` value.
     // TODO: Add support for parsing f32 vs f64 and etc.
-    pub fn from_parse(val: &str) -> DataElement {
+    pub fn from_parse<S: Into<String>>(val: S) -> DataElement {
+
+        let val: String = val.into();
 
         // Attempt i64
         match val.parse::<i64>().ok() {
@@ -101,6 +103,26 @@ impl DataElement {
                     None => panic!("Unable to parse value!")
                 }
             }
+        }
+    }
+
+    /// Get the current [`DType`]
+    pub fn dtype(&self) -> DType {
+        match self {
+            DataElement::I64(_) => DType::I64,
+            DataElement::F64(_) => DType::F64,
+            DataElement::I32(_) => DType::I32,
+            DataElement::F32(_) => DType::F32,
+            DataElement::STRING(_) => DType::STRING
+        }
+    }
+
+    /// Determine if the `DataElement` holds an `NaN` value
+    pub fn is_nan(&self) -> bool {
+        match self {
+            DataElement::F64(v) => v.is_nan(),
+            DataElement::F32(v) => v.is_nan(),
+            _ => false // Integers and Strings not allowed to be NaN
         }
     }
 

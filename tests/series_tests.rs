@@ -8,6 +8,42 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_actions_on_various_element_series() {
+
+    let mut series = Series::from_data_elements(vec![
+        DataElement::I32(1),
+        DataElement::F32(1.0),
+        DataElement::I64(1),
+        DataElement::F64(1.0),
+        DataElement::STRING("hi".to_string())
+    ]);
+
+    // Test that trying to convert series to Integer, containing a String, 
+    // results in an Error
+    match series.astype(DType::I32) {
+        Ok(()) => {
+            panic!("Should not have been able to convert a String to NaN integer")
+        },
+        Err(_) => println!("Unable to convert String value to Integer! TEST PASSED!")
+    };
+
+    // Conversion to a Float type does work, because NaN is, itself a Float
+    // But converting a NaN to an integer resulting in the primitive's MIN val
+    // Which we think goes against the principle of least surprise; so 
+    // we raise an error instead.
+    series.astype(DType::F32).unwrap();
+
+    // Now check that converting a series with an NaN results in an error
+    match series.astype(DType::I32) {
+        Ok(()) => panic!("Was able to convert a series w/ NaN into Integer!"),
+        Err(_) => println!("Could not convert NaN to Integer -> TEST PASSED")
+    }
+
+    // Summing a series should skip any String or NaN values...
+    assert_eq!(series.sum::<i32>(), 4);
+}
+
+#[test]
 fn test_astype_conversions() {
     let series_base = Series::from_data_elements(vec![
         DataElement::I64(1_i64),
@@ -16,14 +52,9 @@ fn test_astype_conversions() {
     ]);
     let nan: f64 = Float::nan();  // Can't make NaN an integer directly
 
-    // Test conversion to i64
-    let mut series = series_base.clone();
-    series.astype(DType::I64);
-    assert_eq!(series, Series::from_vec(vec![1_i64, 1_i64, nan as i64]));
-
     // Test conversion to f64, special float comparison needed...
     let mut series = series_base.clone();
-    series.astype(DType::F64);
+    series.astype(DType::F64).unwrap();
     let vec = series.to_vec::<f64>();
     for (a, b) in vec.into_iter().zip(vec![1_f64, 1_f64, nan]) {
         assert!(a.approx_eq(&b, 0.000001, 1));
@@ -31,7 +62,7 @@ fn test_astype_conversions() {
 
     // Test conversion to string
     let mut series = series_base.clone();
-    series.astype(DType::STRING);
+    series.astype(DType::STRING).unwrap();
     assert_eq!(
         series.to_vec::<String>(), 
         vec![1_i64.to_string(), 1_i64.to_string(), "Hello".to_string()]
