@@ -8,6 +8,23 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_series_indexing() {
+    let mut series = Series::from_vec(vec![0, 1, 2, 3]);
+    series[0] = 1.into();
+    assert_eq!(series[0], 1.into());
+}
+
+#[test]
+fn test_series_append() {
+    let mut series = Series::from_vec(vec![0, 1, 2]);
+    assert_eq!(series.len(), 3);
+
+    series.append(3);
+    assert_eq!(series.len(), 4);
+    assert_eq!(series[3], 3.into());
+}
+
+#[test]
 fn test_actions_on_various_element_series() {
 
     let mut series = Series::from_data_elements(vec![
