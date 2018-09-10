@@ -8,8 +8,9 @@ use criterion::Criterion;
 
 fn criterion_bechmark(c: &mut Criterion) {
 
+    let mut series = Series::arange(0, 100000);
     let inputs = vec![
-        Series::arange(0, 100000)
+        series
     ];
 
     c.bench_function_over_inputs(
@@ -35,8 +36,6 @@ fn criterion_bechmark(c: &mut Criterion) {
         |b, series| b.iter(|| series.sum::<i64>()),
         inputs.clone()
     );
-    
-
 }
 
 criterion_group!(benches, criterion_bechmark);

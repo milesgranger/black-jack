@@ -8,21 +8,24 @@
 //! ```
 //! use blackjack::prelude::*;
 //! 
-//! let series = Series::arange(0, 5);
+//! let mut series = Series::arange(0, 5);
 //! 
+//! // Index and change elements, call `.into()` to easily convert to `DataElement`
+//! series[0] = 1.into();              // `into()` on `BlackJackData`
+//! series[1] = DataElement::I32(0);   // ...or more explicitly set the value
+//! 
+//! assert_eq!(series[0], DataElement::I32(1));
 //! assert_eq!(series.sum::<i32>(), 10);
 //! assert_eq!(series.len(), 5);
 //! ```
 
 use num::*;
-use std::ops::{Range};
+use std::ops::{Range, Index, IndexMut};
 use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
 
 use prelude::*;
-
-
 
 
 /// Series struct for containing underlying Array and other meta data.
@@ -39,6 +42,19 @@ pub struct Series {
     // Only set if called by `.astype()` or parsing or raw data was able to
     // confirm all `DataElement`s are of the same type.
     dtype: Option<DType>
+}
+
+impl Index<usize> for Series {
+    type Output = DataElement;
+    fn index(&self, idx: usize) -> &DataElement {
+        &self.values[idx]
+    }
+}
+
+impl IndexMut<usize> for Series {
+    fn index_mut(&mut self, idx: usize) -> &mut DataElement {
+        &mut self.values[idx]
+    }
 }
 
 impl fmt::Display for Series {
