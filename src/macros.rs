@@ -26,7 +26,11 @@ macro_rules! impl_FROM_DataElement_for_primitive {
                     DataElement::F64(v) => v as $primitive,
                     DataElement::I32(v) => v as $primitive,
                     DataElement::F32(v) => v as $primitive,
-                    _ => panic!("Unable to implement From<DataElement>, is primitive a String?")
+                    DataElement::STRING(v) => {
+                        let nan: f64 = Float::nan();
+                        v.parse::<$primitive>()
+                            .unwrap_or(nan as $primitive)
+                    }
                 }    
             }
         }

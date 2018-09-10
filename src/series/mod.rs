@@ -195,9 +195,12 @@ impl SeriesTrait for Series {
     fn sum<T>(&self) -> T
         where 
             T: Num + Clone + From<DataElement> + Sum + Copy
-            
     {
-        self.values.iter().map(|v| T::from(v.clone())).sum()
+        self.values.iter()
+            .filter(|v| v.dtype() != DType::STRING)  // No strings allowed
+            .filter(|v| !v.is_nan())                 // or NaNs
+            .map(|v| T::from(v.clone()))
+            .sum()
     }
 
     fn mean(&self) -> Result<f64, &'static str>
@@ -236,23 +239,38 @@ impl SeriesTrait for Series {
         self.dtype.clone()
      }
 
-     fn astype(&mut self, dtype: DType) -> () {
+     
+    fn astype(&mut self, dtype: DType) -> Result<(), &'static str> {
+    
+        // iterate over all elements currently held...
+        for val in &mut self.values {
 
-         // iterate over all elements currently held...
-         for val in &mut self.values {
-
-             // Convert the value to the desired dtype
-             match dtype {
-                 DType::F64 => *val = DataElement::F64(val.into()),
-                 DType::I64 => *val = DataElement::I64(val.into()),
-                 DType::F32 => *val = DataElement::F32(val.into()),
-                 DType::I32 => *val = DataElement::I32(val.into()),
-                 DType::STRING => *val = DataElement::STRING(val.into())
-             }
-         };
+            // Convert the value to the desired dtype
+            *val = match dtype {
+                DType::F64 => DataElement::F64(val.into()),
+                DType::I64 => {
+                    if val.dtype() == DType::STRING || val.is_nan() {
+                        return Err("Cannot convert Float NaN to Integer type")
+                    } else {
+                        DataElement::I64(val.into())
+                    }
+                }
+                DType::F32 => DataElement::F32(val.into()),
+                DType::I32 => {
+                    if val.dtype() == DType::STRING || val.is_nan() {
+                        return Err("Cannot convert Float NaN to Integer type")
+                    } else {
+                        DataElement::I32(val.into())
+                    }
+                },
+                DType::STRING => DataElement::STRING(val.into())
+            }
+        };
 
          // Now all elements are converted, set `dtype`
-         self.dtype = Some(dtype);
-     }
+        self.dtype = Some(dtype);
+
+        Ok(())
+    }
 
 }
