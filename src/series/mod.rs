@@ -1,7 +1,7 @@
 //! Series represents a single column within a dataframe and wraps many `Array` like
 //! functionality.
 //! 
-//! For methods implemented for a `Series`, please check out the trait [SeriesTrait](trait.SeriesTrait.html)
+//! For methods implemented for a [`Series`], please check out the trait [`SeriesTrait`]
 //! 
 //! ## Example use:
 //! 
@@ -287,6 +287,10 @@ impl SeriesTrait for Series {
         self.dtype = Some(dtype);
 
         Ok(())
+    }
+
+    fn append<V: Into<DataElement>>(&mut self, val: V) -> () {
+        self.values.push(val.into());
     }
 
 }

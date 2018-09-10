@@ -172,15 +172,31 @@ pub trait SeriesTrait: Debug + Sized + Any {
 
     /// Get the dtype, returns `None` if series dtype is unknown. 
     /// in such a case, calling `.astype()` to coerce all types to a single
-    /// type in needed. 
+    /// type is needed. 
     fn dtype(&self) -> Option<DType>;
 
     /// Cast all [`DataElement`]s within a series to a given [`DType`]
-    /// Will fail if series contains a string and asking for an integer
+    /// Will fail if series contains a string and asking for an integer, 
+    /// of an `NaN` and asking for an integer.
     /// 
-    /// ie. "Hello" -> .astype([`DType::I64`]) -> **Error!**
-    /// ie. "Hello" -> .astype([`DType::F64`]) -> `NaN`
+    /// ie. "Hello" -> .astype([`DType::I64`]) -> **Error!**  
+    /// ie. "Hello" -> .astype([`DType::F64`]) -> `NaN`  
+    /// ipso-facto... `NaN` -> .astype([`DType::I64`]) -> **Error!**
     fn astype(&mut self, dtype: DType) -> Result<(), &'static str>;
+
+    /// Append a [`BlackJackData`] element to the Series
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let mut series = Series::from_vec(vec![0, 1, 2]);
+    /// assert_eq!(series.len(), 3);
+    /// 
+    /// series.append(3);
+    /// assert_eq!(series.len(), 4);
+    /// ```
+    fn append<V: Into<DataElement>>(&mut self, val: V) -> ();
 
     /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or `SeriesTrait::from_raw(*mut Self)`
     fn into_raw(self) -> *mut Self { 
