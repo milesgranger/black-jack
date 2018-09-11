@@ -9,13 +9,31 @@ use blackjack::prelude::*;
 
 #[test]
 fn test_series_scalar_ops() {
-    let series = Series::arange(0, 5);
+    
+    let base_series = Series::arange(0, 5);
 
     // Test Mul
-    let ser_2x = series * 2;
-    assert_eq!(ser_2x.sum::<i32>(), 20);
+    let series = base_series.clone();
+    let series = series * 2;
+    assert_eq!(series.sum::<i32>(), 20);
 
     // Test Add
+    let series = base_series.clone();
+    let series = series + 2;
+    assert_eq!(series.sum::<i32>(), 20);
+
+    // Test Sub
+    let series = base_series.clone();
+    let series = series - 2;
+    assert_eq!(series.sum::<i32>(), 0);
+
+    // Test Div, convert to f32 so floats don't get rounded during
+    // sum operations, where each DataElement would be cast as an integer.
+    let series = base_series.clone();
+    let series = series / 2_f64;
+    assert_eq!(series.sum::<f32>() as i32, 5);
+    
+
 }
 
 #[test]

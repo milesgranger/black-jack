@@ -1,7 +1,7 @@
 //! Enums to be used throughout the crate.
 
 use std::string::ToString;
-use std::ops::{Deref, Mul};
+use std::ops::{Mul, Add, Sub, Div};
 use num::*;
 use prelude::*;
 
@@ -142,32 +142,52 @@ impl<T: BlackJackData + ToString> From<T> for DataElement {
     }
 }
 
-impl Deref for DataElement {
-    type Target = BlackJackData;
+impl<T> Mul<T> for DataElement 
+    where 
+        T: From<DataElement> + Mul,
+        <T as Mul>::Output: BlackJackData
+{
+    type Output = DataElement;
 
-    fn deref(&self) -> &Self::Target {
-        match self {
-            DataElement::I64(v) => v,
-            DataElement::F64(v) => v,
-            DataElement::I32(v) => v,
-            DataElement::F32(v) => v,
-            DataElement::STRING(v) => v
-        }
+    fn mul(self, rhs: T) -> DataElement {
+        (T::from(self) * rhs).into()
+    }
+}               
+
+
+impl<T> Add<T> for DataElement 
+    where 
+        T: From<DataElement> + Add,
+        <T as Add>::Output: BlackJackData
+{
+    type Output = DataElement;
+
+    fn add(self, rhs: T) -> DataElement {
+        (T::from(self) + rhs).into()
     }
 }
 
-impl<T: ToPrimitive> Mul<T> for DataElement {
-    type Output = Result<DataElement, &'static str>;
 
-    fn mul(self, rhs: T) -> Result<DataElement, &'static str> {
-        match self {
-            DataElement::F64(v) => Ok((v * rhs.to_f64().unwrap()).into()),
-            DataElement::I64(v) => Ok((v * rhs.to_i64().unwrap()).into()),
-            DataElement::F32(v) => Ok((v * rhs.to_f32().unwrap()).into()),
-            DataElement::I32(v) => Ok((v * rhs.to_i32().unwrap()).into()),
-            DataElement::STRING(_v) => {
-                Err("Cannot multiply a String type by a scalar value")
-            }
-        }
+impl<T> Sub<T> for DataElement 
+    where 
+        T: From<DataElement> + Sub,
+        <T as Sub>::Output: BlackJackData
+{
+    type Output = DataElement;
+
+    fn sub(self, rhs: T) -> DataElement {
+        (T::from(self) - rhs).into()
+    }
+}
+
+impl<T> Div<T> for DataElement 
+    where 
+        T: From<DataElement> + Div,
+        <T as Div>::Output: BlackJackData
+{
+    type Output = DataElement;
+
+    fn div(self, rhs: T) -> DataElement {
+        (T::from(self) / rhs).into()
     }
 }

@@ -61,6 +61,17 @@ fn criterion_bechmark(c: &mut Criterion) {
             let _df = DataFrame::read_csv(path);
         })
     );
+    
+    c.bench_function(
+        "series scalar ops",
+        |b| b.iter_with_setup(|| {
+                Series::arange(0, 10000)
+            }, | series | {
+                let _series = series * 2;
+            })
+    );
+
+    
 }
 
 criterion_group!(benches, criterion_bechmark);
