@@ -53,6 +53,14 @@ fn criterion_bechmark(c: &mut Criterion) {
                 series.append(1);
             })
     );
+
+    c.bench_function(
+        "dataframe read_csv BASIC",
+        |b| b.iter(|| {
+            let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
+            let _df = DataFrame::read_csv(path);
+        })
+    );
 }
 
 criterion_group!(benches, criterion_bechmark);

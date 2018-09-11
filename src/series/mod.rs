@@ -25,6 +25,7 @@ use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
 
+pub mod overloaders;
 use prelude::*;
 
 

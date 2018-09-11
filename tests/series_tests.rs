@@ -8,6 +8,17 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_series_scalar_ops() {
+    let series = Series::arange(0, 5);
+
+    // Test Mul
+    let ser_2x = series * 2;
+    assert_eq!(ser_2x.sum::<i32>(), 20);
+
+    // Test Add
+}
+
+#[test]
 fn test_series_indexing() {
     let mut series = Series::from_vec(vec![0, 1, 2, 3]);
     series[0] = 1.into();
@@ -124,7 +135,7 @@ fn test_series_naming() {
 }
 
 #[test]
-fn test_series_ops() {
+fn test_series_aggregation_ops() {
     let series: Series = Series::arange(0, 5);
 
     // Test sum

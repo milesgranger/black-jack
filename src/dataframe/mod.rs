@@ -73,7 +73,6 @@ impl DataFrameIO for DataFrame {
         let mut reader = csv::Reader::from_path(path)?;
 
         let headers = reader.headers()?.clone();  // TODO: Don't fail on non existant headers -> give 'col0', 'col1', etc.
-        println!("Header list: {:?}", headers);
 
         // Containers for storing column data
         let mut vecs: Vec<Vec<DataElement>> = (0..headers.len()).map(|_| Vec::new()).collect();
@@ -83,7 +82,6 @@ impl DataFrameIO for DataFrame {
             match record {
 
                 Ok(rec) => { 
-                    println!("Record: {:?}", &rec);
                     for (field, container) in rec.iter().zip(&mut vecs) {
                         container.push(
                             DataElement::from_parse(field)

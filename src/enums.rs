@@ -1,6 +1,7 @@
 //! Enums to be used throughout the crate.
 
 use std::string::ToString;
+use std::ops::{Deref, Mul};
 use num::*;
 use prelude::*;
 
@@ -137,6 +138,36 @@ impl<T: BlackJackData + ToString> From<T> for DataElement {
             DType::I32 => DataElement::I32(val.to_string().parse::<i32>().unwrap_or_else(|_| panic!("Unable to convert value to i32"))),
             DType::F32 => DataElement::F32(val.to_string().parse::<f32>().unwrap_or_else(|_| panic!("Unable to convert value to f32"))),
             DType::STRING => DataElement::STRING(val.to_string())
+        }
+    }
+}
+
+impl Deref for DataElement {
+    type Target = BlackJackData;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            DataElement::I64(v) => v,
+            DataElement::F64(v) => v,
+            DataElement::I32(v) => v,
+            DataElement::F32(v) => v,
+            DataElement::STRING(v) => v
+        }
+    }
+}
+
+impl<T: ToPrimitive> Mul<T> for DataElement {
+    type Output = Result<DataElement, &'static str>;
+
+    fn mul(self, rhs: T) -> Result<DataElement, &'static str> {
+        match self {
+            DataElement::F64(v) => Ok((v * rhs.to_f64().unwrap()).into()),
+            DataElement::I64(v) => Ok((v * rhs.to_i64().unwrap()).into()),
+            DataElement::F32(v) => Ok((v * rhs.to_f32().unwrap()).into()),
+            DataElement::I32(v) => Ok((v * rhs.to_i32().unwrap()).into()),
+            DataElement::STRING(_v) => {
+                Err("Cannot multiply a String type by a scalar value")
+            }
         }
     }
 }
