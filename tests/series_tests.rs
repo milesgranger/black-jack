@@ -8,6 +8,88 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_series_ops_inplace() {
+
+    let base_series = Series::arange(0, 5);
+
+    // Test MulAssign - all i64
+    let mut series = base_series.clone();
+    series.astype(DType::I64).unwrap();
+    series *= 2_i64;
+    assert_eq!(series.sum::<i32>(), 20);
+
+    // Test MulAssign - series_f64 *= 2_i64
+    let mut series = base_series.clone();
+    series.astype(DType::F64).unwrap();
+    series *= 2_i64;
+    assert_eq!(series.sum::<i32>(), 20);
+
+    // Test AddAssign - all i64
+    let mut series = base_series.clone();
+    series.astype(DType::I64).unwrap();
+    series += 2_i64;
+    assert_eq!(series.sum::<i32>(), 20);
+
+    // Test MulAssign - series_f64 += 2_i64
+    let mut series = base_series.clone();
+    series.astype(DType::F64).unwrap();
+    series += 2_i64;
+    assert_eq!(series.sum::<i32>(), 20);
+
+    // Test SubAssign - all i64
+    let mut series = base_series.clone();
+    series.astype(DType::I64).unwrap();
+    series -= 2_i64;
+    assert_eq!(series.sum::<i32>(), 0);
+
+    // Test SublAssign - series_f64 -= 2_i64
+    let mut series = base_series.clone();
+    series.astype(DType::F64).unwrap();
+    series -= 2_i64;
+    assert_eq!(series.sum::<i32>(), 0);
+    
+    // Test DivAssign - all i64
+    let mut series = base_series.clone();
+    series.astype(DType::I64).unwrap();
+    series /= 2_i64;
+    assert_eq!(series.sum::<i32>() as i32, 4);
+
+    // Test DivAssign - series_f64 * 2_i64
+    let mut series = base_series.clone();
+    series.astype(DType::F64).unwrap();
+    series /= 2_i64;
+    assert_eq!(series.sum::<f32>() as i32, 5);
+
+}
+
+#[test]
+fn test_series_scalar_ops() {
+    
+    let base_series = Series::arange(0, 5);
+
+    // Test Mul
+    let series = base_series.clone();
+    let series = series * 2;
+    assert_eq!(series.sum::<i32>(), 20);
+
+    // Test Add
+    let series = base_series.clone();
+    let series = series + 2;
+    assert_eq!(series.sum::<i32>(), 20);
+
+    // Test Sub
+    let series = base_series.clone();
+    let series = series - 2;
+    assert_eq!(series.sum::<i32>(), 0);
+
+    // Test Div, convert to f32 so floats don't get rounded during
+    // sum operations, where each DataElement would be cast as an integer.
+    let series = base_series.clone();
+    let series = series / 2_f64;
+    assert_eq!(series.sum::<f32>() as i32, 5);
+}
+
+#[test]
 fn test_series_indexing() {
     let mut series = Series::from_vec(vec![0, 1, 2, 3]);
     series[0] = 1.into();
@@ -124,7 +206,7 @@ fn test_series_naming() {
 }
 
 #[test]
-fn test_series_ops() {
+fn test_series_aggregation_ops() {
     let series: Series = Series::arange(0, 5);
 
     // Test sum

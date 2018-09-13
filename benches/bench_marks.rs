@@ -53,6 +53,36 @@ fn criterion_bechmark(c: &mut Criterion) {
                 series.append(1);
             })
     );
+
+    c.bench_function(
+        "dataframe read_csv BASIC",
+        |b| b.iter(|| {
+            let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
+            let _df = DataFrame::read_csv(path);
+        })
+    );
+    
+    c.bench_function(
+        "series scalar ops - (Mul)",
+        |b| b.iter_with_setup(|| {
+                Series::arange(0, 10000)
+            }, | series | {
+                let _series = series * 2;
+            })
+    );
+
+    c.bench_function(
+        "series scalar ops - (MulAssign)",
+        |b| b.iter_with_setup(|| {
+                let mut s = Series::arange(0, 10000);
+                s.astype(DType::I64).unwrap();
+                s
+            }, | mut series | {
+                series *= 2_i64;
+            })
+    );
+
+    
 }
 
 criterion_group!(benches, criterion_bechmark);

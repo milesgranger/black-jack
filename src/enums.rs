@@ -1,6 +1,7 @@
 //! Enums to be used throughout the crate.
 
 use std::string::ToString;
+use std::ops::{Mul, Add, Sub, Div, MulAssign, AddAssign, SubAssign, DivAssign};
 use num::*;
 use prelude::*;
 
@@ -81,6 +82,7 @@ pub enum DataElement {
     STRING(String)
 }
 
+
 impl DataElement {
 
     /// Get a [`DataElement`] from a `&str` value.
@@ -126,6 +128,21 @@ impl DataElement {
         }
     }
 
+
+    /// convert to a different type
+    pub fn astype(&mut self, dtype: DType) {
+        match dtype {
+            DType::I64 => match self {
+                DataElement::I64(v) => Self::from(*v),
+                DataElement::F64(v) => Self::from(*v as i64),
+                DataElement::I32(v) => Self::from(*v as i64),
+                DataElement::F32(v) => Self::from(*v as i64),
+                _ => panic!("can't convert string to i64")
+            },
+            _ => panic!("no can do")
+        };
+    }
+
 }
 
 
@@ -138,5 +155,75 @@ impl<T: BlackJackData + ToString> From<T> for DataElement {
             DType::F32 => DataElement::F32(val.to_string().parse::<f32>().unwrap_or_else(|_| panic!("Unable to convert value to f32"))),
             DType::STRING => DataElement::STRING(val.to_string())
         }
+    }
+}
+
+impl<T> Mul<T> for DataElement 
+    where 
+        T: From<DataElement> + Mul,
+        <T as Mul>::Output: BlackJackData
+{
+    type Output = DataElement;
+
+    fn mul(self, rhs: T) -> DataElement {
+        (T::from(self) * rhs).into()
+    }
+}
+
+impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, i64);
+impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, f64);
+impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, i32);
+impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, f32);
+
+impl_OP_Assign_DataElement!(AddAssign, add_assign, +=, i64);
+impl_OP_Assign_DataElement!(AddAssign, add_assign, +=, f64);
+impl_OP_Assign_DataElement!(AddAssign, add_assign, +=, i32);
+impl_OP_Assign_DataElement!(AddAssign, add_assign, +=, f32);
+
+impl_OP_Assign_DataElement!(SubAssign, sub_assign, -=, i64);
+impl_OP_Assign_DataElement!(SubAssign, sub_assign, -=, f64);
+impl_OP_Assign_DataElement!(SubAssign, sub_assign, -=, i32);
+impl_OP_Assign_DataElement!(SubAssign, sub_assign, -=, f32);
+
+impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, i64);
+impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, f64);
+impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, i32);
+impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, f32);
+
+
+impl<T> Add<T> for DataElement 
+    where 
+        T: From<DataElement> + Add,
+        <T as Add>::Output: BlackJackData
+{
+    type Output = DataElement;
+
+    fn add(self, rhs: T) -> DataElement {
+        (T::from(self) + rhs).into()
+    }
+}
+
+
+impl<T> Sub<T> for DataElement 
+    where 
+        T: From<DataElement> + Sub,
+        <T as Sub>::Output: BlackJackData
+{
+    type Output = DataElement;
+
+    fn sub(self, rhs: T) -> DataElement {
+        (T::from(self) - rhs).into()
+    }
+}
+
+impl<T> Div<T> for DataElement 
+    where 
+        T: From<DataElement> + Div,
+        <T as Div>::Output: BlackJackData
+{
+    type Output = DataElement;
+
+    fn div(self, rhs: T) -> DataElement {
+        (T::from(self) / rhs).into()
     }
 }
