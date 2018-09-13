@@ -1,7 +1,7 @@
 //! Enums to be used throughout the crate.
 
 use std::string::ToString;
-use std::ops::{Mul, Add, Sub, Div};
+use std::ops::{Mul, Add, Sub, Div, MulAssign, AddAssign, SubAssign, DivAssign};
 use num::*;
 use prelude::*;
 
@@ -82,6 +82,7 @@ pub enum DataElement {
     STRING(String)
 }
 
+
 impl DataElement {
 
     /// Get a [`DataElement`] from a `&str` value.
@@ -127,6 +128,21 @@ impl DataElement {
         }
     }
 
+
+    /// convert to a different type
+    pub fn astype(&mut self, dtype: DType) {
+        match dtype {
+            DType::I64 => match self {
+                DataElement::I64(v) => Self::from(*v),
+                DataElement::F64(v) => Self::from(*v as i64),
+                DataElement::I32(v) => Self::from(*v as i64),
+                DataElement::F32(v) => Self::from(*v as i64),
+                _ => panic!("can't convert string to i64")
+            },
+            _ => panic!("no can do")
+        };
+    }
+
 }
 
 
@@ -152,7 +168,27 @@ impl<T> Mul<T> for DataElement
     fn mul(self, rhs: T) -> DataElement {
         (T::from(self) * rhs).into()
     }
-}               
+}
+
+impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, i64);
+impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, f64);
+impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, i32);
+impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, f32);
+
+impl_OP_Assign_DataElement!(AddAssign, add_assign, +=, i64);
+impl_OP_Assign_DataElement!(AddAssign, add_assign, +=, f64);
+impl_OP_Assign_DataElement!(AddAssign, add_assign, +=, i32);
+impl_OP_Assign_DataElement!(AddAssign, add_assign, +=, f32);
+
+impl_OP_Assign_DataElement!(SubAssign, sub_assign, -=, i64);
+impl_OP_Assign_DataElement!(SubAssign, sub_assign, -=, f64);
+impl_OP_Assign_DataElement!(SubAssign, sub_assign, -=, i32);
+impl_OP_Assign_DataElement!(SubAssign, sub_assign, -=, f32);
+
+impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, i64);
+impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, f64);
+impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, i32);
+impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, f32);
 
 
 impl<T> Add<T> for DataElement 

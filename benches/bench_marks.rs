@@ -63,11 +63,22 @@ fn criterion_bechmark(c: &mut Criterion) {
     );
     
     c.bench_function(
-        "series scalar ops",
+        "series scalar ops - (Mul)",
         |b| b.iter_with_setup(|| {
                 Series::arange(0, 10000)
             }, | series | {
                 let _series = series * 2;
+            })
+    );
+
+    c.bench_function(
+        "series scalar ops - (MulAssign)",
+        |b| b.iter_with_setup(|| {
+                let mut s = Series::arange(0, 10000);
+                s.astype(DType::I64).unwrap();
+                s
+            }, | mut series | {
+                series *= 2_i64;
             })
     );
 
