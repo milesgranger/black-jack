@@ -46,13 +46,13 @@ fn supported_dtypes_check() {
 fn test_data_element_parsing() {
 
 
-    let elem = DataElement::from_parse("5.0");
+    let elem = DataElement::from_str_parse("5.0");
     assert_eq!(elem, DataElement::F64(5.0));
 
-    let elem = DataElement::from_parse("5");
+    let elem = DataElement::from_str_parse("5");
     assert_eq!(elem, DataElement::I64(5));
 
-    let elem = DataElement::from_parse("STRING VALUE");
+    let elem = DataElement::from_str_parse("STRING VALUE");
     assert_eq!(elem, DataElement::STRING("STRING VALUE".to_string()));
 
 }

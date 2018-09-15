@@ -15,6 +15,7 @@
 use std::collections::{HashMap, HashSet};
 use std::ops::{Index, IndexMut};
 use std::path::Path;
+use std::ffi::OsStr;
 use std::error::Error;
 use std::fmt;
 
@@ -43,6 +44,81 @@ impl DataFrame {
             series_objects: HashMap::new(),
         }
     }
+
+    /// Read a CSV file into a [`DataFrame`] where each column represents a Series
+    /// supports automatic decompression of gzipped files if they end with `.gz`
+    /// 
+    /// ## Example
+    /// 
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let path = format!("{}/tests/data/basic_csv.csv.gz", env!("CARGO_MANIFEST_DIR"));
+    /// let df = DataFrame::read_csv(&path, b',').unwrap();
+    /// 
+    /// assert_eq!(df["col1"].sum::<i32>(), 15);
+    /// 
+    /// ```
+    pub fn read_csv<S: AsRef<OsStr> + ToString>(path: S, delimiter: u8) -> Result<Self, Box<Error>> {
+
+        use std::io::prelude::*;
+        use std::fs::File;
+        use flate2::read::GzDecoder;
+
+
+        let p = Path::new(&path);
+        let file_reader: Box<Read> = if path.to_string().ends_with(".gz") {
+
+                                            // Return a Gzip reader
+                                            Box::new(
+                                                GzDecoder::new(File::open(p)?)
+                                            )
+                                        } else {
+                                            
+                                            // Return plain file reader
+                                            Box::new(
+                                                File::open(p)?
+                                            )
+                                        };
+
+        let mut reader = csv::ReaderBuilder::new()
+                                .delimiter(delimiter)
+                                .from_reader(file_reader);
+
+        let headers = reader.headers()?.clone();  // TODO: Don't fail on non existant headers -> give 'col0', 'col1', etc.
+
+        // Containers for storing column data
+        let mut vecs: Vec<Vec<DataElement>> = (0..headers.len()).map(|_| Vec::new()).collect();
+
+        for record in reader.records() {
+
+            match record {
+
+                Ok(rec) => { 
+                    for (field, container) in rec.iter().zip(&mut vecs) {
+                        container.push(
+                            DataElement::from_str_parse(field)
+                        );
+                    };
+                },
+
+                // TODO: Process for dealing with invalid records.
+                Err(err) => println!("Unable to read record: '{}'", err)
+            }
+        }
+
+        // TODO: Place into Series and start converting and comparing against primitives.. 
+        // for example, convert to f64 and see if that is partially equal to i64, if so, keep i64
+        // if all numeric conversion trials fail, assume strings.
+        let mut df = DataFrame::new();
+        for (header, vec) in headers.into_iter().zip(vecs) {
+            let mut series = Series::from_data_elements(vec);
+            series.set_name(header);
+            df.add_column(series);
+        }
+
+        Ok(df)
+    }
 }
 
 
@@ -66,47 +142,6 @@ impl fmt::Display for DataFrame {
 
 
 impl DataFrameBehavior for DataFrame {}
-
-impl DataFrameIO for DataFrame {
-
-    fn read_csv<S: AsRef<Path>>(path: S) -> Result<Self, Box<Error>> {
-        let mut reader = csv::Reader::from_path(path)?;
-
-        let headers = reader.headers()?.clone();  // TODO: Don't fail on non existant headers -> give 'col0', 'col1', etc.
-
-        // Containers for storing column data
-        let mut vecs: Vec<Vec<DataElement>> = (0..headers.len()).map(|_| Vec::new()).collect();
-
-        for record in reader.records() {
-
-            match record {
-
-                Ok(rec) => { 
-                    for (field, container) in rec.iter().zip(&mut vecs) {
-                        container.push(
-                            DataElement::from_parse(field)
-                        );
-                    };
-                },
-
-                // TODO: Process for dealing with invalid records.
-                Err(err) => println!("Unable to read record: '{}'", err)
-            }
-        }
-
-        // TODO: Place into Series and start converting and comparing against primitives.. 
-        // for example, convert to f64 and see if that is partially equal to i64, if so, keep i64
-        // if all numeric conversion trials fail, assume strings.
-        let mut df = DataFrame::new();
-        for (header, vec) in headers.into_iter().zip(vecs) {
-            let mut series = Series::from_data_elements(vec);
-            series.set_name(header);
-            df.add_column(series);
-        }
-
-        Ok(df)
-    }
-}
 
 impl ColumnManager for DataFrame {
 

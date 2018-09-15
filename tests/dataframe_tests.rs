@@ -1,6 +1,8 @@
 
 extern crate blackjack;
 
+use std::collections::HashSet;
+
 use blackjack::prelude::*;
 
 
@@ -52,12 +54,29 @@ fn test_pretty_display() {
 }
 
 #[test]
-fn test_read_csv() {
-    
+fn test_read_basic_csv() {
     let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
     println!("Using path: {}", &path);
-    let df = DataFrame::read_csv(&path).expect("Unable to read file!");
+    let df = DataFrame::read_csv(&path, b',').expect("Unable to read file!");
     println!("Resulting DataFrame: {}", df);
+
+    let cols = ["col1".to_string(), "col2".to_string(), "col3".to_string()];
+    let expected_columns: HashSet<&String> = cols.iter().collect();
+    assert_eq!(expected_columns, df.columns());
+}
+
+#[test]
+fn test_read_gzipped_basic_csv() {
+    
+    let path = format!("{}/tests/data/basic_csv.csv.gz", env!("CARGO_MANIFEST_DIR"));
+    println!("Using path: {}", &path);
+    let df = DataFrame::read_csv(&path, b',').unwrap();
+    println!("Resulting DataFrame: {}", df);
+
+
+    let cols = ["col1".to_string(), "col2".to_string(), "col3".to_string()];
+    let expected_columns: HashSet<&String> = cols.iter().collect();
+    assert_eq!(expected_columns, df.columns());
 
 }
 
