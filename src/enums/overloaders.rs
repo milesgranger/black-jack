@@ -5,7 +5,6 @@ use std::ops::{
     Mul, Add, Sub, Div, 
     MulAssign, AddAssign, SubAssign, DivAssign
 };
-use std::mem;
 use num::*;
 use prelude::*;
 
@@ -28,7 +27,7 @@ impl<T> MulAssign<T> for DataElement
         <T as Mul>::Output: BlackJackData
 {
     fn mul_assign(&mut self, val: T) {
-        *self = match mem::replace(self, DataElement::None) {
+        *self = match *self {
             DataElement::F64(v) => (T::from_f64(v).unwrap() * val).into(),
             DataElement::I64(v) => (T::from_i64(v).unwrap() * val).into(),
             DataElement::F32(v) => (T::from_f32(v).unwrap() * val).into(),
@@ -47,7 +46,7 @@ impl<T> AddAssign<T> for DataElement
         <T as Add>::Output: BlackJackData
 {
     fn add_assign(&mut self, val: T) {
-        *self = match mem::replace(self, DataElement::None) {
+        *self = match *self {
             DataElement::F64(v) => (T::from_f64(v).unwrap() + val).into(),
             DataElement::I64(v) => (T::from_i64(v).unwrap() + val).into(),
             DataElement::F32(v) => (T::from_f32(v).unwrap() + val).into(),
@@ -66,7 +65,7 @@ impl<T> SubAssign<T> for DataElement
         <T as Sub>::Output: BlackJackData
 {
     fn sub_assign(&mut self, val: T) {
-        *self = match mem::replace(self, DataElement::None) {
+        *self = match *self {
             DataElement::F64(v) => (T::from_f64(v).unwrap() - val).into(),
             DataElement::I64(v) => (T::from_i64(v).unwrap() - val).into(),
             DataElement::F32(v) => (T::from_f32(v).unwrap() - val).into(),
@@ -85,7 +84,7 @@ impl<T> DivAssign<T> for DataElement
         <T as Div>::Output: BlackJackData
 {
     fn div_assign(&mut self, val: T) {
-        *self = match mem::replace(self, DataElement::None) {
+        *self = match *self {
             DataElement::F64(v) => (T::from_f64(v).unwrap() / val).into(),
             DataElement::I64(v) => (T::from_i64(v).unwrap() / val).into(),
             DataElement::F32(v) => (T::from_f32(v).unwrap() / val).into(),

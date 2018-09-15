@@ -17,7 +17,7 @@ name = "blackjack"
 [dependencies]
 num = "^0.2"
 csv = "^1.0.1"
-take_mut = "0.2.2"
+flate2 = { version = "1.0", features = ["rust_backend"], default-features = false }
 
 [dev-dependencies]
 float-cmp = "0.4.0"

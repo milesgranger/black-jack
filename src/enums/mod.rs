@@ -95,7 +95,7 @@ impl DataElement {
 
     /// Get a [`DataElement`] from a `&str` value.
     // TODO: Add support for parsing f32 vs f64 and etc.
-    pub fn from_parse<S: Into<String>>(val: S) -> DataElement {
+    pub fn from_str_parse<S: Into<String>>(val: S) -> DataElement {
 
         let val: String = val.into();
 
