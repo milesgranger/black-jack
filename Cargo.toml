@@ -17,6 +17,8 @@ name = "blackjack"
 [dependencies]
 num = "^0.2"
 csv = "^1.0.1"
+#streaming-stats = "0.2.0" --> commented out until PR accepted adding modes
+streaming-stats = { git = "https://github.com/milesgranger/rust-stats" } 
 flate2 = { version = "1.0", features = ["rust_backend"], default-features = false }
 
 [dev-dependencies]

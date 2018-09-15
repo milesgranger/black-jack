@@ -19,11 +19,13 @@
 //! assert_eq!(series.len(), 5);
 //! ```
 
-use num::*;
 use std::ops::{Range, Index, IndexMut};
 use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
+
+use num::*;
+use stats;
 
 pub mod overloaders;
 use prelude::*;
@@ -193,9 +195,6 @@ impl Series {
     }
 }
 
-
-
-
 impl SeriesTrait for Series {
 
     fn set_name(&mut self, name: &str) -> () {
@@ -207,6 +206,32 @@ impl SeriesTrait for Series {
             Some(ref name) => Some(name.clone()),
             None => None
         }
+    }
+
+    fn mode<T>(&self) -> Result<Self, &'static str> 
+        where T: BlackJackData + From<DataElement> + PartialOrd + Clone + ToPrimitive
+    {
+        if self.len() == 0 {
+            return Err("Cannot compute mode of an empty series!")
+        }
+
+        let modes = stats::modes(self.values.iter().map(|v| T::from(v.clone())));
+        let mut modes = Series::from_vec(modes);
+
+        // Cast to the requested DType 'T'
+        modes.astype(T::from(self.values[0].clone()).dtype())?;
+        Ok(modes)
+    }
+
+    fn var<T>(&self) -> Result<T, &'static str>
+        where 
+            T: BlackJackData + From<DataElement> + ToPrimitive + Clone
+    {
+        if self.len() == 0  {
+            return Err("Cannot compute variance of an empty series!");
+        }
+        let var = stats::variance(self.values.iter().map(|v| T::from(v.clone())));
+        Ok(DataElement::from(var).into())
     }
 
     fn sum<T>(&self) -> T

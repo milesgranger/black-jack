@@ -33,6 +33,7 @@
 
 extern crate num;
 extern crate csv;
+extern crate stats;
 extern crate flate2;
 
 #[macro_use] pub mod macros;

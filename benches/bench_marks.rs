@@ -82,6 +82,29 @@ fn criterion_bechmark(c: &mut Criterion) {
             })
     );
 
+    c.bench_function(
+        "series agg ops (MODE)",
+        |b| b.iter_with_setup(|| {
+                let mut s = Series::arange(0, 10000);
+                s.append(0);
+                s.append(0);
+                s.append(1);
+                s.append(1);
+                s
+            }, | series | {
+                let _mode = series.mode::<i32>().unwrap();
+            })
+    );
+
+    c.bench_function(
+        "series agg ops (VAR)",
+        |b| b.iter_with_setup(|| {
+                Series::arange(0, 10000)
+            }, | series | {
+                let _var = series.var::<i32>().unwrap();
+            })
+    );
+
     
 }
 

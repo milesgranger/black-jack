@@ -221,6 +221,17 @@ fn test_series_aggregation_ops() {
     // Test max
     assert_eq!(series.max(), Ok(4_i32));
 
+    // Test mode - both single mode and multiple modes
+    let series = Series::from_vec(vec![0, 0, 0, 1, 2, 3]);
+    assert_eq!(series.mode::<i32>(), Ok(Series::from_vec(vec![0])));
+
+    let series = Series::from_vec(vec![0, 0, 0, 1, 1, 1, 2]);
+    assert_eq!(series.mode::<i32>(), Ok(Series::from_vec(vec![0, 1])));
+
+    // Test variance
+    let series = Series::arange(0, 5);
+    assert_eq!(series.var::<f32>().unwrap() as i32, 2);
+
 }
 
 #[test]

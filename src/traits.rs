@@ -1,10 +1,11 @@
 //! Traits to be used throughout the crate
 
 
-use std::fmt::Debug;
+use std::fmt::{Debug};
 use std::any::{Any};
 use std::iter::{Sum};
 use std::collections::HashSet;
+
 
 use num::*;
 use prelude::*;
@@ -46,7 +47,8 @@ pub trait ColumnManager {
     /// Add a new series to the dataframe as a column.
     fn add_column(&mut self, series: Series) -> ();
 
-    /// Get a reference to a series by name, **will also have to know the primitive type stored**.
+    /// Get a reference to a series by name, **will also have to know the 
+    /// primitive type stored**.
     ///
     /// ## Example
     /// ```
@@ -59,8 +61,8 @@ pub trait ColumnManager {
     /// let series_clone = series.clone(); // Create a clone to compare later
     ///
     /// df.add_column(series);  // Add the column to dataframe
-    ///
-    /// let series_ref: &Series = df.get_column("series1").unwrap();  // Fetch the column back as a reference.
+    /// // Fetch the column back as a reference.
+    /// let series_ref: &Series = df.get_column("series1").unwrap();
     ///
     /// assert_eq!(*series_ref, series_clone)  // ensure they equal.
     /// ```
@@ -101,7 +103,8 @@ pub trait SeriesTrait: Debug + Sized + Any {
     /// Set the name of a series
     fn set_name(&mut self, name: &str) -> ();
 
-    /// Get the name of the series; Series may not be assigned a string, so an `Option` is returned.
+    /// Get the name of the series; Series may not be assigned a string, 
+    /// so an `Option` is returned.
     /// 
     /// ## Example
     /// ```
@@ -114,11 +117,29 @@ pub trait SeriesTrait: Debug + Sized + Any {
     /// ```
     fn name(&self) -> Option<String>;
 
-    /// Sum a given series, yielding the same type as the elements stored in the series.
+    /// Finds the returns a [`Series`] containing the mode(s) of the current
+    /// [`Series`]
+    fn mode<T>(&self) -> Result<Self, &'static str>
+        where T: BlackJackData + From<DataElement> + PartialOrd + Clone + ToPrimitive;
+
+    /// Calculate the variance of the series  
+    /// **NOTE** that whatever type is determined is what the values are cast to
+    /// during calculation of the variance. 
+    /// 
+    /// ie. `series.var::<i32>()` will cast each element into `i32` as input
+    /// for calculating the variance, and yield a `i32` value. If you want all
+    /// values to be calculated as `f64` then specify that in the type annotation.
+    fn var<T>(&self) -> Result<T, &'static str>
+        where 
+            T: BlackJackData + From<DataElement> + ToPrimitive + Clone;
+
+    /// Sum a given series, yielding the same type as the elements stored in the 
+    /// series.
     fn sum<T>(&self) -> T
         where T: Num + Clone + From<DataElement> + Sum + Copy;
 
-    /// Average / Mean of a given series - Requires specifying desired float return annotation 
+    /// Average / Mean of a given series - Requires specifying desired float 
+    /// return annotation 
     /// 
     /// ## Example:
     /// ```
@@ -139,8 +160,8 @@ pub trait SeriesTrait: Debug + Sized + Any {
     /// ```
     fn mean(&self) -> Result<f64, &'static str>;
 
-    /// Find the minimum of the series. If several elements are equally minimum, the first element is returned. 
-    /// If it's empty, an Error will be returned
+    /// Find the minimum of the series. If several elements are equally minimum,
+    /// the first element is returned. If it's empty, an Error will be returned.
     /// 
     /// ## Example
     /// ```
@@ -154,7 +175,8 @@ pub trait SeriesTrait: Debug + Sized + Any {
         where 
             T: Num + Clone + Ord + BlackJackData + From<DataElement>;
 
-    /// Exibits the same behavior and usage of [`SeriesTrait::min`], only yielding the [`Result`] of a maximum.
+    /// Exibits the same behavior and usage of [`SeriesTrait::min`], only
+    /// yielding the [`Result`] of a maximum.
     fn max<T>(&self) -> Result<T, &'static str>
         where 
             T: Num + Clone + Ord + From<DataElement>;
@@ -193,7 +215,8 @@ pub trait SeriesTrait: Debug + Sized + Any {
     /// ```
     fn append<V: Into<DataElement>>(&mut self, val: V) -> ();
 
-    /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or `SeriesTrait::from_raw(*mut Self)`
+    /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or 
+    /// `SeriesTrait::from_raw(*mut Self)`
     fn into_raw(self) -> *mut Self { 
         Box::into_raw(Box::new(self)) 
     }
