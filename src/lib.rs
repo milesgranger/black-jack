@@ -33,6 +33,7 @@
 
 extern crate num;
 extern crate csv;
+extern crate take_mut;
 
 #[macro_use] pub mod macros;
 

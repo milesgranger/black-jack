@@ -46,7 +46,8 @@ macro_rules! impl_OP_Assign_DataElement {
                                 or convert scalar value to integer."#)
                         }
                     },
-                    DataElement::STRING(_v) => panic!("Cannot multiply string by numeric value.")
+                    DataElement::STRING(_v) => panic!("Cannot multiply string by numeric value."),
+                    DataElement::None => panic!("Cannot mulitply None by numeric value.")
                 }
             }
         }
@@ -72,6 +73,10 @@ macro_rules! impl_FROM_DataElement_for_primitive {
                         let nan: f64 = Float::nan();
                         v.parse::<$primitive>()
                             .unwrap_or(nan as $primitive)
+                    },
+                    DataElement::None => {
+                        let nan: f64 = Float::nan();
+                        nan as $primitive
                     }
                 }    
             }
@@ -90,6 +95,10 @@ macro_rules! impl_FROM_DataElement_for_primitive {
                         let nan: f64 = Float::nan();
                         v.parse::<$primitive>()
                             .unwrap_or(nan as $primitive)
+                    },
+                    DataElement::None => {
+                        let nan: f64 = Float::nan();
+                        nan as $primitive
                     }
                 }
             }

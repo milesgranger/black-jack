@@ -280,7 +280,8 @@ impl SeriesTrait for Series {
                         DataElement::I32(val.into())
                     }
                 },
-                DType::STRING => DataElement::STRING(val.into())
+                DType::STRING => DataElement::STRING(val.into()),
+                DType::None => DataElement::None
             }
         };
 
