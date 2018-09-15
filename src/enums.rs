@@ -22,7 +22,10 @@ pub enum DType {
     I32,
 
     /// `String`
-    STRING
+    STRING,
+
+    /// `None`
+    None
 }
 
 // Implement `From<DataElement>` for each supported primitive
@@ -44,7 +47,8 @@ impl From<DataElement> for String {
             DataElement::I64(v) => v.to_string(),
             DataElement::F32(v) => v.to_string(),
             DataElement::I32(v) => v.to_string(),
-            DataElement::STRING(v) => v.clone()
+            DataElement::STRING(v) => v.clone(),
+            DataElement::None => "None".to_string()
         }
     }
 }
@@ -56,7 +60,8 @@ impl<'a> From<&'a mut DataElement> for String {
             DataElement::I64(v) => v.to_string(),
             DataElement::F32(v) => v.to_string(),
             DataElement::I32(v) => v.to_string(),
-            DataElement::STRING(v) => v.clone()
+            DataElement::STRING(v) => v.clone(),
+            DataElement::None => "None".to_string()
         }
     }
 }
@@ -79,7 +84,10 @@ pub enum DataElement {
     F32(f32),
 
     /// String support
-    STRING(String)
+    STRING(String),
+
+    /// None
+    None
 }
 
 
@@ -115,7 +123,8 @@ impl DataElement {
             DataElement::F64(_) => DType::F64,
             DataElement::I32(_) => DType::I32,
             DataElement::F32(_) => DType::F32,
-            DataElement::STRING(_) => DType::STRING
+            DataElement::STRING(_) => DType::STRING,
+            DataElement::None => DType::None
         }
     }
 
@@ -153,7 +162,8 @@ impl<T: BlackJackData + ToString> From<T> for DataElement {
             DType::F64 => DataElement::F64(val.to_string().parse::<f64>().unwrap_or_else(|_| panic!("Unable to convert value to f64"))),
             DType::I32 => DataElement::I32(val.to_string().parse::<i32>().unwrap_or_else(|_| panic!("Unable to convert value to i32"))),
             DType::F32 => DataElement::F32(val.to_string().parse::<f32>().unwrap_or_else(|_| panic!("Unable to convert value to f32"))),
-            DType::STRING => DataElement::STRING(val.to_string())
+            DType::STRING => DataElement::STRING(val.to_string()),
+            DType::None => DataElement::None
         }
     }
 }
@@ -170,6 +180,27 @@ impl<T> Mul<T> for DataElement
     }
 }
 
+use std::mem;
+impl<T> MulAssign<T> for DataElement 
+    where 
+        T: MulAssign<T> + BlackJackData + Mul + FromPrimitive,
+        <T as Mul>::Output: BlackJackData
+{
+    fn mul_assign(&mut self, val: T) {
+        *self = match mem::replace(self, DataElement::None) {
+            DataElement::F64(v) => (T::from_f64(v).unwrap() * val).into(),
+            DataElement::I64(v) => (T::from_i64(v).unwrap() * val).into(),
+            DataElement::F32(v) => (T::from_f32(v).unwrap() * val).into(),
+            DataElement::I32(v) => (T::from_i32(v).unwrap() * val).into(),
+            _ => {
+                let nan: f64 = Float::nan();
+                nan.into()
+            },
+        }
+    }
+}
+
+/*
 impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, i64);
 impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, f64);
 impl_OP_Assign_DataElement!(MulAssign, mul_assign, *=, i32);
@@ -189,7 +220,7 @@ impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, i64);
 impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, f64);
 impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, i32);
 impl_OP_Assign_DataElement!(DivAssign, div_assign, /=, f32);
-
+*/
 
 impl<T> Add<T> for DataElement 
     where 
