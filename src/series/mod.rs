@@ -315,6 +315,31 @@ impl Series {
         Ok(total / count)
     }
 
+    /// Calculate the quantile of the series
+    /// 
+    /// ## Example:
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::arange(0, 100);
+    /// let qtl = series.quantile::<f32>(0.5).unwrap(); // `49.5_f32`
+    /// 
+    /// assert!(qtl < 49.51);
+    /// assert!(qtl > 49.49);
+    /// ```
+    pub fn quantile<T>(&self, quantile: f64) -> Result<T, &'static str> 
+        where 
+            T: ToPrimitive + BlackJackData + From<DataElement>
+    {
+        use rgsl::statistics::quantile_from_sorted_data;
+        use std::cmp::Ordering;
+
+        let mut vec = self.clone().to_vec::<f64>();
+        vec.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        let qtl = quantile_from_sorted_data(&vec, 1, vec.len(), quantile);
+        Ok(DataElement::from(qtl).into())
+    }
+
     /// Calculate the median of a series
     pub fn median<T>(&self) -> Result<T, &'static str> 
         where T: BlackJackData + From<DataElement> + ToPrimitive + Clone + PartialOrd 

@@ -110,7 +110,7 @@ fn criterion_bechmark(c: &mut Criterion) {
         |b| b.iter_with_setup(|| {
                 Series::arange(0, 10000)
             }, | series | {
-                let _var = series.std::<f32>().unwrap();
+                let _std = series.std::<f32>().unwrap();
             })
     );
 
@@ -119,7 +119,16 @@ fn criterion_bechmark(c: &mut Criterion) {
         |b| b.iter_with_setup(|| {
                 Series::arange(0, 10000)
             }, | series | {
-                let _var = series.median::<f32>().unwrap();
+                let _median = series.median::<f32>().unwrap();
+            })
+    );
+
+    c.bench_function(
+        "series agg ops (QUANTILE)",
+        |b| b.iter_with_setup(|| {
+                Series::arange(0, 10000)
+            }, | series | {
+                let _qtl = series.quantile::<f32>(0.5).unwrap();
             })
     );
 
