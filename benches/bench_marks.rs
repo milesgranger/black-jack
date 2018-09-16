@@ -105,6 +105,24 @@ fn criterion_bechmark(c: &mut Criterion) {
             })
     );
 
+    c.bench_function(
+        "series agg ops (STD)",
+        |b| b.iter_with_setup(|| {
+                Series::arange(0, 10000)
+            }, | series | {
+                let _var = series.std::<f32>().unwrap();
+            })
+    );
+
+    c.bench_function(
+        "series agg ops (MEDIAN)",
+        |b| b.iter_with_setup(|| {
+                Series::arange(0, 10000)
+            }, | series | {
+                let _var = series.median::<f32>().unwrap();
+            })
+    );
+
     
 }
 

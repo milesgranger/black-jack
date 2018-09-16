@@ -232,6 +232,20 @@ fn test_series_aggregation_ops() {
     let series = Series::arange(0, 5);
     assert_eq!(series.var::<f32>().unwrap() as i32, 2);
 
+    // Test standard deviation
+    let series = Series::arange(0, 10);
+    let std = series.std::<f32>().unwrap();
+    assert!(std > 2.87);
+    assert!(std < 2.88);
+
+    // Test median, both float and integer
+    let series = Series::arange(0, 10);
+    let median = series.median::<f32>().unwrap();
+    assert!(median < 4.51);
+    assert!(median > 4.49);
+    let series = Series::arange(0, 3);
+    assert_eq!(series.median::<i32>().unwrap(), 1);
+
 }
 
 #[test]

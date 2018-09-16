@@ -253,6 +253,28 @@ impl Series {
         Ok(DataElement::from(var).into())
     }
 
+    /// Calculate the standard deviation of the series
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::arange(0, 10);
+    /// 
+    /// let std = series.std::<f32>().unwrap(); // Ok(2.8722...)
+    /// assert!(std > 2.87);
+    /// assert!(std < 2.88);
+    /// ```
+    pub fn std<T>(&self) -> Result<T, &'static str> 
+        where T: BlackJackData + From<DataElement> + ToPrimitive + Clone 
+    {
+        if self.len() == 0 {
+            return Err("Cannot compute standard deviation of an empty series!")
+        }
+        let std = stats::stddev(self.values.iter().map(|v| T::from(v.clone())));
+        Ok(DataElement::from(std).into())
+    }
+
     /// Sum a given series, yielding the same type as the elements stored in the 
     /// series.
     pub fn sum<T>(&self) -> T
@@ -291,6 +313,23 @@ impl Series {
         let total: f64 = self.sum();
         let count: f64 = self.len() as f64;
         Ok(total / count)
+    }
+
+    /// Calculate the median of a series
+    pub fn median<T>(&self) -> Result<T, &'static str> 
+        where T: BlackJackData + From<DataElement> + ToPrimitive + Clone + PartialOrd 
+    {
+        if self.len() == 0 {
+            return Err("Cannot calculate median of an empty series.")
+        }
+        let std_opt = stats::median(self.values.iter()
+                                            .map(|v| T::from(v.clone())));
+        match std_opt {
+            Some(std) => Ok(DataElement::from(std).into()),
+            None => Err(r#"Unable to calculate median, please create an issue!
+                           as this wasn't expected to ever happen on a non-empty
+                           series. :("#)
+        }
     }
 
     /// Find the minimum of the series. If several elements are equally minimum,
