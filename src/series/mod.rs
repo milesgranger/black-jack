@@ -19,11 +19,13 @@
 //! assert_eq!(series.len(), 5);
 //! ```
 
-use num::*;
 use std::ops::{Range, Index, IndexMut};
 use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
+
+use num::*;
+use stats;
 
 pub mod overloaders;
 use prelude::*;
@@ -37,7 +39,7 @@ pub struct Series {
     /// a default name equalling the cound of columns in the dataframe.
     pub name: Option<String>,
 
-    /// ndarray attribute; the underlying values of the Series
+    /// The underlying values of the Series
     pub values: Vec<DataElement>,
 
     // Only set if called by `.astype()` or parsing or raw data was able to
@@ -130,7 +132,7 @@ impl Series {
     /// ```
     pub fn from_vec<T>(vec: Vec<T>) -> Self 
         where 
-            T: BlackJackData + ToPrimitive,
+            T: BlackJackData,
             DataElement: From<T>
     {
         let dtype = if vec.len() > 0 { Some(vec[0].dtype()) } else  { None };
@@ -191,25 +193,91 @@ impl Series {
         let vec: Vec<T> = self.values.into_iter().map(|v| T::from(v.clone())).collect();
         vec
     }
-}
 
-
-
-
-impl SeriesTrait for Series {
-
-    fn set_name(&mut self, name: &str) -> () {
+    /// Set the name of a series
+    pub fn set_name(&mut self, name: &str) -> () {
         self.name = Some(name.to_string());
     }
 
-    fn name(&self) -> Option<String> {
+    /// Get the name of the series; Series may not be assigned a string, 
+    /// so an `Option` is returned.
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let mut series = Series::from_vec(vec![1, 2, 3]);
+    /// series.set_name("my-series");
+    /// 
+    /// assert_eq!(series.name(), Some("my-series".to_string()));
+    /// ```
+    pub fn name(&self) -> Option<String> {
         match self.name {
             Some(ref name) => Some(name.clone()),
             None => None
         }
     }
 
-    fn sum<T>(&self) -> T
+    /// Finds the returns a [`Series`] containing the mode(s) of the current
+    /// [`Series`]
+    pub fn mode<T>(&self) -> Result<Self, &'static str> 
+        where T: BlackJackData + From<DataElement> + PartialOrd + Clone + ToPrimitive
+    {
+        if self.len() == 0 {
+            return Err("Cannot compute mode of an empty series!")
+        }
+
+        let modes = stats::modes(self.values.iter().map(|v| T::from(v.clone())));
+        let mut modes = Series::from_vec(modes);
+
+        // Cast to the requested DType 'T'
+        modes.astype(T::from(self.values[0].clone()).dtype())?;
+        Ok(modes)
+    }
+
+    /// Calculate the variance of the series  
+    /// **NOTE** that whatever type is determined is what the values are cast to
+    /// during calculation of the variance. 
+    /// 
+    /// ie. `series.var::<i32>()` will cast each element into `i32` as input
+    /// for calculating the variance, and yield a `i32` value. If you want all
+    /// values to be calculated as `f64` then specify that in the type annotation.
+    pub fn var<T>(&self) -> Result<T, &'static str>
+        where 
+            T: BlackJackData + From<DataElement> + ToPrimitive + Clone
+    {
+        if self.len() == 0  {
+            return Err("Cannot compute variance of an empty series!");
+        }
+        let var = stats::variance(self.values.iter().map(|v| T::from(v.clone())));
+        Ok(DataElement::from(var).into())
+    }
+
+    /// Calculate the standard deviation of the series
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::arange(0, 10);
+    /// 
+    /// let std = series.std::<f32>().unwrap(); // Ok(2.8722...)
+    /// assert!(std > 2.87);
+    /// assert!(std < 2.88);
+    /// ```
+    pub fn std<T>(&self) -> Result<T, &'static str> 
+        where T: BlackJackData + From<DataElement> + ToPrimitive + Clone 
+    {
+        if self.len() == 0 {
+            return Err("Cannot compute standard deviation of an empty series!")
+        }
+        let std = stats::stddev(self.values.iter().map(|v| T::from(v.clone())));
+        Ok(DataElement::from(std).into())
+    }
+
+    /// Sum a given series, yielding the same type as the elements stored in the 
+    /// series.
+    pub fn sum<T>(&self) -> T
         where 
             T: Num + Clone + From<DataElement> + Sum + Copy
     {
@@ -220,14 +288,87 @@ impl SeriesTrait for Series {
             .sum()
     }
 
-    fn mean(&self) -> Result<f64, &'static str>
+    /// Average / Mean of a given series - Requires specifying desired float 
+    /// return annotation 
+    /// 
+    /// ## Example:
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::arange(0, 5);
+    /// let mean = series.mean();
+    /// 
+    /// match mean {
+    ///     Ok(result) => {
+    ///         println!("Result is: {}", &result);
+    ///         assert_eq!(result, 2.0);
+    ///     },
+    ///     Err(err) => {
+    ///         panic!("Was unable to compute mean, error: {}", err);
+    ///     }
+    /// }
+    /// ```
+    pub fn mean(&self) -> Result<f64, &'static str>
     {
         let total: f64 = self.sum();
         let count: f64 = self.len() as f64;
         Ok(total / count)
     }
 
-    fn min<T>(&self) -> Result<T, &'static str>
+    /// Calculate the quantile of the series
+    /// 
+    /// ## Example:
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series = Series::arange(0, 100);
+    /// let qtl = series.quantile::<f32>(0.5).unwrap(); // `49.5_f32`
+    /// 
+    /// assert!(qtl < 49.51);
+    /// assert!(qtl > 49.49);
+    /// ```
+    pub fn quantile<T>(&self, quantile: f64) -> Result<T, &'static str> 
+        where 
+            T: ToPrimitive + BlackJackData + From<DataElement>
+    {
+        use rgsl::statistics::quantile_from_sorted_data;
+        use std::cmp::Ordering;
+
+        let mut vec = self.clone().to_vec::<f64>();
+        vec.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        let qtl = quantile_from_sorted_data(&vec, 1, vec.len(), quantile);
+        Ok(DataElement::from(qtl).into())
+    }
+
+    /// Calculate the median of a series
+    pub fn median<T>(&self) -> Result<T, &'static str> 
+        where T: BlackJackData + From<DataElement> + ToPrimitive + Clone + PartialOrd 
+    {
+        if self.len() == 0 {
+            return Err("Cannot calculate median of an empty series.")
+        }
+        let std_opt = stats::median(self.values.iter()
+                                            .map(|v| T::from(v.clone())));
+        match std_opt {
+            Some(std) => Ok(DataElement::from(std).into()),
+            None => Err(r#"Unable to calculate median, please create an issue!
+                           as this wasn't expected to ever happen on a non-empty
+                           series. :("#)
+        }
+    }
+
+    /// Find the minimum of the series. If several elements are equally minimum,
+    /// the first element is returned. If it's empty, an Error will be returned.
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series: Series = Series::arange(10, 100);
+    /// 
+    /// assert_eq!(series.min(), Ok(10));
+    /// ```
+    pub fn min<T>(&self) -> Result<T, &'static str>
         where 
             T: Num + Clone + Ord + BlackJackData + From<DataElement>
     {
@@ -238,7 +379,9 @@ impl SeriesTrait for Series {
         }
     }
 
-    fn max<T>(&self) -> Result<T, &'static str>
+    /// Exibits the same behavior and usage of [`SeriesTrait::min`], only
+    /// yielding the [`Result`] of a maximum.
+    pub fn max<T>(&self) -> Result<T, &'static str>
         where 
             T: Num + Clone + Ord,
             T: From<DataElement>
@@ -250,14 +393,27 @@ impl SeriesTrait for Series {
         }
     }
 
-    fn len(&self) -> usize { self.values.len() }
+    /// Determine the length of the Series
+    pub fn len(&self) -> usize { self.values.len() }
 
-    fn dtype(&self) -> Option<DType> { 
+    /// Determine if series is empty.
+    pub fn is_empty(&self) -> bool { self.len() == 0 }
+
+    /// Get the dtype, returns `None` if series dtype is unknown. 
+    /// in such a case, calling `.astype()` to coerce all types to a single
+    /// type is needed. 
+    pub fn dtype(&self) -> Option<DType> { 
         self.dtype.clone()
-     }
+    }
 
-     
-    fn astype(&mut self, dtype: DType) -> Result<(), &'static str> {
+    /// Cast all [`DataElement`]s within a series to a given [`DType`]
+    /// Will fail if series contains a string and asking for an integer, 
+    /// of an `NaN` and asking for an integer.
+    /// 
+    /// ie. "Hello" -> .astype([`DType::I64`]) -> **Error!**  
+    /// ie. "Hello" -> .astype([`DType::F64`]) -> `NaN`  
+    /// ipso-facto... `NaN` -> .astype([`DType::I64`]) -> **Error!**
+    pub fn astype(&mut self, dtype: DType) -> Result<(), &'static str> {
     
         // iterate over all elements currently held...
         for val in &mut self.values {
@@ -291,8 +447,30 @@ impl SeriesTrait for Series {
         Ok(())
     }
 
-    fn append<V: Into<DataElement>>(&mut self, val: V) -> () {
+    /// Append a [`BlackJackData`] element to the Series
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let mut series = Series::from_vec(vec![0, 1, 2]);
+    /// assert_eq!(series.len(), 3);
+    /// 
+    /// series.append(3);
+    /// assert_eq!(series.len(), 4);
+    /// ```
+    pub fn append<V: Into<DataElement>>(&mut self, val: V) -> () {
         self.values.push(val.into());
     }
 
+    /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or 
+    /// `SeriesTrait::from_raw(*mut Self)`
+    pub fn into_raw(self) -> *mut Self { 
+        Box::into_raw(Box::new(self)) 
+    }
+
+    /// Create from raw pointer
+    pub fn from_raw(ptr: *mut Self) -> Self { 
+        unsafe { *Box::from_raw(ptr) } 
+    }
 }

@@ -1,12 +1,9 @@
 //! Traits to be used throughout the crate
 
 
-use std::fmt::Debug;
-use std::any::{Any};
-use std::iter::{Sum};
+use std::fmt::{Debug};
 use std::collections::HashSet;
 
-use num::*;
 use prelude::*;
 
 /* 
@@ -46,7 +43,8 @@ pub trait ColumnManager {
     /// Add a new series to the dataframe as a column.
     fn add_column(&mut self, series: Series) -> ();
 
-    /// Get a reference to a series by name, **will also have to know the primitive type stored**.
+    /// Get a reference to a series by name, **will also have to know the 
+    /// primitive type stored**.
     ///
     /// ## Example
     /// ```
@@ -59,8 +57,8 @@ pub trait ColumnManager {
     /// let series_clone = series.clone(); // Create a clone to compare later
     ///
     /// df.add_column(series);  // Add the column to dataframe
-    ///
-    /// let series_ref: &Series = df.get_column("series1").unwrap();  // Fetch the column back as a reference.
+    /// // Fetch the column back as a reference.
+    /// let series_ref: &Series = df.get_column("series1").unwrap();
     ///
     /// assert_eq!(*series_ref, series_clone)  // ensure they equal.
     /// ```
@@ -94,112 +92,3 @@ pub trait DataFrameBehavior: Sized {
 /* 
     Series traits
 */
-
-/// Define the behavior of a Series object.
-pub trait SeriesTrait: Debug + Sized + Any {
-
-    /// Set the name of a series
-    fn set_name(&mut self, name: &str) -> ();
-
-    /// Get the name of the series; Series may not be assigned a string, so an `Option` is returned.
-    /// 
-    /// ## Example
-    /// ```
-    /// use blackjack::prelude::*;
-    /// 
-    /// let mut series = Series::from_vec(vec![1, 2, 3]);
-    /// series.set_name("my-series");
-    /// 
-    /// assert_eq!(series.name(), Some("my-series".to_string()));
-    /// ```
-    fn name(&self) -> Option<String>;
-
-    /// Sum a given series, yielding the same type as the elements stored in the series.
-    fn sum<T>(&self) -> T
-        where T: Num + Clone + From<DataElement> + Sum + Copy;
-
-    /// Average / Mean of a given series - Requires specifying desired float return annotation 
-    /// 
-    /// ## Example:
-    /// ```
-    /// use blackjack::prelude::*;
-    /// 
-    /// let series = Series::arange(0, 5);
-    /// let mean = series.mean();
-    /// 
-    /// match mean {
-    ///     Ok(result) => {
-    ///         println!("Result is: {}", &result);
-    ///         assert_eq!(result, 2.0);
-    ///     },
-    ///     Err(err) => {
-    ///         panic!("Was unable to compute mean, error: {}", err);
-    ///     }
-    /// }
-    /// ```
-    fn mean(&self) -> Result<f64, &'static str>;
-
-    /// Find the minimum of the series. If several elements are equally minimum, the first element is returned. 
-    /// If it's empty, an Error will be returned
-    /// 
-    /// ## Example
-    /// ```
-    /// use blackjack::prelude::*;
-    /// 
-    /// let series: Series = Series::arange(10, 100);
-    /// 
-    /// assert_eq!(series.min(), Ok(10));
-    /// ```
-    fn min<T>(&self) -> Result<T, &'static str>
-        where 
-            T: Num + Clone + Ord + BlackJackData + From<DataElement>;
-
-    /// Exibits the same behavior and usage of [`SeriesTrait::min`], only yielding the [`Result`] of a maximum.
-    fn max<T>(&self) -> Result<T, &'static str>
-        where 
-            T: Num + Clone + Ord + From<DataElement>;
-
-    /// Determine the length of the Series
-    fn len(&self) -> usize;
-
-    /// Determine if series is empty.
-    fn is_empty(&self) -> bool { self.len() == 0 }
-
-    /// Get the dtype, returns `None` if series dtype is unknown. 
-    /// in such a case, calling `.astype()` to coerce all types to a single
-    /// type is needed. 
-    fn dtype(&self) -> Option<DType>;
-
-    /// Cast all [`DataElement`]s within a series to a given [`DType`]
-    /// Will fail if series contains a string and asking for an integer, 
-    /// of an `NaN` and asking for an integer.
-    /// 
-    /// ie. "Hello" -> .astype([`DType::I64`]) -> **Error!**  
-    /// ie. "Hello" -> .astype([`DType::F64`]) -> `NaN`  
-    /// ipso-facto... `NaN` -> .astype([`DType::I64`]) -> **Error!**
-    fn astype(&mut self, dtype: DType) -> Result<(), &'static str>;
-
-    /// Append a [`BlackJackData`] element to the Series
-    /// 
-    /// ## Example
-    /// ```
-    /// use blackjack::prelude::*;
-    /// 
-    /// let mut series = Series::from_vec(vec![0, 1, 2]);
-    /// assert_eq!(series.len(), 3);
-    /// 
-    /// series.append(3);
-    /// assert_eq!(series.len(), 4);
-    /// ```
-    fn append<V: Into<DataElement>>(&mut self, val: V) -> ();
-
-    /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or `SeriesTrait::from_raw(*mut Self)`
-    fn into_raw(self) -> *mut Self { 
-        Box::into_raw(Box::new(self)) 
-    }
-
-    /// Create from raw pointer
-    fn from_raw(ptr: *mut Self) -> Self { 
-        unsafe { *Box::from_raw(ptr) } 
-    }
-}

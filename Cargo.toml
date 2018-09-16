@@ -1,8 +1,8 @@
 [package]
 name = "black-jack"
-version = "0.0.15-a2"
+version = "0.0.15"
 authors = ["Miles Granger <miles59923@gmail.com>"]
-description = "Rust backend engine for Python package lumber-jack"
+description = "DataFrame / Series processing in Rust - Work in progress"
 repository = "https://github.com/milesgranger/black-jack"
 readme = "README.md"
 license-file = "LICENSE"
@@ -16,8 +16,14 @@ name = "blackjack"
 
 [dependencies]
 num = "^0.2"
-csv = "^1.0.1"
+csv = "^1.0"
+#streaming-stats = "0.2.0" --> commented out until PR accepted adding modes
+streaming-stats = { git = "https://github.com/milesgranger/rust-stats" } 
+GSL = "^1.0"
 flate2 = { version = "1.0", features = ["rust_backend"], default-features = false }
+
+[features]
+default = ["GSL/v2"]
 
 [dev-dependencies]
 float-cmp = "0.4.0"
