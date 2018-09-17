@@ -57,7 +57,7 @@ fn criterion_bechmark(c: &mut Criterion) {
     c.bench_function(
         "dataframe read_csv BASIC",
         |b| b.iter(|| {
-            let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
+            let path = format!("{}/tests/data/medium_csv.csv", env!("CARGO_MANIFEST_DIR"));
             let _df = DataFrame::read_csv(path, b',');
         })
     );
