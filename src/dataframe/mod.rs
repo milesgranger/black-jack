@@ -19,6 +19,7 @@ use std::ffi::OsStr;
 use std::error::Error;
 use std::fmt;
 
+use rayon::prelude::*;
 use csv;
 use prelude::*;
 
@@ -85,10 +86,17 @@ impl DataFrame {
                                 .delimiter(delimiter)
                                 .from_reader(file_reader);
 
-        let headers = reader.headers()?.clone();  // TODO: Don't fail on non existant headers -> give 'col0', 'col1', etc.
+        // TODO: Don't fail on non existant headers -> give 'col0', 'col1', etc.
+        let headers: Vec<String> = reader.headers()?
+                                        .clone()
+                                        .into_iter()
+                                        .map(|v| v.to_string())
+                                        .collect();  
 
         // Containers for storing column data
-        let mut vecs: Vec<Vec<DataElement>> = (0..headers.len()).map(|_| Vec::new()).collect();
+        let mut vecs: Vec<Vec<String>> = (0..headers.len())
+                                            .map(|_| Vec::new())
+                                            .collect();
 
         for record in reader.records() {
 
@@ -96,9 +104,7 @@ impl DataFrame {
 
                 Ok(rec) => { 
                     for (field, container) in rec.iter().zip(&mut vecs) {
-                        container.push(
-                            DataElement::from_str_parse(field)
-                        );
+                        container.push(field.into());
                     };
                 },
 
@@ -107,16 +113,24 @@ impl DataFrame {
             }
         }
 
-        // TODO: Place into Series and start converting and comparing against primitives.. 
-        // for example, convert to f64 and see if that is partially equal to i64, if so, keep i64
-        // if all numeric conversion trials fail, assume strings.
         let mut df = DataFrame::new();
-        for (header, vec) in headers.into_iter().zip(vecs) {
-            let mut series = Series::from_data_elements(vec);
-            series.set_name(header);
+
+        // map headers to vectors containing it's fields in parallel and into
+        // Series structs, parsing each field.
+        let sc: Vec<Series> = headers.into_par_iter()
+                                    .zip(vecs)
+                                    .map(|(header, vec)| {
+                                        let de = vec.into_par_iter()
+                                                    .map(|s| DataElement::from_str_parse(s))
+                                                    .collect();
+                                        let mut series = Series::from_data_elements(de);
+                                        series.set_name(&header);
+                                        series
+                                    })
+                                    .collect();
+        for series in sc {
             df.add_column(series);
         }
-
         Ok(df)
     }
 }
@@ -126,7 +140,10 @@ impl fmt::Display for DataFrame {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut printed_series: Vec<Vec<String>> = Vec::new();
         for series in self.series_objects.values() {
-            let stdout: Vec<String> = format!("{}", series).split("\n").map(|v| v.to_string()).collect();
+            let stdout: Vec<String> = format!("{}", series)
+                                        .split("\n")
+                                        .map(|v| v.to_string())
+                                        .collect();
             printed_series.push(stdout);
         }
         let mut output: String = "\n".to_string();
