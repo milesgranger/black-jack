@@ -96,11 +96,9 @@ impl fmt::Display for Series {
     }
 }
 
-use itertools::Itertools;
+impl SeriesGroupByBehavior for Series {
 
-impl GroupByBehavior for Series {
-
-    fn split(&self, keys: Series) -> Vec<Series> {
+    fn groupby(&self, keys: Series) -> SeriesGroupBy {
 
         let values = self.values.clone();
 
@@ -120,15 +118,7 @@ impl GroupByBehavior for Series {
             series.set_name(&key);
             groups.push(series);
         }
-        groups
-    }
-
-    fn apply<F, T>(&self, agg_func: F) -> T
-        where 
-            F: Fn(&Series) -> T,
-            T: BlackJackData
-    {
-        agg_func(&self)
+        SeriesGroupBy::new(groups)
     }
 }
 

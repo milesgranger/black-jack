@@ -13,6 +13,22 @@ pub struct SeriesGroupBy {
 
 impl SeriesGroupBy {
 
+    pub fn new(groups: Vec<Series>) -> Self {
+        SeriesGroupBy { groups }
+    }
+
+    pub fn apply<F, T>(self, agg_func: F) -> Series
+        where 
+            F: Fn(Series) -> T,
+            T: BlackJackData
+    {
+        let results = self.groups
+            .into_iter()
+            .map(agg_func)
+            .collect();
+        Series::from_vec(results)
+    }
+
     /// Apply a `sum` aggregation to each [`Series`] group
     pub fn sum<T>(&self) -> Series 
         where T: Num + From<DataElement> + Sum + Copy + BlackJackData
@@ -28,19 +44,6 @@ impl SeriesGroupBy {
 
 
 /// Trait defining the concept of split -> apply -> combine
-pub trait GroupByBehavior {
-
-    fn groupby(&self, keys: Series) -> SeriesGroupBy {
-        let groups = self.split(keys);
-        SeriesGroupBy { groups }
-    }
-    fn split(&self, keys: Series) -> Vec<Series>;
-    fn apply<F, T>(&self, agg_func: F) -> T
-        where 
-            F: Fn(&Series) -> T,
-            T: BlackJackData;
-
-    fn combine<T: BlackJackData>(vec: Vec<T>) -> Series {
-        Series::from_vec(vec)
-    }
+pub trait SeriesGroupByBehavior {
+    fn groupby(&self, keys: Series) -> SeriesGroupBy;
 }

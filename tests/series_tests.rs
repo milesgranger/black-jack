@@ -8,28 +8,19 @@ use blackjack::prelude::*;
 
 
 #[test]
-fn test_split_for_groupby() {
+fn test_groupby_sum() {
     let series = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
     let keys   = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
 
     // Split into groups and sort those groups
-    let mut groups = series.split(keys);
-    groups.sort_by_key(|a| a.sum::<i32>());
+    let grouped = series.groupby(keys).sum::<i32>();
 
     // 3 keys == 3 len
-    assert_eq!(groups.len(), 3);
+    assert_eq!(grouped.len(), 3);
 
-    // Ensure each groups adds to the expect sum
-    assert_eq!(groups[0].sum::<i32>(), 2);
-    assert_eq!(groups[1].sum::<i32>(), 4);
-    assert_eq!(groups[2].sum::<i32>(), 6);
-}
-
-#[test]
-fn test_apply_for_groupby() {
-    let series = Series::from_vec(vec![1, 2, 3]);
-    let val = series.apply(|s| s.sum::<i32>());
-    assert_eq!(val, 6);
+    let mut vals = grouped.into_vec::<i32>();
+    vals.sort();
+    assert_eq!(vals, vec![2, 4, 6]);
 }
 
 #[test]
