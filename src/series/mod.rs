@@ -23,7 +23,7 @@ use std::ops::{Range, Index, IndexMut};
 use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 use num::*;
 use stats;
@@ -95,6 +95,35 @@ impl fmt::Display for Series {
         write!(f, "{}\n", string)
     }
 }
+
+use itertools::Itertools;
+
+impl GroupByBehavior for Series {
+
+    fn split(&self, keys: Series) -> Vec<Series> {
+
+        let values = self.values.clone();
+
+        let mut map: HashMap<String, Vec<DataElement>> = HashMap::new();
+
+        // Group values by their keys
+        for (k, v) in keys.values.into_iter().zip(values.into_iter()) {
+            let key: String = k.into();
+            let mr = map.entry(key).or_default();
+            mr.push(v);
+        }
+        
+        // Create new series from the previous mapping.
+        let mut groups = vec![];
+        for (key, values) in map {
+            let mut series = Series::from_data_elements(values);
+            series.set_name(&key);
+            groups.push(series);
+        }
+        groups
+    }
+}
+
 
 /// Constructor methods for `Series<T>`
 impl Series {
