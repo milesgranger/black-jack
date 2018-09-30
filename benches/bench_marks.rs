@@ -132,6 +132,17 @@ fn criterion_bechmark(c: &mut Criterion) {
             })
     );
 
+    c.bench_function(
+        "series groupby",
+        |b| b.iter_with_setup(|| {
+            let series = Series::arange(0, 10000);
+            let keys   = Series::arange(0, 10000);
+            (keys, series)
+        }, |(keys, series)| {
+            let _res = series.groupby(keys).sum::<i32>();
+        })
+    );
+
     
 }
 
