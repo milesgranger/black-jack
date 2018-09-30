@@ -26,6 +26,7 @@ use std::fmt;
 use std::collections::HashMap;
 
 use num::*;
+use rayon::prelude::*;
 use stats;
 
 pub mod overloaders;
@@ -112,12 +113,15 @@ impl SeriesGroupByBehavior for Series {
         }
         
         // Create new series from the previous mapping.
-        let mut groups = vec![];
-        for (key, values) in map {
-            let mut series = Series::from_data_elements(values);
-            series.set_name(&key);
-            groups.push(series);
-        }
+        let groups = map
+            .into_par_iter()
+            .map(|(name, values)| {
+                let mut series = Series::from_data_elements(values);
+                series.set_name(&name);
+                series
+            })
+            .collect();
+
         SeriesGroupBy::new(groups)
     }
 }

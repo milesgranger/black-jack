@@ -1,6 +1,6 @@
 [package]
 name = "black-jack"
-version = "0.0.16a"
+version = "0.0.16-a"
 authors = ["Miles Granger <miles59923@gmail.com>"]
 description = "DataFrame / Series processing in Rust - Work in progress"
 repository = "https://github.com/milesgranger/black-jack"

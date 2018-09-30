@@ -10,7 +10,7 @@ use blackjack::prelude::*;
 #[test]
 fn test_groupby_sum() {
     let series = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
-    let keys   = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
+    let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
 
     // Split into groups and sort those groups
     let grouped = series.groupby(keys).sum::<i32>();
