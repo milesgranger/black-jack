@@ -26,6 +26,13 @@ fn test_split_for_groupby() {
 }
 
 #[test]
+fn test_apply_for_groupby() {
+    let series = Series::from_vec(vec![1, 2, 3]);
+    let val = series.apply(|s| s.sum::<i32>());
+    assert_eq!(val, 6);
+}
+
+#[test]
 fn test_unique() {
     let series = Series::from_vec(vec![1, 2, 1, 0, 1, 0, 1, 1]);
     let unique = series.unique::<i32>();

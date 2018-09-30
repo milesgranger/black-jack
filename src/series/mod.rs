@@ -122,6 +122,14 @@ impl GroupByBehavior for Series {
         }
         groups
     }
+
+    fn apply<F, T>(&self, agg_func: F) -> T
+        where 
+            F: Fn(&Series) -> T,
+            T: BlackJackData
+    {
+        agg_func(&self)
+    }
 }
 
 
