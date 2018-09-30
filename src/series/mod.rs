@@ -23,6 +23,7 @@ use std::ops::{Range, Index, IndexMut};
 use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
+use std::collections::HashSet;
 
 use num::*;
 use stats;
@@ -120,6 +121,44 @@ impl Series {
             dtype,
             values: vec, 
         }
+    }
+
+    /// Get a series of the unique elements held in this series
+    /// 
+    /// ## Example
+    /// 
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series: Series = Series::from_vec(vec![1.0, 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0]);
+    /// let unique: Series = series.unique::<i32>();
+    /// assert_eq!(unique, Series::from_vec(vec![0, 1, 2]));
+    /// ```
+    pub fn unique<T>(&self) -> Series 
+        where T: From<DataElement> + BlackJackData + PartialEq
+    {
+        // Cannot use `HashSet` as f32 & f64 don't implement Hash
+        let mut unique: Vec<T> = vec![];
+        let mut values = self.values.clone();
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        for val in values
+                    .into_iter()
+                    .map(|v| T::from(v)) 
+        {
+            if unique.len() > 0 {
+                if val == unique[unique.len() - 1] {
+                    continue
+                } else {
+                    unique.push(val)
+                }
+            } else {
+                unique.push(val)
+            }
+        }
+        
+        Series::from_vec(unique)
+        
     }
 
     /// Create a new Series struct from a vector, where T is supported by [`BlackJackData`]. 
