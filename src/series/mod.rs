@@ -181,15 +181,15 @@ impl Series {
     /// let series = Series::from_vec(vec![1_f64, 2_f64, 3_f64]);
     /// 
     /// assert_eq!(
-    ///     series.clone().to_vec::<i32>(), 
+    ///     series.clone().into_vec::<i32>(), 
     ///     vec![1_i32, 2_i32, 3_i32]
     /// );
     /// assert_eq!(
-    ///     series.to_vec::<String>(), 
+    ///     series.into_vec::<String>(), 
     ///     vec![1_f64.to_string(), 2_f64.to_string(), 3_f64.to_string()]
     /// );
     /// ```
-    pub fn to_vec<T: From<DataElement>>(self) -> Vec<T> {
+    pub fn into_vec<T: From<DataElement>>(self) -> Vec<T> {
         let vec: Vec<T> = self.values.into_iter().map(|v| T::from(v.clone())).collect();
         vec
     }
@@ -334,7 +334,7 @@ impl Series {
         use rgsl::statistics::quantile_from_sorted_data;
         use std::cmp::Ordering;
 
-        let mut vec = self.clone().to_vec::<f64>();
+        let mut vec = self.clone().into_vec::<f64>();
         vec.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
         let qtl = quantile_from_sorted_data(&vec, 1, vec.len(), quantile);
         Ok(DataElement::from(qtl).into())

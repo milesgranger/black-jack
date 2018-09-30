@@ -163,7 +163,7 @@ fn test_astype_conversions() {
     // Test conversion to f64, special float comparison needed...
     let mut series = series_base.clone();
     series.astype(DType::F64).unwrap();
-    let vec = series.to_vec::<f64>();
+    let vec = series.into_vec::<f64>();
     for (a, b) in vec.into_iter().zip(vec![1_f64, 1_f64, nan]) {
         assert!(a.approx_eq(&b, 0.000001, 1));
     }
@@ -172,7 +172,7 @@ fn test_astype_conversions() {
     let mut series = series_base.clone();
     series.astype(DType::STRING).unwrap();
     assert_eq!(
-        series.to_vec::<String>(), 
+        series.into_vec::<String>(), 
         vec![1_i64.to_string(), 1_i64.to_string(), "Hello".to_string()]
     );
 }

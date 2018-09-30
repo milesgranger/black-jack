@@ -19,6 +19,7 @@ use std::ffi::OsStr;
 use std::error::Error;
 use std::fmt;
 
+use itertools::Itertools;
 use rayon::prelude::*;
 use csv;
 use prelude::*;
@@ -30,6 +31,29 @@ use prelude::*;
 pub struct DataFrame {
     series_objects: HashMap<String, Series>,
 }
+
+impl GroupByBehavior for DataFrame {
+
+    fn split(&self, column: &str) -> Vec<Series> {
+        
+        // TODO: Remove unwrap with Result impl
+        let key_column = self.get_column(column).unwrap();
+        /*
+        self.columns()
+            .iter()
+            .map(|col_name| {
+                let series: &Series = &self[col_name.as_str()];
+                let data = key_column.values
+                    .iter()
+                    .zip(series.values.iter())
+                    .into_group_map();
+            });
+        */
+        vec![]
+    }
+}
+
+
 
 impl DataFrame {
     /// Create a new `DataFrame` struct
