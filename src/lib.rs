@@ -37,6 +37,7 @@ extern crate stats;
 extern crate flate2;
 extern crate rgsl;
 extern crate rayon;
+extern crate itertools;
 
 #[macro_use] pub mod macros;
 

@@ -5,6 +5,8 @@ use std::fmt::{Debug};
 use std::collections::HashSet;
 
 use prelude::*;
+mod groupby;
+pub use self::groupby::*;
 
 /* 
     Traits used throughout crate

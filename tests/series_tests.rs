@@ -8,6 +8,29 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_groupby_sum() {
+    let series = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
+    let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
+
+    // Split into groups and sort those groups
+    let grouped = series.groupby(keys).sum::<i32>();
+
+    // 3 keys == 3 len
+    assert_eq!(grouped.len(), 3);
+
+    let mut vals = grouped.into_vec::<i32>();
+    vals.sort();
+    assert_eq!(vals, vec![2, 4, 6]);
+}
+
+#[test]
+fn test_unique() {
+    let series = Series::from_vec(vec![1, 2, 1, 0, 1, 0, 1, 1]);
+    let unique = series.unique::<i32>();
+    assert_eq!(unique, Series::from_vec(vec![0, 1, 2]));
+}
+
+#[test]
 fn test_series_ops_inplace() {
 
     let base_series = Series::arange(0, 5);
@@ -163,7 +186,7 @@ fn test_astype_conversions() {
     // Test conversion to f64, special float comparison needed...
     let mut series = series_base.clone();
     series.astype(DType::F64).unwrap();
-    let vec = series.to_vec::<f64>();
+    let vec = series.into_vec::<f64>();
     for (a, b) in vec.into_iter().zip(vec![1_f64, 1_f64, nan]) {
         assert!(a.approx_eq(&b, 0.000001, 1));
     }
@@ -172,7 +195,7 @@ fn test_astype_conversions() {
     let mut series = series_base.clone();
     series.astype(DType::STRING).unwrap();
     assert_eq!(
-        series.to_vec::<String>(), 
+        series.into_vec::<String>(), 
         vec![1_i64.to_string(), 1_i64.to_string(), "Hello".to_string()]
     );
 }

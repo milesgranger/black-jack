@@ -23,8 +23,10 @@ use std::ops::{Range, Index, IndexMut};
 use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
+use std::collections::HashMap;
 
 use num::*;
+use rayon::prelude::*;
 use stats;
 
 pub mod overloaders;
@@ -95,6 +97,36 @@ impl fmt::Display for Series {
     }
 }
 
+impl SeriesGroupByBehavior for Series {
+
+    fn groupby(&self, keys: Series) -> SeriesGroupBy {
+
+        let values = self.values.clone();
+
+        let mut map: HashMap<String, Vec<DataElement>> = HashMap::new();
+
+        // Group values by their keys
+        for (k, v) in keys.values.into_iter().zip(values.into_iter()) {
+            let key: String = k.into();
+            let mr = map.entry(key).or_default();
+            mr.push(v);
+        }
+        
+        // Create new series from the previous mapping.
+        let groups = map
+            .into_par_iter()
+            .map(|(name, values)| {
+                let mut series = Series::from_data_elements(values);
+                series.set_name(&name);
+                series
+            })
+            .collect();
+
+        SeriesGroupBy::new(groups)
+    }
+}
+
+
 /// Constructor methods for `Series<T>`
 impl Series {
 
@@ -120,6 +152,44 @@ impl Series {
             dtype,
             values: vec, 
         }
+    }
+
+    /// Get a series of the unique elements held in this series
+    /// 
+    /// ## Example
+    /// 
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let series: Series = Series::from_vec(vec![1.0, 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0]);
+    /// let unique: Series = series.unique::<i32>();
+    /// assert_eq!(unique, Series::from_vec(vec![0, 1, 2]));
+    /// ```
+    pub fn unique<T>(&self) -> Series 
+        where T: From<DataElement> + BlackJackData + PartialEq
+    {
+        // Cannot use `HashSet` as f32 & f64 don't implement Hash
+        let mut unique: Vec<T> = vec![];
+        let mut values = self.values.clone();
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        for val in values
+                    .into_iter()
+                    .map(|v| T::from(v)) 
+        {
+            if unique.len() > 0 {
+                if val == unique[unique.len() - 1] {
+                    continue
+                } else {
+                    unique.push(val)
+                }
+            } else {
+                unique.push(val)
+            }
+        }
+        
+        Series::from_vec(unique)
+        
     }
 
     /// Create a new Series struct from a vector, where T is supported by [`BlackJackData`]. 
@@ -181,15 +251,15 @@ impl Series {
     /// let series = Series::from_vec(vec![1_f64, 2_f64, 3_f64]);
     /// 
     /// assert_eq!(
-    ///     series.clone().to_vec::<i32>(), 
+    ///     series.clone().into_vec::<i32>(), 
     ///     vec![1_i32, 2_i32, 3_i32]
     /// );
     /// assert_eq!(
-    ///     series.to_vec::<String>(), 
+    ///     series.into_vec::<String>(), 
     ///     vec![1_f64.to_string(), 2_f64.to_string(), 3_f64.to_string()]
     /// );
     /// ```
-    pub fn to_vec<T: From<DataElement>>(self) -> Vec<T> {
+    pub fn into_vec<T: From<DataElement>>(self) -> Vec<T> {
         let vec: Vec<T> = self.values.into_iter().map(|v| T::from(v.clone())).collect();
         vec
     }
@@ -334,7 +404,7 @@ impl Series {
         use rgsl::statistics::quantile_from_sorted_data;
         use std::cmp::Ordering;
 
-        let mut vec = self.clone().to_vec::<f64>();
+        let mut vec = self.clone().into_vec::<f64>();
         vec.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
         let qtl = quantile_from_sorted_data(&vec, 1, vec.len(), quantile);
         Ok(DataElement::from(qtl).into())
