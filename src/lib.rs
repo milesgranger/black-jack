@@ -38,6 +38,7 @@ extern crate flate2;
 extern crate rgsl;
 extern crate rayon;
 extern crate itertools;
+extern crate prettytable;
 
 #[macro_use] pub mod macros;
 
