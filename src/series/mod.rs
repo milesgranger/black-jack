@@ -25,7 +25,6 @@ use std::convert::From;
 use std::fmt;
 use std::collections::HashMap;
 
-use prettytable as pt;
 use num::*;
 use rayon::prelude::*;
 use stats;
@@ -67,13 +66,15 @@ impl fmt::Display for Series {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 
-        let mut table = pt::Table::new();
+        use prettytable::{Table, Row, Cell};
+
+        let mut table = Table::new();
 
         // Title (column name)
         table.add_row(
-            pt::Row::new(
+            Row::new(
                 vec![
-                    pt::Cell::new(&self.name().unwrap_or("<NA>".to_string()))
+                    Cell::new(&self.name().unwrap_or("<NA>".to_string()))
                 ]
             )
         );
@@ -85,8 +86,8 @@ impl fmt::Display for Series {
             .map(|v| {
                 let v: String = v.clone().into();
                 table.add_row(
-                    pt::Row::new(vec![
-                        pt::Cell::new(&format!("{}", v))
+                    Row::new(vec![
+                        Cell::new(&format!("{}", v))
                     ])
                 );
             })
