@@ -44,7 +44,8 @@ fn test_column_names() {
 #[test]
 fn test_pretty_display() {
     let mut df = DataFrame::new();
-    let s1 = Series::arange(0, 5);
+    let mut s1 = Series::arange(0, 5);
+    s1.set_name("series-1");
     let s2 = Series::arange(5, 10);
 
     df.add_column(s1);

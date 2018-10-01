@@ -3,7 +3,7 @@
 ## BlackJack is under development and not meant to be used; aside from those curious & daring few. :)
 
 [![crates.io](http://meritbadge.herokuapp.com/black-jack)](https://crates.io/crates/black-jack) 
-[![Build Status](https://travis-ci.org/milesgranger/black-jack.svg?branch=master)](https://travis-ci.org/milesgranger/black-jack) 
+[![Build Status](https://travis-ci.com/milesgranger/black-jack.svg?branch=master)](https://travis-ci.com/milesgranger/black-jack) 
 [![Coverage Status](https://coveralls.io/repos/github/milesgranger/black-jack/badge.svg?branch=master)](https://coveralls.io/github/milesgranger/black-jack?branch=master)
 ![License](https://img.shields.io/badge/license-Unlicense-green.svg) 
 

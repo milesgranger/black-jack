@@ -138,22 +138,45 @@ impl DataFrame {
 
 impl fmt::Display for DataFrame {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut printed_series: Vec<Vec<String>> = Vec::new();
-        for series in self.series_objects.values() {
-            let stdout: Vec<String> = format!("{}", series)
-                                        .split("\n")
-                                        .map(|v| v.to_string())
-                                        .collect();
-            printed_series.push(stdout);
+        
+        use prettytable::{Table, Row, Cell};
+
+        let mut table = Table::new();
+
+        // Vec of series refs in df.
+        let series_refs = self.columns()
+            .into_iter()
+            .map(|col_name| (col_name, &self[col_name.as_str()]) )
+            .collect::<Vec<(&String, &Series)>>();
+
+        // Create header row
+        table.add_row(
+            Row::new(
+                series_refs
+                    .iter()
+                    .map(|(name, _series)| {
+                        Cell::new(&name)
+                    })
+                    .collect::<Vec<Cell>>()
+            )
+        );
+
+        // TODO: Impl a better len, ie DataFrame::len()
+        // Build rows.
+        for i in 0..series_refs[0].1.len() - 1 {
+            let row = series_refs
+                .iter()
+                .map(|(_name, series)| {
+                    let val: String = series[i].clone().into();
+                    Cell::new(&format!("{}", val))
+                })
+                .collect::<Vec<Cell>>();
+
+            table.add_row(Row::new(row));
         }
-        let mut output: String = "\n".to_string();
-        for i in 0..printed_series[0].len() {
-            for ii in 0..printed_series.len() {
-                output.push_str(&printed_series[ii][i]);
-            }
-            output.push_str("\n");
-        }
-        write!(f, "{}", output)
+        
+        // Build header
+        write!(f, "{}", table)
     }
 }
 
