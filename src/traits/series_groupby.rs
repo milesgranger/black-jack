@@ -57,8 +57,8 @@ impl SeriesGroupBy {
     {
         let results = self.groups
             .par_iter()
-            .map(|s| s.sum::<T>())
-            .collect();
+            .map(|series| series.sum::<T>())
+            .collect::<Vec<T>>();
         Series::from_vec(results)
     }
 }

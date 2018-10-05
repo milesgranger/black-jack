@@ -5,8 +5,10 @@ use std::fmt::{Debug};
 use std::collections::HashSet;
 
 use prelude::*;
-mod groupby;
-pub use self::groupby::*;
+mod series_groupby;
+mod dataframe_groupby;
+pub use self::series_groupby::*;
+pub use self::dataframe_groupby::*;
 
 /* 
     Traits used throughout crate

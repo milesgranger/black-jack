@@ -39,6 +39,7 @@ extern crate rgsl;
 extern crate rayon;
 extern crate itertools;
 extern crate prettytable;
+extern crate indexmap;
 
 #[macro_use] pub mod macros;
 
