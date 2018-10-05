@@ -31,7 +31,7 @@ impl DataFrameGroupBy {
         let _ = self.groups
             .iter()
             .map(|series_groupby| series_groupby.sum::<T>())
-            .map(|series| df.add_column(series))
+            .map(|series| {println!("{}", &series); df.add_column(series)})
             .collect::<Vec<()>>();
 
         df

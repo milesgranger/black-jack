@@ -15,6 +15,8 @@ fn test_groupby_sum() {
     // Split into groups and sort those groups
     let grouped = series.groupby(keys).sum::<i32>();
 
+    println!("{}", &grouped);
+
     // 3 keys == 3 len
     assert_eq!(grouped.len(), 3);
 

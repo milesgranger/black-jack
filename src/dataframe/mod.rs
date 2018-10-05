@@ -46,9 +46,6 @@ impl DataFrame {
         }
     }
 
-    /// Group by
-    
-
     /// Read a CSV file into a [`DataFrame`] where each column represents a Series
     /// supports automatic decompression of gzipped files if they end with `.gz`
     /// 
@@ -166,7 +163,7 @@ impl fmt::Display for DataFrame {
 
         // TODO: Impl a better len, ie DataFrame::len()
         // Build rows.
-        for i in 0..series_refs[0].1.len() - 1 {
+        for i in 0..series_refs[0].1.len() {
             let row = series_refs
                 .iter()
                 .map(|(_name, series)| {

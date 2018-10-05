@@ -7,6 +7,23 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_df_groupby() {
+    let mut df = DataFrame::new();
+    let series1 = Series::arange(0, 10);
+    let series2 = Series::arange(10, 20);
+
+    df.add_column(series1);
+    df.add_column(series2);
+
+    let keys = Series::from_vec(
+        vec![1, 2, 3, 1, 2, 3, 1, 2, 3, 1]
+    );
+
+    let grouped = df.groupby(keys).sum::<i32>();
+    println!("{}", grouped);
+}
+
+#[test]
 fn test_index_mut() {
     let mut df = DataFrame::new();
     let mut s1 = Series::arange(0, 5);

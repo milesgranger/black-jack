@@ -23,10 +23,8 @@ use std::ops::{Range, Index, IndexMut};
 use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
-use std::collections::HashMap;
 
 use num::*;
-use rayon::prelude::*;
 use stats;
 
 pub mod overloaders;
@@ -100,23 +98,34 @@ impl fmt::Display for Series {
 impl SeriesGroupByBehavior for Series {
 
     fn groupby(&self, keys: Series) -> SeriesGroupBy {
+        
+        /* TODO: Revisit this to avoid the clones. Needs to keep the groups
+           in order based on key order; match pandas. ie: 
+        
+            >>> pd.Series([1, 2, 3, 1, 2, 3]).groupby([4, 5, 6, 4, 5, 6]).sum()
+            4    2
+            5    4
+            6    6
+            dtype: int64
+        */
+        use indexmap::IndexMap;
 
         let values = self.values.clone();
 
-        let mut map: HashMap<String, Vec<DataElement>> = HashMap::new();
+        let mut map: IndexMap<String, Vec<DataElement>> = IndexMap::new();
 
         // Group values by their keys
         for (k, v) in keys.values.into_iter().zip(values.into_iter()) {
             let key: String = k.into();
-            let mr = map.entry(key).or_default();
+            let mr = map.entry(key).or_insert(vec![]);
             mr.push(v);
         }
         
         // Create new series from the previous mapping.
         let groups = map
-            .into_par_iter()
+            .iter()
             .map(|(name, values)| {
-                let mut series = Series::from_data_elements(values);
+                let mut series = Series::from_data_elements(values.clone());
                 series.set_name(&name);
                 series
             })
@@ -150,7 +159,7 @@ impl Series {
         Series { 
             name: None,
             dtype,
-            values: vec, 
+            values: vec
         }
     }
 
@@ -210,7 +219,7 @@ impl Series {
         Series { 
             name: None,
             dtype,
-            values: vec,
+            values: vec
         }
     }
 
@@ -235,7 +244,7 @@ impl Series {
         Series {
             name: None,
             dtype: None,
-            values: vec,
+            values: vec
         }
     }
 
