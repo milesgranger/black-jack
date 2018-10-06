@@ -7,13 +7,45 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_change_df_index() {
+    let s1 = Series::arange(0, 5);
+    let idx = 1..s1.len() + 1;
+
+    let mut df = DataFrame::new();
+    df.add_column(s1).unwrap();
+
+    let expected_index = idx
+        .clone()
+        .into_iter()
+        .map(|v| v.into())
+        .collect::<Vec<DataElement>>();
+
+    assert!(df.set_index(idx.into_iter()).is_ok());
+    assert_eq!(&expected_index, df.index());
+}
+
+#[test]
+fn test_df_column_size_mismatch() {
+    let s1 = Series::arange(0, 5);
+    let s2 = Series::arange(0, 100);
+
+    let mut df = DataFrame::new();
+
+    // first addition can be any size
+    assert!(df.add_column(s1).is_ok());
+
+    // second must be same length as the first.
+    assert!(df.add_column(s2).is_err());
+}
+
+#[test]
 fn test_df_groupby() {
     let mut df = DataFrame::new();
     let series1 = Series::arange(0, 10);
     let series2 = Series::arange(10, 20);
 
-    df.add_column(series1);
-    df.add_column(series2);
+    df.add_column(series1).unwrap();
+    df.add_column(series2).unwrap();
 
     let keys = Series::from_vec(
         vec![1, 2, 3, 1, 2, 3, 1, 2, 3, 1]
@@ -28,7 +60,7 @@ fn test_index_mut() {
     let mut df = DataFrame::new();
     let mut s1 = Series::arange(0, 5);
     s1.set_name("s1");
-    df.add_column(s1);
+    df.add_column(s1).unwrap();
 
     let s1 = Series::arange(5, 10);
     let sc = s1.clone();
@@ -49,8 +81,8 @@ fn test_column_names() {
 
     s1.set_name("s1");
     s2.set_name("s2");
-    df.add_column(s1);
-    df.add_column(s2);
+    df.add_column(s1).unwrap();
+    df.add_column(s2).unwrap();
 
     assert_eq!(
         df.columns(), 
@@ -65,8 +97,8 @@ fn test_pretty_display() {
     s1.set_name("series-1");
     let s2 = Series::arange(5, 10);
 
-    df.add_column(s1);
-    df.add_column(s2);
+    df.add_column(s1).unwrap();
+    df.add_column(s2).unwrap();
 
     println!("{}", df);
 }
@@ -113,13 +145,13 @@ fn test_add_columns() {
     series1.set_name("series-1");
     let series1_clone = series1.clone();
 
-    let mut series2: Series = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+    let mut series2: Series = Series::from_vec(vec![0.0, 1.0, 2.0, 3.0, 4.0]);
     series2.set_name("series-2");
     let series2_clone = series2.clone();
 
     // Add both columns
-    df.add_column(series1);
-    df.add_column(series2);
+    df.add_column(series1).unwrap();
+    df.add_column(series2).unwrap();
     
     {
         // Test the columns match
@@ -148,7 +180,7 @@ fn test_get_column_by_name() {
     series.set_name("test-series");
     let series_clone = series.clone();
 
-    df.add_column(series);
+    df.add_column(series).unwrap();
 
     let series_ref: &Series = df.get_column("test-series").expect("Unable to find column named 'test-series'");
     assert_eq!(*series_ref, series_clone);

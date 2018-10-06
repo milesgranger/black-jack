@@ -45,7 +45,7 @@ impl BlackJackData for String {
 /// Define the behavior for managing columns/series within a dataframe
 pub trait ColumnManager {
     /// Add a new series to the dataframe as a column.
-    fn add_column(&mut self, series: Series) -> ();
+    fn add_column(&mut self, series: Series) -> Result<(), String>;
 
     /// Get a reference to a series by name, **will also have to know the 
     /// primitive type stored**.
