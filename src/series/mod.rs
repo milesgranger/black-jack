@@ -42,6 +42,9 @@ pub struct Series {
     /// The underlying values of the Series
     pub values: Vec<DataElement>,
 
+    /// The index of the Series
+    pub index: Vec<DataElement>,
+
     // Only set if called by `.astype()` or parsing or raw data was able to
     // confirm all `DataElement`s are of the same type.
     dtype: Option<DType>
@@ -155,11 +158,21 @@ impl Series {
     {
         let dtype = Some(start.dtype());
         let data: Vec<T> = (start..stop).collect();
-        let vec: Vec<DataElement> = data.into_iter().map(|v| DataElement::from(v)).collect();
+        
+        let values: Vec<DataElement> = data
+            .into_iter()
+            .map(|v| DataElement::from(v))
+            .collect();
+        
+        let index = (0..values.len())
+            .map(|v| v.to_i64().unwrap().into())
+            .collect();
+
         Series { 
             name: None,
             dtype,
-            values: vec
+            index,
+            values
         }
     }
 
@@ -215,11 +228,21 @@ impl Series {
             DataElement: From<T>
     {
         let dtype = if vec.len() > 0 { Some(vec[0].dtype()) } else  { None };
-        let vec: Vec<DataElement> = vec.into_iter().map(|v| DataElement::from(v)).collect();
+
+        let values = vec
+            .into_iter()
+            .map(|v| DataElement::from(v))
+            .collect::<Vec<DataElement>>();
+
+        let index = (0..values.len())
+            .map(|v| v.to_i64().unwrap().into())
+            .collect();
+
         Series { 
             name: None,
             dtype,
-            values: vec
+            index,
+            values
         }
     }
 
@@ -241,9 +264,14 @@ impl Series {
     pub fn from_data_elements(vec: Vec<DataElement>) -> Self {
 
         // TODO: Add check to see if all DataElements are of the same dtype.
+        let index = (0..vec.len())
+            .map(|v| v.to_i64().unwrap().into())
+            .collect();
+
         Series {
             name: None,
             dtype: None,
+            index,
             values: vec
         }
     }
