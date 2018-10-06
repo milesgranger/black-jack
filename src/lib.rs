@@ -14,7 +14,7 @@
 //! 
 //! // Make some series
 //! let series_i32: Series = Series::arange(0, 5);
-//! let mut series_f64: Series = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+//! let mut series_f64: Series = Series::from_vec(vec![0.0, 1.0, 2.0, 3.0, 4.0]);
 //! 
 //! // You can set a series name!
 //! series_f64.set_name("my-float-series");
@@ -23,8 +23,9 @@
 //! assert_eq!(series_i32.name(), None);
 //! 
 //! // Add columns (of different types) to a dataframe
-//! df.add_column(series_i32);
-//! df.add_column(series_f64);
+//! // .add_column() -> Result<(), String>; `series` must be the same length as `df`
+//! assert!(df.add_column(series_i32).is_ok());
+//! assert!(df.add_column(series_f64).is_ok());
 //! 
 //! // Get columns by either method or indexing it
 //! let series_ref: Option<&Series> = df.get_column("my-float-series");

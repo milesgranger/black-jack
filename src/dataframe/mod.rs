@@ -29,6 +29,7 @@ use prelude::*;
 #[derive(Default, Debug)]
 pub struct DataFrame {
     series_objects: HashMap<String, Series>,
+    index: Vec<DataElement>
 }
 
 impl DataFrame {
@@ -43,6 +44,58 @@ impl DataFrame {
     pub fn new() -> Self {
         Self {
             series_objects: HashMap::new(),
+            index: vec![]
+        }
+    }
+
+    /// Length of the dataframe
+    pub fn len(&self) -> usize {
+        self.index.len()
+    }
+
+    /// Get a reference to the current index
+    pub fn index(&self) -> &Vec<DataElement> {
+        &self.index
+    }
+
+    /// Set the index of this dataframe from an iterator producing elements
+    /// which can be transformed into [`DataElement`]s; ie, any [`BlackJackData`]
+    /// 
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let s1 = Series::arange(0, 5);
+    /// let idx = 1..s1.len() + 1;
+    /// 
+    /// let mut df = DataFrame::new();
+    /// df.add_column(s1).unwrap();
+    /// 
+    /// // Need to create a clone of `Vec<DataElement>` to ensure index was changed
+    /// let idx_clone = idx
+    ///     .clone()
+    ///     .into_iter()
+    ///     .map(|v| v.into())
+    ///     .collect::<Vec<DataElement>>();
+    /// 
+    /// assert!(df.set_index(idx.into_iter()).is_ok());  // Set index
+    /// assert_eq!(&idx_clone, df.index());              // Ensure is't what we gave
+    /// 
+    /// ```
+    pub fn set_index<'a, I, T>(&mut self, index: I) -> Result<(), String> 
+        where 
+            I: ExactSizeIterator + Iterator<Item=T>,
+            T: Into<DataElement>
+    {
+        if index.len() != self.len() {
+            let err = format!(
+                "Length of dataframe is {} but index passed is {}.", 
+                self.len(), index.len()
+            );
+            Err(err)
+        } else {
+            self.index = index.into_iter().map(|v| v.into()).collect();
+            Ok(())
         }
     }
 
@@ -60,7 +113,9 @@ impl DataFrame {
     /// assert_eq!(df["col1"].sum::<i32>(), 15);
     /// 
     /// ```
-    pub fn read_csv<S: AsRef<OsStr> + ToString>(path: S, delimiter: u8) -> Result<Self, Box<Error>> {
+    pub fn read_csv<S>(path: S, delimiter: u8) -> Result<Self, Box<Error>> 
+        where S: AsRef<OsStr> + ToString
+    {
 
         use std::io::prelude::*;
         use std::fs::File;
@@ -129,8 +184,9 @@ impl DataFrame {
                                     })
                                     .collect();
         for series in sc {
-            df.add_column(series);
+            df.add_column(series)?;
         }
+
         Ok(df)
     }
 }
@@ -185,12 +241,32 @@ impl DataFrameBehavior for DataFrame {}
 
 impl ColumnManager for DataFrame {
 
-    fn add_column(&mut self, series: Series) -> () {
-        let n_cols = self.n_columns();
-        self.series_objects
-            .entry(series.name()
-                    .unwrap_or_else(|| format!("COL_{}", n_cols) ))
-            .or_insert_with(|| series );
+    fn add_column(&mut self, series: Series) -> Result<(), String> {
+
+        // Set column index if this is the first column being added
+        if self.index.is_empty() {
+            self.index = (0..series.len())
+                .map(|v| DataElement::from(v as i64))
+                .collect();
+        }
+
+        if self.len() != series.len() {
+            let err = format!(
+                "DataFrame is of size {}, but passed series is {}",
+                self.len(), series.len()
+            );
+            Err(err)
+
+        } else {
+            let n_cols = self.n_columns();
+            self.series_objects
+                .entry(series.name()
+                        .unwrap_or_else(|| format!("COL_{}", n_cols) ))
+                .or_insert_with(|| series );
+            Ok(())
+        }
+
+        
     }
 
     fn get_column(&self, name: &str) -> Option<&Series> {

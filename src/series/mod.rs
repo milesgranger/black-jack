@@ -43,7 +43,7 @@ pub struct Series {
     pub values: Vec<DataElement>,
 
     /// The index of the Series
-    pub index: Vec<DataElement>,
+    index: Vec<DataElement>,
 
     // Only set if called by `.astype()` or parsing or raw data was able to
     // confirm all `DataElement`s are of the same type.
@@ -173,6 +173,30 @@ impl Series {
             dtype,
             index,
             values
+        }
+    }
+
+    /// Get a reference to the current index
+    pub fn index(&self) -> &Vec<DataElement> {
+        &self.index
+    }
+
+    /// Set the index of this series from an iterator producing elements
+    /// which can be transformed into [`DataElement`]s; ie, any [`BlackJackData`]
+    pub fn set_index<'a, I, T>(&mut self, index: I) -> Result<(), String> 
+        where 
+            I: ExactSizeIterator + Iterator<Item=T>,
+            T: Into<DataElement>
+    {
+        if index.len() != self.len() {
+            let err = format!(
+                "Length of dataframe is {} but index passed is {}.", 
+                self.len(), index.len()
+            );
+            Err(err)
+        } else {
+            self.index = index.into_iter().map(|v| v.into()).collect();
+            Ok(())
         }
     }
 

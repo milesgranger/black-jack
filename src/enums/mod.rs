@@ -90,6 +90,12 @@ pub enum DataElement {
     None
 }
 
+impl From<usize> for DataElement {
+    fn from(n: usize) -> Self {
+        DataElement::I64(n as i64)
+    }
+}
+
 
 impl DataElement {
 

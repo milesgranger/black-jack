@@ -8,6 +8,21 @@ use blackjack::prelude::*;
 
 
 #[test]
+fn test_series_index() {
+    let mut series = Series::arange(0, 10);
+    let index  = 1..series.len() + 1;
+
+    let expected_index = index
+        .clone()
+        .into_iter()
+        .map(|v| v.into())
+        .collect::<Vec<DataElement>>();
+
+    assert!(series.set_index(index.into_iter()).is_ok());
+    assert_eq!(&expected_index, series.index());
+}
+
+#[test]
 fn test_groupby_sum() {
     let series = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
     let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
