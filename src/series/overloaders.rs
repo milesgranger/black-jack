@@ -13,65 +13,61 @@ use prelude::*;
 
 
 /// Support `series * scalar`
-impl<T> Mul<T> for Series 
+impl<T> Mul<T> for Series<T>
     where 
-        T: Num + Copy + From<DataElement> + BlackJackData + Send,
+        T: Num + Copy + BlackJackData + Send + Sync,
         Vec<T>: IntoParallelIterator<Item=T>,
         <Vec<T> as IntoParallelIterator>::Iter: IndexedParallelIterator
 {
-    type Output = Series;
+    type Output = Series<T>;
 
-    fn mul(self, scalar_val: T) -> Series {
-        let vals = iter::repeat(scalar_val).take(self.len()).collect::<Vec<T>>();
-        let vec: Vec<DataElement> = self.values.into_par_iter()
-                                                .zip(vals)
-                                                .map(|(v, s)| v * s)
-                                                .collect();
-        Series::from_data_elements(vec)
+    fn mul(self, scalar_val: T) -> Series<T> {
+        let vec: Vec<T> = self.values
+            .into_par_iter()
+            .map(|v| v * scalar_val)
+            .collect();
+        Series::from_vec(vec)
     }
 }
 
-impl<T> MulAssign<T> for Series 
+impl<T> MulAssign<T> for Series<T>
     where 
-        T: Num + Copy + From<DataElement> + BlackJackData + Send,
-        DataElement: MulAssign<T>,
+        T: Num + Copy + BlackJackData + Send + Sync + MulAssign<T>,
         Vec<T>: IntoParallelIterator<Item=T>,
         <Vec<T> as IntoParallelIterator>::Iter: IndexedParallelIterator
 {
     fn mul_assign(&mut self, scalar_val: T) -> () {
 
-        let vals = iter::repeat(scalar_val).take(self.len()).collect::<Vec<T>>();
-        self.values.par_iter_mut()
-                    .zip(vals)
-                    .map(|(v, s)| *v *= s)
-                    .collect::<Vec<()>>();
+        self.values
+            .par_iter_mut()
+            .map(|v| *v *= scalar_val)
+            .collect::<Vec<()>>();
     }
 }
 
 /// Support `series + scalar`
-impl<T> Add<T> for Series 
+impl<T> Add<T> for Series<T>
     where 
-        T: Num + Copy + From<DataElement> + BlackJackData + Send,
+        T: Num + Copy + BlackJackData + Send,
         Vec<T>: IntoParallelIterator<Item=T>,
         <Vec<T> as IntoParallelIterator>::Iter: IndexedParallelIterator
 {
-    type Output = Series;
+    type Output = Series<T>;
 
-    fn add(self, scalar_val: T) -> Series {
+    fn add(self, scalar_val: T) -> Series<T> {
         let vals = iter::repeat(scalar_val).take(self.len()).collect::<Vec<T>>();
-        let vec: Vec<DataElement> = self.values.into_par_iter()
+        let vec: Vec<T> = self.values.into_par_iter()
                                                 .zip(vals)
                                                 .map(|(v, s)| v + s)
                                                 .collect();
-        Series::from_data_elements(vec)
+        Series::from_vec(vec)
     }
 }
 
 /// Support `series += scalar`
-impl<T> AddAssign<T> for Series
+impl<T> AddAssign<T> for Series<T>
     where 
-        T: Num + Copy + From<DataElement> + BlackJackData + Send + FromPrimitive,
-        DataElement: AddAssign<T>,
+        T: Num + Copy + BlackJackData + Send + FromPrimitive + AddAssign<T>,
         Vec<T>: IntoParallelIterator<Item=T>,
         <Vec<T> as IntoParallelIterator>::Iter: IndexedParallelIterator
 {
@@ -86,29 +82,28 @@ impl<T> AddAssign<T> for Series
 }
 
 /// Support `series - scalar`
-impl<T> Sub<T> for Series 
+impl<T> Sub<T> for Series<T>
     where 
-        T: Num + Copy + From<DataElement> + BlackJackData + Send,
+        T: Num + Copy + BlackJackData + Send,
         Vec<T>: IntoParallelIterator<Item=T>,
         <Vec<T> as IntoParallelIterator>::Iter: IndexedParallelIterator
 {
-    type Output = Series;
+    type Output = Series<T>;
 
-    fn sub(self, scalar_val: T) -> Series {
+    fn sub(self, scalar_val: T) -> Series<T> {
         let vals = iter::repeat(scalar_val).take(self.len()).collect::<Vec<T>>();
-        let vec: Vec<DataElement> = self.values.into_par_iter()
+        let vec: Vec<T> = self.values.into_par_iter()
                                                 .zip(vals)
                                                 .map(|(v, s)| v - s)
                                                 .collect();
-        Series::from_data_elements(vec)
+        Series::from_vec(vec)
     }
 }
 
 /// Support `series -= scalar`
-impl<T> SubAssign<T> for Series
+impl<T> SubAssign<T> for Series<T>
     where 
-        T: Num + Copy + From<DataElement> + BlackJackData + Send,
-        DataElement: SubAssign<T>,
+        T: Num + Copy + BlackJackData + Send + SubAssign<T>,
         Vec<T>: IntoParallelIterator<Item=T>,
         <Vec<T> as IntoParallelIterator>::Iter: IndexedParallelIterator
 {
@@ -123,29 +118,28 @@ impl<T> SubAssign<T> for Series
 }
 
 /// Support `series - scalar`
-impl<T> Div<T> for Series 
+impl<T> Div<T> for Series<T>
     where 
-        T: Num + Copy + From<DataElement> + BlackJackData + Send,
+        T: Num + Copy + BlackJackData + Send,
         Vec<T>: IntoParallelIterator<Item=T>,
         <Vec<T> as IntoParallelIterator>::Iter: IndexedParallelIterator
 {
-    type Output = Series;
+    type Output = Series<T>;
 
-    fn div(self, scalar_val: T) -> Series {
+    fn div(self, scalar_val: T) -> Series<T> {
         let vals = iter::repeat(scalar_val).take(self.len()).collect::<Vec<T>>();
-        let vec: Vec<DataElement> = self.values.into_par_iter()
+        let vec: Vec<T> = self.values.into_par_iter()
                                                 .zip(vals)
                                                 .map(|(v, s)| v / s)
                                                 .collect();
-        Series::from_data_elements(vec)
+        Series::from_vec(vec)
     }
 }
 
 /// Support `series += scalar`
-impl<T> DivAssign<T> for Series
+impl<T> DivAssign<T> for Series<T>
     where 
-        T: Num + Copy + From<DataElement> + BlackJackData + Send,
-        DataElement: DivAssign<T>,
+        T: Num + Copy + BlackJackData + Send + DivAssign<T>,
         Vec<T>: IntoParallelIterator<Item=T>,
         <Vec<T> as IntoParallelIterator>::Iter: IndexedParallelIterator
 {

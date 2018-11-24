@@ -41,6 +41,12 @@ extern crate rayon;
 extern crate itertools;
 extern crate prettytable;
 extern crate indexmap;
+extern crate ndarray;
+extern crate bincode;
+#[macro_use] extern crate serde;
+#[macro_use] extern crate derive_more;
+#[macro_use] extern crate serde_derive;
+
 
 #[macro_use] pub mod macros;
 
