@@ -24,6 +24,11 @@ itertools = "^0.7"
 flate2 = { version = "1.0", features = ["rust_backend"], default-features = false }
 prettytable-rs = "^0.8"
 indexmap = "^1.0"
+ndarray = "^0.12.1"
+derive_more = "^0.13.0"
+bincode = "1.0.1"
+serde_derive = "^1.0.27"
+serde = "1.0.80"
 
 [features]
 default = ["GSL/v2"]

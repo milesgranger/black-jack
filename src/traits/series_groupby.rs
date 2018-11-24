@@ -8,14 +8,16 @@ use prelude::*;
 
 /// [`Series::groupby`]  result.
 /// Contains the split series by key
-pub struct SeriesGroupBy {
-    groups: Vec<Series>
+pub struct SeriesGroupBy<T: BlackJackData> {
+    groups: Vec<Series<T>>
 }
 
-impl SeriesGroupBy {
+impl<T> SeriesGroupBy<T>
+    where T: BlackJackData
+{
 
     /// Create a new [`SeriesGroupBy`] from a `Vec<Series>`
-    pub fn new(groups: Vec<Series>) -> Self {
+    pub fn new(groups: Vec<Series<T>>) -> Self {
         SeriesGroupBy { groups }
     }
 
@@ -39,51 +41,27 @@ impl SeriesGroupBy {
     /// 
     /// assert_eq!(series.max::<i32>(), Ok(3));  // by key, 3 is the max.
     /// ```
-    pub fn apply<F, T>(self, agg_func: F) -> Series
+    pub fn apply<F>(self, agg_func: F) -> Series<T>
         where 
-            F: Fn(Series) -> T + Sync + Send,
-            T: BlackJackData + Send
+            F: Fn(Series<T>) -> T + Sync + Send,
+            T: Send
     {
         let results = self.groups
-            .into_par_iter()
+            .into_iter()
             .map(agg_func)
-            .collect();
+            .collect::<Vec<T>>();
         Series::from_vec(results)
     }
 
     /// Apply a `sum` aggregation to each [`Series`] group
-    pub fn sum<T>(&self) -> Series 
-        where T: Send + Num + From<DataElement> + Sum + Copy + BlackJackData
+    pub fn sum<'a>(&'a self) -> Series<T>
+        where
+            T: Send + Num + Sum<&'a T> + Copy + Sum,
     {
         let results = self.groups
-            .par_iter()
-            .map(|series| series.sum::<T>())
+            .iter()
+            .map(|series| series.sum())
             .collect::<Vec<T>>();
         Series::from_vec(results)
     }
-}
-
-
-/// Trait defining the concept of split -> apply -> combine
-pub trait SeriesGroupByBehavior {
-
-    /// Group by method for grouping elements in a [`Series`]
-    /// by key.
-    /// 
-    /// ## Example
-    /// 
-    /// ```
-    /// use blackjack::prelude::*;
-    /// 
-    /// let series = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
-    /// let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
-    /// 
-    /// let grouped: Series = series.groupby(keys).sum::<i32>();
-    /// assert_eq!(grouped.len(), 3);
-    /// 
-    /// let mut vals = grouped.into_vec::<i32>();
-    /// vals.sort();
-    /// assert_eq!(vals, vec![2, 4, 6]);
-    /// ```
-    fn groupby(&self, keys: Series) -> SeriesGroupBy;
 }
