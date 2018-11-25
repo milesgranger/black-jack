@@ -8,28 +8,17 @@
 //! 
 //! ```
 //! use blackjack::prelude::*;
-//! 
-//! // Dataframe; container for series objects.
-//! let mut df = DataFrame::new();
+//!
 //! 
 //! // Make some series
-//! let series_i32: Series = Series::arange(0, 5);
-//! let mut series_f64: Series = Series::from_vec(vec![0.0, 1.0, 2.0, 3.0, 4.0]);
+//! let series_i32: Series<i32> = Series::arange(0, 5);
+//! let mut series_f64: Series<f32> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
 //! 
 //! // You can set a series name!
 //! series_f64.set_name("my-float-series");
 //! 
 //! // Or not... 
 //! assert_eq!(series_i32.name(), None);
-//! 
-//! // Add columns (of different types) to a dataframe
-//! // .add_column() -> Result<(), String>; `series` must be the same length as `df`
-//! assert!(df.add_column(series_i32).is_ok());
-//! assert!(df.add_column(series_f64).is_ok());
-//! 
-//! // Get columns by either method or indexing it
-//! let series_ref: Option<&Series> = df.get_column("my-float-series");
-//! let series_ref: &Series = &df["my-float-series"];  // panics if series name does not exist in dataframe!
 //! ```
 
 extern crate num;

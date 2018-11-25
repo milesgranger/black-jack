@@ -36,10 +36,10 @@ impl<T> SeriesGroupBy<T>
     /// let series = Series::from_vec(vec![9, 9, 3, 1, 1, 9]);
     /// let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
     /// 
-    /// let grouped: SeriesGroupBy = series.groupby(keys);
-    /// let series = grouped.apply(|s: Series| s.min::<i32>().unwrap());
+    /// let grouped: SeriesGroupBy<i32> = series.groupby(keys);
+    /// let series = grouped.apply(|s: Series<i32>| s.min().unwrap());
     /// 
-    /// assert_eq!(series.max::<i32>(), Ok(3));  // by key, 3 is the max.
+    /// assert_eq!(series.max(), Ok(3));  // by key, 3 is the max.
     /// ```
     pub fn apply<F>(self, agg_func: F) -> Series<T>
         where 
