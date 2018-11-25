@@ -2,7 +2,6 @@
 
 
 use std::fmt::{Debug, Display};
-use std::collections::HashSet;
 use prelude::*;
 mod series_groupby;
 mod dataframe_groupby;
