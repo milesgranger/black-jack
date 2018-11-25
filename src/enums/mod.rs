@@ -1,12 +1,7 @@
 //! Enums to be used throughout the crate.
 
-use std::string::ToString;
-use num::*;
-use prelude::*;
-pub mod overloaders;
-
 /// Possible DType returns, matches [`BlackJackData`]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
 pub enum DType {
 
     /// `f64`

@@ -14,13 +14,13 @@ fn criterion_bechmark(c: &mut Criterion) {
 
     c.bench_function_over_inputs(
         "series min",  
-        |b, series| b.iter(|| series.min::<i64>()),
+        |b, series| b.iter(|| series.min()),
         inputs.clone()
     );
 
     c.bench_function_over_inputs(
         "series max",  
-        |b, series| b.iter(|| series.max::<i64>()),
+        |b, series| b.iter(|| series.max()),
         inputs.clone()
     );
 
@@ -32,7 +32,7 @@ fn criterion_bechmark(c: &mut Criterion) {
     
     c.bench_function_over_inputs(
         "series sum",  
-        |b, series| b.iter(|| series.sum::<i64>()),
+        |b, series| b.iter(|| series.sum()),
         inputs.clone()
     );
 
@@ -54,6 +54,7 @@ fn criterion_bechmark(c: &mut Criterion) {
             })
     );
 
+    /*
     c.bench_function(
         "dataframe read_csv BASIC",
         |b| b.iter(|| {
@@ -61,6 +62,7 @@ fn criterion_bechmark(c: &mut Criterion) {
             let _df = DataFrame::read_csv(path, b',');
         })
     );
+    */
     
     c.bench_function(
         "series scalar ops - (Mul)",
@@ -75,7 +77,7 @@ fn criterion_bechmark(c: &mut Criterion) {
         "series scalar ops - (MulAssign)",
         |b| b.iter_with_setup(|| {
                 let mut s = Series::arange(0, 10000);
-                s.astype(DType::I64).unwrap();
+                s.astype::<i64>().unwrap();
                 s
             }, | mut series | {
                 series *= 2_i64;
@@ -92,7 +94,7 @@ fn criterion_bechmark(c: &mut Criterion) {
                 s.append(1);
                 s
             }, | series | {
-                let _mode = series.mode::<i32>().unwrap();
+                let _mode = series.mode().unwrap();
             })
     );
 
@@ -101,7 +103,7 @@ fn criterion_bechmark(c: &mut Criterion) {
         |b| b.iter_with_setup(|| {
                 Series::arange(0, 10000)
             }, | series | {
-                let _var = series.var::<i32>().unwrap();
+                let _var = series.var().unwrap();
             })
     );
 
@@ -110,7 +112,7 @@ fn criterion_bechmark(c: &mut Criterion) {
         |b| b.iter_with_setup(|| {
                 Series::arange(0, 10000)
             }, | series | {
-                let _std = series.std::<f32>().unwrap();
+                let _std = series.std().unwrap();
             })
     );
 
@@ -119,7 +121,7 @@ fn criterion_bechmark(c: &mut Criterion) {
         |b| b.iter_with_setup(|| {
                 Series::arange(0, 10000)
             }, | series | {
-                let _median = series.median::<f32>().unwrap();
+                let _median = series.median().unwrap();
             })
     );
 
@@ -128,7 +130,7 @@ fn criterion_bechmark(c: &mut Criterion) {
         |b| b.iter_with_setup(|| {
                 Series::arange(0, 10000)
             }, | series | {
-                let _qtl = series.quantile::<f32>(0.5).unwrap();
+                let _qtl = series.quantile(0.5).unwrap();
             })
     );
 
@@ -139,7 +141,7 @@ fn criterion_bechmark(c: &mut Criterion) {
             let keys   = Series::arange(0, 10000);
             (keys, series)
         }, |(keys, series)| {
-            let _res = series.groupby(keys).sum::<i32>();
+            let _res = series.groupby(keys).sum();
         })
     );
 

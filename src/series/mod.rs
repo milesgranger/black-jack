@@ -26,14 +26,13 @@ use std::fmt;
 
 use num::*;
 use stats;
-use rayon::prelude::*;
 
 pub mod overloaders;
 use prelude::*;
 
 
 /// Series struct for containing underlying Array and other meta data.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Series<T>
     where
         T: BlackJackData
@@ -46,66 +45,7 @@ pub struct Series<T>
     /// The underlying values of the Series
     pub values: Vec<T>,
 
-    /// The index of the Series
-    index: Vec<DataElement>,
-
-    // Only set if called by `.astype()` or parsing or raw data was able to
-    // confirm all `DataElement`s are of the same type.
-    dtype: Option<DType>
-}
-
-impl<T> Index<usize> for Series<T>
-    where T: BlackJackData
-{
-    type Output = T;
-    fn index(&self, idx: usize) -> &T {
-        &self.values[idx]
-    }
-}
-
-impl<T: BlackJackData> IndexMut<usize> for Series<T> {
-    fn index_mut(&mut self, idx: usize) -> &mut T {
-        &mut self.values[idx]
-    }
-}
-
-impl<T> fmt::Display for Series<T>
-    where
-        T: BlackJackData,
-        String: From<T>
-{
-
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-
-        use prettytable::{Table, Row, Cell};
-
-        let mut table = Table::new();
-
-        // Title (column name)
-        table.add_row(
-            Row::new(
-                vec![
-                    Cell::new(&self.name().unwrap_or("<NA>".to_string()))
-                ]
-            )
-        );
-
-        // Build remaining values.
-        // TODO: Limit how many are actually printed.
-        let _ = self.values
-            .iter()
-            .map(|v| {
-                let v: String = v.clone().into();
-                table.add_row(
-                    Row::new(vec![
-                        Cell::new(&format!("{}", v))
-                    ])
-                );
-            })
-            .collect::<Vec<()>>();
-
-        write!(f, "{}\n", table)
-    }
+    dtype: DType
 }
 
 /// Constructor methods for `Series<T>`
@@ -128,7 +68,7 @@ impl<T> Series<T>
             Range<T>: Iterator, 
             Vec<T>: FromIterator<<Range<T> as Iterator>::Item>
     {
-        let dtype = Some(start.dtype());
+        let dtype = start.dtype();
         let values: Vec<T> = (start..stop).collect();
         Series { 
             name: None,
@@ -236,7 +176,7 @@ impl<T> Series<T>
     /// ```
     pub fn from_vec(vec: Vec<T>) -> Self
     {
-        let dtype = if vec.len() > 0 { Some(vec[0].dtype()) } else  { None };
+        let dtype = vec[0].dtype();  // TODO: Do something better.
         Series { 
             name: None,
             dtype,
@@ -475,7 +415,7 @@ impl<T> Series<T>
     /// Get the dtype, returns `None` if series dtype is unknown. 
     /// in such a case, calling `.astype()` to coerce all types to a single
     /// type is needed. 
-    pub fn dtype(&self) -> Option<DType> { 
+    pub fn dtype(&self) -> DType {
         self.dtype.clone()
     }
 
@@ -562,5 +502,63 @@ impl<T> Series<T>
             .collect();
 
         SeriesGroupBy::new(groups)
+    }
+}
+
+
+// Support ref indexing
+impl<T> Index<usize> for Series<T>
+    where T: BlackJackData
+{
+    type Output = T;
+    fn index(&self, idx: usize) -> &T {
+        &self.values[idx]
+    }
+}
+
+// Support ref mut indexing
+impl<T: BlackJackData> IndexMut<usize> for Series<T> {
+    fn index_mut(&mut self, idx: usize) -> &mut T {
+        &mut self.values[idx]
+    }
+}
+
+// Support Display for Series
+impl<T> fmt::Display for Series<T>
+    where
+        T: BlackJackData,
+        String: From<T>
+{
+
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+
+        use prettytable::{Table, Row, Cell};
+
+        let mut table = Table::new();
+
+        // Title (column name)
+        table.add_row(
+            Row::new(
+                vec![
+                    Cell::new(&self.name().unwrap_or("<NA>".to_string()))
+                ]
+            )
+        );
+
+        // Build remaining values.
+        // TODO: Limit how many are actually printed.
+        let _ = self.values
+            .iter()
+            .map(|v| {
+                let v: String = v.clone().into();
+                table.add_row(
+                    Row::new(vec![
+                        Cell::new(&format!("{}", v))
+                    ])
+                );
+            })
+            .collect::<Vec<()>>();
+
+        write!(f, "{}\n", table)
     }
 }

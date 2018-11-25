@@ -2,7 +2,6 @@
 //! Module holds overloading implementations for [`Series`].
 //! 
 
-use std::iter;
 use std::marker::Send;
 use std::ops::{Mul, Add, Sub, Div, MulAssign, AddAssign, SubAssign, DivAssign};
 

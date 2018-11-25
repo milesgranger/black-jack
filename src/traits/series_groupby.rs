@@ -2,7 +2,6 @@
 use std::iter::Sum;
 
 use num::*;
-use rayon::prelude::*;
 use prelude::*;
 
 
