@@ -10,12 +10,12 @@
 //! 
 //! let mut series = Series::arange(0, 5);
 //! 
-//! // Index and change elements, call `.into()` to easily convert to `DataElement`
-//! series[0] = 1.into();              // `into()` on `BlackJackData`
-//! series[1] = DataElement::I32(0);   // ...or more explicitly set the value
-//! 
-//! assert_eq!(series[0], DataElement::I32(1));
-//! assert_eq!(series.sum::<i32>(), 10);
+//! // Index and change elements
+//! series[0] = 1;
+//! series[1] = 0;
+//!
+//! assert_eq!(series[0], 1);
+//! assert_eq!(series.sum(), 10);
 //! assert_eq!(series.len(), 5);
 //! ```
 
@@ -120,7 +120,7 @@ impl<T> Series<T>
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series: Series = Series::arange(0, 10);
+    /// let series: Series<i32> = Series::arange(0, 10);
     /// ```
     pub fn arange(start: T, stop: T) -> Self
         where
@@ -137,6 +137,59 @@ impl<T> Series<T>
         }
     }
 
+    /// Convert the series into another [`DType`] (creates a new series)
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let series: Series<i32> = Series::arange(0, 10);
+    /// assert_eq!(series[0].dtype(), DType::I32);
+    /// let new_series = series.astype::<f64>().unwrap();
+    /// assert_eq!(new_series[0].dtype(), DType::F64);
+    /// ```
+    pub fn astype<A>(&self) -> Result<Series<A>, &'static str>
+        where A: BlackJackData + NumCast,
+              T: ToPrimitive
+    {
+        let series = Series {
+            name: self.name.clone(),
+            dtype: self.dtype.clone(),
+            values: self.values
+                .clone()
+                .into_iter()
+                .map(|v| NumCast::from(v).ok_or_else(|| "Cannot cast into type"))
+                .collect::<Result<Vec<A>, _>>()?
+        };
+        Ok(series)
+    }
+
+    /// Convert this series into another [`DType`] (consumes current series)
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let series: Series<i32> = Series::arange(0, 10);
+    /// assert_eq!(series[0].dtype(), DType::I32);
+    /// let new_series = series.into_type::<f64>().unwrap();
+    /// assert_eq!(new_series[0].dtype(), DType::F64);
+    /// ```
+    pub fn into_type<A>(self) -> Result<Series<A>, &'static str>
+        where A: BlackJackData + NumCast,
+              T: ToPrimitive
+    {
+        let series = Series {
+            name: self.name,
+            dtype: self.dtype,
+            values: self.values
+                .into_iter()
+                .map(|v| NumCast::from(v).ok_or_else(|| "Cannot cast into type"))
+                .collect::<Result<Vec<A>, _>>()?
+        };
+        Ok(series)
+    }
+
     /// Get a series of the unique elements held in this series
     /// 
     /// ## Example
@@ -144,8 +197,8 @@ impl<T> Series<T>
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series: Series = Series::from_vec(vec![1.0, 2.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0]);
-    /// let unique: Series = series.unique::<i32>();
+    /// let series: Series<i32> = Series::from_vec(vec![1, 2, 1, 0, 1, 0, 1, 1]);
+    /// let unique: Series<i32> = series.unique();
     /// assert_eq!(unique, Series::from_vec(vec![0, 1, 2]));
     /// ```
     pub fn unique(&self) -> Series<T>
@@ -179,7 +232,7 @@ impl<T> Series<T>
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series: Series = Series::from_vec(vec![1, 2, 3]);
+    /// let series: Series<i32> = Series::from_vec(vec![1, 2, 3]);
     /// ```
     pub fn from_vec(vec: Vec<T>) -> Self
     {
@@ -204,12 +257,8 @@ impl<T> Series<T>
     /// let series = Series::from_vec(vec![1_f64, 2_f64, 3_f64]);
     /// 
     /// assert_eq!(
-    ///     series.clone().into_vec::<i32>(), 
-    ///     vec![1_i32, 2_i32, 3_i32]
-    /// );
-    /// assert_eq!(
-    ///     series.into_vec::<String>(), 
-    ///     vec![1_f64.to_string(), 2_f64.to_string(), 3_f64.to_string()]
+    ///     series.clone().into_vec(),
+    ///     vec![1_f64, 2_f64, 3_f64]
     /// );
     /// ```
     pub fn into_vec(self) -> Vec<T> {
@@ -278,9 +327,9 @@ impl<T> Series<T>
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series = Series::arange(0, 10);
+    /// let series = Series::arange(0, 10).astype::<f32>().unwrap();
     /// 
-    /// let std = series.std::<f32>().unwrap(); // Ok(2.8722...)
+    /// let std = series.std().unwrap(); // Ok(2.8722...)
     /// assert!(std > 2.87);
     /// assert!(std < 2.88);
     /// ```
@@ -341,8 +390,8 @@ impl<T> Series<T>
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series = Series::arange(0, 100);
-    /// let qtl = series.quantile::<f32>(0.5).unwrap(); // `49.5_f32`
+    /// let series = Series::arange(0, 100).astype::<f32>().unwrap();
+    /// let qtl = series.quantile(0.5).unwrap(); // `49.5_f32`
     /// 
     /// assert!(qtl < 49.51);
     /// assert!(qtl > 49.49);
@@ -389,7 +438,7 @@ impl<T> Series<T>
     /// ```
     /// use blackjack::prelude::*;
     /// 
-    /// let series: Series = Series::arange(10, 100);
+    /// let series: Series<i32> = Series::arange(10, 100);
     /// 
     /// assert_eq!(series.min(), Ok(10));
     /// ```
@@ -443,7 +492,8 @@ impl<T> Series<T>
     /// assert_eq!(series.len(), 4);
     /// ```
     pub fn append<V: Into<T>>(&mut self, val: V) -> () {
-        self.values.push(val.into());
+        let v = val.into();
+        self.values.push(v);
     }
 
     /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or 
@@ -468,10 +518,10 @@ impl<T> Series<T>
     /// let series = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
     /// let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
     ///
-    /// let grouped: Series = series.groupby(keys).sum::<i32>();
+    /// let grouped: Series<i32> = series.groupby(keys).sum();
     /// assert_eq!(grouped.len(), 3);
     ///
-    /// let mut vals = grouped.into_vec::<i32>();
+    /// let mut vals = grouped.into_vec();
     /// vals.sort();
     /// assert_eq!(vals, vec![2, 4, 6]);
     /// ```
