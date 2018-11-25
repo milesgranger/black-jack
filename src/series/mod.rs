@@ -250,7 +250,7 @@ impl<T> Series<T>
         }
 
         let modes = stats::modes(self.values.iter().map(|v| *v));
-        let mut modes = Series::from_vec(modes);
+        let modes = Series::from_vec(modes);
         Ok(modes)
     }
 
