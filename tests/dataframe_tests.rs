@@ -5,6 +5,14 @@ use std::collections::HashSet;
 
 use blackjack::prelude::*;
 
+
+#[test]
+fn test_series_serializer() {
+    let series = Series::arange(0, 10);
+    let serialized = SerializedSeries::from_series(series).unwrap();
+    let deserialzed = serialized.decoded_series().unwrap();
+}
+
 /*
 
 #[test]

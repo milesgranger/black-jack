@@ -1,4 +1,5 @@
 #![warn(missing_docs)]
+#![feature(impl_trait_in_bindings)]
 //! Black-Jack is under development, and not meant to be used in any real capacity. 
 //! 
 //! The (_long term_) goal is to create a lightweight [Pandas](https://pandas.pydata.org/) equivelent 
@@ -35,6 +36,7 @@ extern crate bincode;
 #[macro_use] extern crate serde;
 #[macro_use] extern crate derive_more;
 #[macro_use] extern crate serde_derive;
+#[macro_use] extern crate failure;
 
 
 #[macro_use] pub mod macros;
