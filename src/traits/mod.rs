@@ -2,6 +2,7 @@
 
 
 use std::fmt::{Debug, Display};
+use serde::Deserialize;
 use prelude::*;
 mod series_groupby;
 mod dataframe_groupby;
