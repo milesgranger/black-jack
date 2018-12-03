@@ -1,5 +1,4 @@
 #![warn(missing_docs)]
-#![feature(impl_trait_in_bindings)]
 //! Black-Jack is under development, and not meant to be used in any real capacity. 
 //! 
 //! The (_long term_) goal is to create a lightweight [Pandas](https://pandas.pydata.org/) equivelent 
