@@ -8,9 +8,10 @@ use blackjack::prelude::*;
 
 #[test]
 fn test_series_serializer() {
-    let series = Series::arange(0, 10);
+    let mut series = Series::arange(0, 10);
+    series.set_name("col1");
     let serialized = SerializedSeries::from_series(series).unwrap();
-    let deserialzed = serialized.decoded_series().unwrap();
+    let deserialzed: Series<i32> = serialized.decode().unwrap();
 }
 
 /*
@@ -77,7 +78,7 @@ fn test_index_mut() {
 
     assert_eq!(&df["s1"], &sc);
 }
-
+*/
 #[test]
 fn test_column_names() {
     use std::collections::HashSet;
@@ -94,11 +95,11 @@ fn test_column_names() {
     df.add_column(s2).unwrap();
 
     assert_eq!(
-        df.columns(), 
-        HashSet::from_iter(vec![&"s1".to_string(), &"s2".to_string()])
+        df.columns().collect::<Vec<&str>>(),
+        vec!["s1", "s2"]
     );
 }
-
+/*
 #[test]
 fn test_pretty_display() {
     let mut df = DataFrame::new();

@@ -54,8 +54,7 @@ impl<T> SeriesGroupBy<T>
 
     /// Apply a `sum` aggregation to each [`Series`] group
     pub fn sum<'a>(&'a self) -> Series<T>
-        where
-            T: Send + Num + Sum<&'a T> + Copy + Sum,
+        where T: Send + Num + Sum<&'a T> + Copy + Sum,
     {
         let results = self.groups
             .iter()
