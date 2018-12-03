@@ -33,6 +33,8 @@ pub struct SerializedSeries {
 impl SerializedSeries {
 
     /// Serialize a [`Series`] into a [`SerializedSeries`]
+    /// used for storing various Series types into a container, typically, you will not use
+    /// this directly.
     pub fn from_series<T: BlackJackData + Serialize>(series: Series<T>) -> Result<Self, BlackJackError> {
         match series.name() {
             Some(name) => {
@@ -43,9 +45,9 @@ impl SerializedSeries {
             None => Err(BlackJackError::NoSeriesName)
         }
     }
-
     /// Deserialize this into a series
-    pub fn decoded_series<'a, T: BlackJackData + Deserialize<'a>>(&'a self) -> Result<Series<T>, bincode::Error>
+    pub fn decode<'a, T>(&'a self) -> Result<Series<T>, bincode::Error>
+        where T: BlackJackData + Deserialize<'a>
     {
         bincode::deserialize::<Series<T>>(&self.encoded_data)
     }
@@ -55,3 +57,28 @@ impl SerializedSeries {
 pub struct DataFrame {
     data: Vec<SerializedSeries>
 }
+
+impl DataFrame {
+
+    /// Get a new and empty dataframe
+    pub fn new() -> Self {
+        DataFrame {
+            data: vec![]
+        }
+    }
+
+    /// Add a column to this dataframe.
+    pub fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> Result<(), BlackJackError> {
+        let serialized = SerializedSeries::from_series(series)?;
+        self.data.push(serialized);
+        Ok(())
+    }
+
+    /// Get a list of column names in this dataframe
+    pub fn columns(&self) -> impl Iterator<Item=&str> {
+        self.data
+            .iter()
+            .map(|c| c.name.as_str())
+    }
+}
+
