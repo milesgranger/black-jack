@@ -182,20 +182,17 @@ fn test_add_columns() {
 
 
 }
-
+*/
 #[test]
 fn test_get_column_by_name() {
     let mut df = DataFrame::new();
-    let mut series: Series = Series::arange(0, 5);
+    let mut series: Series<i32> = Series::arange(0, 5);
     series.set_name("test-series");
     let series_clone = series.clone();
 
     df.add_column(series).unwrap();
 
-    let series_ref: &Series = df.get_column("test-series").expect("Unable to find column named 'test-series'");
-    assert_eq!(*series_ref, series_clone);
+    let series_ref: Series<i32> = df.get_column("test-series").expect("Unable to find column named 'test-series'");
+    assert_eq!(series_ref, series_clone);
 
-    let series_ref: &Series = &df["test-series"];
-    assert_eq!(*series_ref, series_clone);
 }
-*/

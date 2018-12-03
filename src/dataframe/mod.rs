@@ -74,11 +74,29 @@ impl DataFrame {
         Ok(())
     }
 
+    /// Get a reference to a column
+    pub fn get_column<'a, T>(&'a self, name: impl Into<&'a str>) -> Result<Series<T>, BlackJackError>
+        where T: BlackJackData + Deserialize<'a>
+    {
+        let name = name.into();
+        for encoded_series in &self.data {
+            if encoded_series.name == name {
+                return Ok(encoded_series.decode::<T>()?)
+            }
+        }
+        Err(BlackJackError::NoSeriesName)
+    }
+
     /// Get a list of column names in this dataframe
     pub fn columns(&self) -> impl Iterator<Item=&str> {
         self.data
             .iter()
             .map(|c| c.name.as_str())
+    }
+
+    /// Get the number of columns for this dataframe
+    pub fn n_columns(&self) -> usize {
+        self.data.len()
     }
 }
 
