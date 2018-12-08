@@ -23,9 +23,10 @@ impl From<Box<bincode::ErrorKind>> for BlackJackError {
     }
 }
 
-
+#[derive(Debug)]
 pub struct SerializedSeries {
     name: String,
+    len: usize,
     dtype: DType,
     encoded_data: Vec<u8>
 }
@@ -40,7 +41,8 @@ impl SerializedSeries {
             Some(name) => {
                 let encoded_data = bincode::serialize(&series)?;
                 let dtype = series.dtype();
-                Ok(SerializedSeries { name, dtype, encoded_data, })
+                let len = series.len();
+                Ok(SerializedSeries { name, dtype, len, encoded_data, })
             },
             None => Err(BlackJackError::NoSeriesName)
         }
@@ -54,21 +56,60 @@ impl SerializedSeries {
 
 }
 
+#[derive(Default, Debug)]
 pub struct DataFrame {
     data: Vec<SerializedSeries>
 }
 
 impl DataFrame {
 
-    /// Get a new and empty dataframe
+    /// Create a new `DataFrame` struct
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let mut df = DataFrame::new();
+    /// ```
     pub fn new() -> Self {
         DataFrame {
             data: vec![]
         }
     }
 
+    /// Length of the dataframe
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let mut df = DataFrame::new();
+    /// assert_eq!(df.len(), None);
+    ///
+    /// let series: Series<i32> = Series::arange(0, 10);
+    /// df.add_column(series).unwrap();
+    ///
+    /// assert_eq!(df.len(), Some(10));
+    /// ```
+    pub fn len(&self) -> Option<usize> {
+        if self.data.len() > 0 {
+            Some(self.data[0].len)
+        } else {
+            None
+        }
+    }
+
+    /// Quickly identify if the dataframe is empty.
+    pub fn is_empty(&self) -> bool {
+        self.len().is_none()
+    }
+
     /// Add a column to this dataframe.
-    pub fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> Result<(), BlackJackError> {
+    pub fn add_column<T: BlackJackData>(&mut self, mut series: Series<T>) -> Result<(), BlackJackError> {
+        // Set series name if it wasn't set already.
+        if let None = series.name() {
+            series.set_name(&format!("col_{}", self.data.len()))
+        }
         let serialized = SerializedSeries::from_series(series)?;
         self.data.push(serialized);
         Ok(())
@@ -87,7 +128,7 @@ impl DataFrame {
         Err(BlackJackError::NoSeriesName)
     }
 
-    /// Get a list of column names in this dataframe
+    /// Get a list of column names in this dataframe as an iterator
     pub fn columns(&self) -> impl Iterator<Item=&str> {
         self.data
             .iter()
