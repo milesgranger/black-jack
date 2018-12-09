@@ -56,17 +56,18 @@ pub struct SerializedSeries {
     encoded_data: Vec<u8>
 }
 
+
 impl SerializedSeries {
 
     /// Serialize a [`Series`] into a [`SerializedSeries`]
     /// used for storing various Series types into a container, typically, you will not use
     /// this directly.
-    pub fn from_series<T: BlackJackData + Serialize>(series: Series<T>) -> Result<Self, BlackJackError> {
+    pub fn from_series<T: BlackJackData>(series: Series<T>) -> Result<Self, BlackJackError> {
         match series.name() {
             Some(name) => {
-                let encoded_data = bincode::serialize(&series.clone())?;
                 let dtype = series.dtype();
                 let len = series.len();
+                let encoded_data = bincode::serialize(&series)?;
                 Ok(SerializedSeries { name, dtype, len, encoded_data, })
             },
             None => Err(BlackJackError::NoSeriesName)
@@ -76,7 +77,7 @@ impl SerializedSeries {
     pub fn decode<'a, T>(&'a self) -> Result<Series<T>, bincode::Error>
         where T: BlackJackData + Deserialize<'a>
     {
-        bincode::deserialize::<Series<T>>(&self.encoded_data)
+        bincode::deserialize(&self.encoded_data)
     }
 
 }
@@ -240,10 +241,10 @@ impl DataFrame {
             .map(|(header, vec)| {
                 let mut series = Series::from_vec(vec);
                 series.set_name(&header);
-                if let Ok(ser) = series.astype::<f32>() {
-
-                    df.add_column(ser.clone()).unwrap();
+                if let Ok(ser) = series.astype::<i32>() {
                     println!("Added series i32: {:?}", &ser);
+                    df.add_column(ser).unwrap();
+
                 } else {
                     df.add_column(series).unwrap()
                 }
