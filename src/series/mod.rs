@@ -92,15 +92,16 @@ impl<T> Series<T>
     pub fn astype<A>(&self) -> Result<Series<A>, &'static str>
         where A: BlackJackData + FromStr
     {
-        let series = Series {
-            name: self.name.clone(),
-            dtype: self.dtype.clone(),
-            values: self.values
+        let values = self.values
                 .clone()
                 .into_iter()
                 .map(|v| v.to_string())
                 .map(|v| v.parse::<A>().map_err(|_| "Cannot cast into type"))
-                .collect::<Result<Vec<A>, _>>()?
+                .collect::<Result<Vec<A>, _>>()?;
+        let series = Series {
+            name: self.name.clone(),
+            dtype: values[0].dtype(),
+            values
         };
         Ok(series)
     }
@@ -117,16 +118,17 @@ impl<T> Series<T>
     /// assert_eq!(new_series[0].dtype(), DType::F64);
     /// ```
     pub fn into_type<A>(self) -> Result<Series<A>, &'static str>
-        where A: BlackJackData + NumCast,
-              T: ToPrimitive
+        where A: BlackJackData + FromStr
     {
-        let series = Series {
-            name: self.name,
-            dtype: self.dtype,
-            values: self.values
+        let values = self.values
                 .into_iter()
-                .map(|v| NumCast::from(v).ok_or_else(|| "Cannot cast into type"))
-                .collect::<Result<Vec<A>, _>>()?
+                .map(|v| v.to_string())
+                .map(|v| v.parse::<A>().map_err(|_| "Cannot cast into type"))
+                .collect::<Result<Vec<A>, _>>()?;
+        let series = Series {
+            name: self.name.clone(),
+            dtype: values[0].dtype(),
+            values
         };
         Ok(series)
     }
