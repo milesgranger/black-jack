@@ -179,8 +179,8 @@ impl DataFrame {
     /// let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
     /// let df = DataFrame::read_csv(&path, b',').unwrap();
     ///
-    /// let col1: Series<String> = df.get_column("col1").unwrap();
-    /// assert_eq!(col1.len(), 15);
+    /// let col1: Series<f32> = df.get_column("col1").unwrap();
+    /// assert_eq!(col1.sum() as i32, 15);
     ///
     /// ```
     pub fn read_csv<S>(path: S, delimiter: u8) -> Result<Self, BlackJackError>
@@ -235,16 +235,17 @@ impl DataFrame {
 
         // map headers to vectors containing it's fields in parallel and into
         // Series structs, parsing each field.
+        // TODO: Parallelize this operation, parse && serialize columns in parallel, then add them.
         let _ = headers
             .into_iter()
             .zip(vecs)
             .map(|(header, vec)| {
                 let mut series = Series::from_vec(vec);
                 series.set_name(&header);
-                if let Ok(ser) = series.astype::<i32>() {
-                    println!("Added series i32: {:?}", &ser);
+                if let Ok(mut ser) = series.astype::<i32>() {
                     df.add_column(ser).unwrap();
-
+                } else if let Ok(ser) = series.astype::<f32>() {
+                    df.add_column(ser).unwrap()
                 } else {
                     df.add_column(series).unwrap()
                 }
