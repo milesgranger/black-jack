@@ -26,6 +26,7 @@ extern crate csv;
 extern crate stats;
 extern crate flate2;
 extern crate rgsl;
+extern crate snap;
 extern crate rayon;
 extern crate itertools;
 extern crate prettytable;

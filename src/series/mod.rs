@@ -23,6 +23,7 @@ use std::ops::{Range, Index, IndexMut};
 use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
+use std::str::FromStr;
 
 use num::*;
 use stats;
@@ -89,8 +90,7 @@ impl<T> Series<T>
     /// assert_eq!(new_series[0].dtype(), DType::F64);
     /// ```
     pub fn astype<A>(&self) -> Result<Series<A>, &'static str>
-        where A: BlackJackData + NumCast,
-              T: ToPrimitive
+        where A: BlackJackData + FromStr
     {
         let series = Series {
             name: self.name.clone(),
@@ -98,7 +98,8 @@ impl<T> Series<T>
             values: self.values
                 .clone()
                 .into_iter()
-                .map(|v| NumCast::from(v).ok_or_else(|| "Cannot cast into type"))
+                .map(|v| v.to_string())
+                .map(|v| v.parse::<A>().map_err(|_| "Cannot cast into type"))
                 .collect::<Result<Vec<A>, _>>()?
         };
         Ok(series)

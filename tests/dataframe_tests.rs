@@ -112,18 +112,20 @@ fn test_pretty_display() {
 
     println!("{}", df);
 }
+*/
 
 #[test]
 fn test_read_basic_csv() {
     let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
     println!("Using path: {}", &path);
     let df = DataFrame::read_csv(&path, b',').expect("Unable to read file!");
-    println!("Resulting DataFrame: {}", df);
+    let cols = vec!["col1", "col2", "col3"];
+    assert_eq!(cols, df.columns().collect::<Vec<&str>>());
 
-    let cols = ["col1".to_string(), "col2".to_string(), "col3".to_string()];
-    let expected_columns: HashSet<&String> = cols.iter().collect();
-    assert_eq!(expected_columns, df.columns());
+    let col1: Series<i32> = df.get_column("col1").unwrap();
+    assert_eq!(col1.sum(), 15);
 }
+
 
 #[test]
 fn test_read_gzipped_basic_csv() {
@@ -131,31 +133,21 @@ fn test_read_gzipped_basic_csv() {
     let path = format!("{}/tests/data/basic_csv.csv.gz", env!("CARGO_MANIFEST_DIR"));
     println!("Using path: {}", &path);
     let df = DataFrame::read_csv(&path, b',').unwrap();
-    println!("Resulting DataFrame: {}", df);
-
-
-    let cols = ["col1".to_string(), "col2".to_string(), "col3".to_string()];
-    let expected_columns: HashSet<&String> = cols.iter().collect();
-    assert_eq!(expected_columns, df.columns());
+    let cols = vec!["col1", "col2", "col3"];
+    assert_eq!(cols, df.columns().collect::<Vec<&str>>());
 
 }
 
-#[test]
-#[should_panic(expected = "No column")]
-fn test_fail_index_column() {
-    let df = DataFrame::new();
-    let _series = &df["col doesn't exist!"];
-}
 
 #[test]
 fn test_add_columns() {
     let mut df = DataFrame::new();
 
-    let mut series1: Series = Series::arange(0, 5);
+    let mut series1: Series<i32> = Series::arange(0, 5);
     series1.set_name("series-1");
     let series1_clone = series1.clone();
 
-    let mut series2: Series = Series::from_vec(vec![0.0, 1.0, 2.0, 3.0, 4.0]);
+    let mut series2: Series<f32> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
     series2.set_name("series-2");
     let series2_clone = series2.clone();
 
@@ -165,24 +157,19 @@ fn test_add_columns() {
     
     {
         // Test the columns match
-        let series1ref: &Series = df.get_column("series-1").expect("No column named 'series-1'");
-        assert_eq!(*series1ref, series1_clone);
+        let series1ref: Series<i32> = df.get_column("series-1").expect("No column named 'series-1'");
+        assert_eq!(series1ref, series1_clone);
 
-        let series2ref: &Series = df.get_column("series-2").expect("No column named 'series-2'");
-        assert_eq!(*series2ref, series2_clone);
+        let series2ref: Series<f32> = df.get_column("series-2").expect("No column named 'series-2'");
+        assert_eq!(series2ref, series2_clone);
 
         // Just sanity check two columns are still there.
         assert_eq!(df.n_columns(), 2);
     }
 
-    // Test into and from raw pointer 
-    let ptr = df.into_raw();
-    let df  = DataFrame::from_raw(ptr);
-    assert_eq!(df.n_columns(), 2);
-
 
 }
-*/
+
 #[test]
 fn test_get_column_by_name() {
     let mut df = DataFrame::new();

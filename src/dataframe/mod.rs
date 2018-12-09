@@ -1,20 +1,45 @@
 ///! DataFrame object and associated functionality
 
 use std::fmt;
+use std::path::Path;
+use std::ffi::OsStr;
 
 use bincode;
 use serde::{Serialize, Deserialize};
 use failure::Error;
+use rayon::prelude::*;
+use csv;
+use snap;
 
 use prelude::*;
 
 
 #[derive(Debug, Fail)]
 pub enum BlackJackError {
+
     #[fail(display = "No series name present!")]
     NoSeriesName,
+
     #[fail(display = "Unable to decode series")]
     SerializationDecodeError(Box<bincode::ErrorKind>),
+
+    #[fail(display = "Unable to read headers!")]
+    HeaderParseError(csv::Error),
+
+    #[fail(display = "IO error")]
+    IoError(std::io::Error)
+}
+
+impl From<std::io::Error> for BlackJackError {
+    fn from(error: std::io::Error) -> BlackJackError {
+        BlackJackError::IoError(error)
+    }
+}
+
+impl From<csv::Error> for BlackJackError {
+    fn from(error: csv::Error) -> BlackJackError {
+        BlackJackError::HeaderParseError(error)
+    }
 }
 
 impl From<Box<bincode::ErrorKind>> for BlackJackError {
@@ -39,7 +64,7 @@ impl SerializedSeries {
     pub fn from_series<T: BlackJackData + Serialize>(series: Series<T>) -> Result<Self, BlackJackError> {
         match series.name() {
             Some(name) => {
-                let encoded_data = bincode::serialize(&series)?;
+                let encoded_data = bincode::serialize(&series.clone())?;
                 let dtype = series.dtype();
                 let len = series.len();
                 Ok(SerializedSeries { name, dtype, len, encoded_data, })
@@ -115,14 +140,16 @@ impl DataFrame {
         Ok(())
     }
 
-    /// Get a reference to a column
+    /// Retrieves a column from the dataframe as an owned representation of it.
     pub fn get_column<'a, T>(&'a self, name: impl Into<&'a str>) -> Result<Series<T>, BlackJackError>
         where T: BlackJackData + Deserialize<'a>
     {
         let name = name.into();
         for encoded_series in &self.data {
             if encoded_series.name == name {
-                return Ok(encoded_series.decode::<T>()?)
+                let series = encoded_series.decode::<T>()?;
+                println!("Decoded series: {:?}", &series);
+                return Ok(series)
             }
         }
         Err(BlackJackError::NoSeriesName)
@@ -138,6 +165,91 @@ impl DataFrame {
     /// Get the number of columns for this dataframe
     pub fn n_columns(&self) -> usize {
         self.data.len()
+    }
+
+    /// Read a CSV file into a [`DataFrame`] where each column represents a Series
+    /// supports automatic decompression of gzipped files if they end with `.gz`
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
+    /// let df = DataFrame::read_csv(&path, b',').unwrap();
+    ///
+    /// let col1: Series<String> = df.get_column("col1").unwrap();
+    /// assert_eq!(col1.len(), 15);
+    ///
+    /// ```
+    pub fn read_csv<S>(path: S, delimiter: u8) -> Result<Self, BlackJackError>
+        where S: AsRef<OsStr> + ToString
+    {
+
+        use std::io::prelude::*;
+        use std::fs::File;
+        use flate2::read::GzDecoder;
+
+        let p = Path::new(&path);
+        let file_reader: Box<Read> = if path.to_string().to_lowercase().ends_with(".gz") {
+                                            // Return a Gzip reader
+                                            Box::new(GzDecoder::new(File::open(p)?))
+                                        } else {
+                                            // Return plain file reader
+                                            Box::new(File::open(p)?)
+                                        };
+
+        let mut reader = csv::ReaderBuilder::new()
+                                .delimiter(delimiter)
+                                .from_reader(file_reader);
+
+        // TODO: Don't fail on non existant headers -> give 'col0', 'col1', etc.
+        let headers: Vec<String> = reader.headers()?
+                                        .clone()
+                                        .into_iter()
+                                        .map(|v| v.to_string())
+                                        .collect();
+
+        // Containers for storing column data
+        let mut vecs: Vec<Vec<String>> = (0..headers.len())
+                                            .map(|_| Vec::new())
+                                            .collect();
+
+        for record in reader.records() {
+
+            match record {
+
+                Ok(rec) => {
+                    for (field, container) in rec.iter().zip(&mut vecs) {
+                        container.push(field.into());
+                    };
+                },
+
+                // TODO: Process for dealing with invalid records.
+                Err(err) => println!("Unable to read record: '{}'", err)
+            }
+        }
+
+        let mut df = DataFrame::new();
+
+        // map headers to vectors containing it's fields in parallel and into
+        // Series structs, parsing each field.
+        let _ = headers
+            .into_iter()
+            .zip(vecs)
+            .map(|(header, vec)| {
+                let mut series = Series::from_vec(vec);
+                series.set_name(&header);
+                if let Ok(ser) = series.astype::<f32>() {
+
+                    df.add_column(ser.clone()).unwrap();
+                    println!("Added series i32: {:?}", &ser);
+                } else {
+                    df.add_column(series).unwrap()
+                }
+            })
+            .collect::<Vec<()>>();
+        Ok(df)
     }
 }
 
