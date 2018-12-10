@@ -54,7 +54,7 @@ fn criterion_bechmark(c: &mut Criterion) {
             })
     );
 
-    /*
+
     c.bench_function(
         "dataframe read_csv BASIC",
         |b| b.iter(|| {
@@ -62,7 +62,6 @@ fn criterion_bechmark(c: &mut Criterion) {
             let _df = DataFrame::read_csv(path, b',');
         })
     );
-    */
     
     c.bench_function(
         "series scalar ops - (Mul)",

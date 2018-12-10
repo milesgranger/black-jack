@@ -14,7 +14,6 @@ fn test_series_serializer() {
     let deserialzed: Series<i32> = serialized.decode().unwrap();
 }
 
-/*
 
 #[test]
 fn test_change_df_index() {
@@ -61,24 +60,11 @@ fn test_df_groupby() {
         vec![1, 2, 3, 1, 2, 3, 1, 2, 3, 1]
     );
 
-    let grouped = df.groupby(keys).sum::<i32>();
-    println!("{}", grouped);
+    let grouped = df.groupby(keys).sum();
+    println!("{:?}", grouped);
 }
 
-#[test]
-fn test_index_mut() {
-    let mut df = DataFrame::new();
-    let mut s1 = Series::arange(0, 5);
-    s1.set_name("s1");
-    df.add_column(s1).unwrap();
 
-    let s1 = Series::arange(5, 10);
-    let sc = s1.clone();
-    df["s1"] = s1;
-
-    assert_eq!(&df["s1"], &sc);
-}
-*/
 #[test]
 fn test_column_names() {
     use std::collections::HashSet;
@@ -99,31 +85,18 @@ fn test_column_names() {
         vec!["s1", "s2"]
     );
 }
-/*
-#[test]
-fn test_pretty_display() {
-    let mut df = DataFrame::new();
-    let mut s1 = Series::arange(0, 5);
-    s1.set_name("series-1");
-    let s2 = Series::arange(5, 10);
 
-    df.add_column(s1).unwrap();
-    df.add_column(s2).unwrap();
-
-    println!("{}", df);
-}
-*/
 
 #[test]
 fn test_read_basic_csv() {
-    let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
+    let path = format!("{}/tests/data/medium_csv.csv", env!("CARGO_MANIFEST_DIR"));
     println!("Using path: {}", &path);
     let df = DataFrame::read_csv(&path, b',').expect("Unable to read file!");
     //let cols = vec!["col1", "col2", "col3"];
     //assert_eq!(cols, df.columns().collect::<Vec<&str>>());
 
     let col1: Series<i32> = df.get_column("col2").unwrap();
-    assert_eq!(col1.sum() as i32, 15);
+    assert_eq!(col1.sum() as i32, 3000);
 }
 
 

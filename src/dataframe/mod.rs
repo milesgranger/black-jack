@@ -72,7 +72,7 @@ impl SerializedSeries {
             Some(name) => {
                 let dtype = series.dtype();
                 let len = series.len();
-                let encoded_data = series.into_vec().encode::<u8>().unwrap();
+                let encoded_data = series.into_vec().as_slice().encode::<u64>().unwrap();
                 Ok(SerializedSeries { name, dtype, len, encoded_data, })
             },
             None => Err(BlackJackError::NoSeriesName)
@@ -82,7 +82,7 @@ impl SerializedSeries {
     pub fn decode<T>(&self) -> Result<Series<T>, bincode::Error>
         where T: BlackJackData
     {
-        let data = <Vec<T>>::decode::<u8>(&self.encoded_data).unwrap();
+        let data = <Vec<T>>::decode::<u64>(&self.encoded_data).unwrap();
         let mut series = Series::from_vec(data);
         series.set_name(&self.name);
         Ok(series)
@@ -158,7 +158,6 @@ impl DataFrame {
         for encoded_series in &self.data {
             if encoded_series.name == name {
                 let series = encoded_series.decode::<T>()?;
-                println!("Decoded series: {:?}", &series);
                 return Ok(series)
             }
         }
