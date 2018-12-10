@@ -40,7 +40,7 @@ pub struct Series<T>
 {
     
     /// Name of the series, if added to a dataframe without a name, it will be assigned
-    /// a default name equalling the cound of columns in the dataframe.
+    /// a default name equalling the count of columns in the dataframe.
     pub name: Option<String>,
 
     /// The underlying values of the Series
@@ -245,16 +245,9 @@ impl<T> Series<T>
         Ok(modes)
     }
 
-    /// Calculate the variance of the series  
-    /// **NOTE** that whatever type is determined is what the values are cast to
-    /// during calculation of the variance. 
-    /// 
-    /// ie. `series.var::<i32>()` will cast each element into `i32` as input
-    /// for calculating the variance, and yield a `i32` value. If you want all
-    /// values to be calculated as `f64` then specify that in the type annotation.
+    /// Calculate the variance of the series
     pub fn var(&self) -> Result<f64, &'static str>
-        where 
-            T: BlackJackData + ToPrimitive + Copy
+        where T: BlackJackData + ToPrimitive + Copy
     {
         if self.len() == 0  {
             return Err("Cannot compute variance of an empty series!");

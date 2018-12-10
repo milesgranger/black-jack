@@ -21,10 +21,10 @@ addons:
 
 script:
   - cargo clean
-  - cargo build
   - cargo test
 
 deploy:
+  provider: script
   script: |
     if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
       RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin 
