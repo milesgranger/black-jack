@@ -14,7 +14,7 @@ fn test_series_serializer() {
     let deserialzed: Series<i32> = serialized.decode().unwrap();
 }
 
-
+/*
 #[test]
 fn test_change_df_index() {
     let s1 = Series::arange(0, 5);
@@ -46,6 +46,7 @@ fn test_df_column_size_mismatch() {
     // second must be same length as the first.
     assert!(df.add_column(s2).is_err());
 }
+*/
 
 #[test]
 fn test_df_groupby() {

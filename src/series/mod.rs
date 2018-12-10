@@ -183,8 +183,7 @@ impl<T> Series<T>
         Series { 
             name: None,
             dtype,
-            index,
-            values
+            values: vec
         }
     }
 
