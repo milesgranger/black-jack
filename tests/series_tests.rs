@@ -6,7 +6,7 @@ use num::*;
 use float_cmp::*;
 use blackjack::prelude::*;
 
-
+/*
 #[test]
 fn test_series_index() {
     let mut series = Series::arange(0, 10);
@@ -21,6 +21,7 @@ fn test_series_index() {
     assert!(series.set_index(index.into_iter()).is_ok());
     assert_eq!(&expected_index, series.index());
 }
+*/
 
 #[test]
 fn test_groupby_sum() {
