@@ -7,6 +7,7 @@ use prelude::*;
 
 /// [`Series::groupby`]  result.
 /// Contains the split series by key
+#[derive(Clone)]
 pub struct SeriesGroupBy<T: BlackJackData> {
     groups: Vec<Series<T>>
 }
