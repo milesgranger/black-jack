@@ -1,31 +1,34 @@
-///! DataFrame object and associated functionality
+//! DataFrame object and associated functionality
+//!
+//!
 
-use std::fmt;
 use std::path::Path;
 use std::ffi::OsStr;
 
+use bytevec::{ByteEncodable, ByteDecodable};
 use bincode;
-use serde::{Serialize, Deserialize};
-use failure::Error;
-use rayon::prelude::*;
 use csv;
-use snap;
 
 use prelude::*;
 
 
+/// Common error enum for the crate
 #[derive(Debug, Fail)]
 pub enum BlackJackError {
 
+    /// A failure of not having the `Series` name set, where one was expected
     #[fail(display = "No series name present!")]
     NoSeriesName,
 
+    /// A failure to decode a `Series<T>` which was previously encoded to `SerializedSeries`
     #[fail(display = "Unable to decode series")]
     SerializationDecodeError(Box<bincode::ErrorKind>),
 
+    /// Failure to parse the header of a CSV file.
     #[fail(display = "Unable to read headers!")]
     HeaderParseError(csv::Error),
 
+    /// Failure of a general `std::io::Error`
     #[fail(display = "IO error")]
     IoError(std::io::Error)
 }
@@ -48,6 +51,8 @@ impl From<Box<bincode::ErrorKind>> for BlackJackError {
     }
 }
 
+/// Serialized version of `Series<T>`, enabling storage inside a homogeneous container
+/// where metadata is stored and data is stored in byte/compressed format.
 #[derive(Debug)]
 pub struct SerializedSeries {
     name: String,
@@ -67,21 +72,25 @@ impl SerializedSeries {
             Some(name) => {
                 let dtype = series.dtype();
                 let len = series.len();
-                let encoded_data = bincode::serialize(&series)?;
+                let encoded_data = series.into_vec().encode::<u8>().unwrap();
                 Ok(SerializedSeries { name, dtype, len, encoded_data, })
             },
             None => Err(BlackJackError::NoSeriesName)
         }
     }
     /// Deserialize this into a series
-    pub fn decode<'a, T>(&'a self) -> Result<Series<T>, bincode::Error>
-        where T: BlackJackData + Deserialize<'a>
+    pub fn decode<T>(&self) -> Result<Series<T>, bincode::Error>
+        where T: BlackJackData
     {
-        bincode::deserialize(&self.encoded_data)
+        let data = <Vec<T>>::decode::<u8>(&self.encoded_data).unwrap();
+        let mut series = Series::from_vec(data);
+        series.set_name(&self.name);
+        Ok(series)
     }
 
 }
 
+/// The container for `Series<T>` objects, allowing for additional functionality
 #[derive(Default, Debug)]
 pub struct DataFrame {
     data: Vec<SerializedSeries>
@@ -142,8 +151,8 @@ impl DataFrame {
     }
 
     /// Retrieves a column from the dataframe as an owned representation of it.
-    pub fn get_column<'a, T>(&'a self, name: impl Into<&'a str>) -> Result<Series<T>, BlackJackError>
-        where T: BlackJackData + Deserialize<'a>
+    pub fn get_column<'a, T>(&self, name: impl Into<&'a str>) -> Result<Series<T>, BlackJackError>
+        where T: BlackJackData
     {
         let name = name.into();
         for encoded_series in &self.data {
@@ -242,7 +251,7 @@ impl DataFrame {
             .map(|(header, vec)| {
                 let mut series = Series::from_vec(vec);
                 series.set_name(&header);
-                if let Ok(mut ser) = series.astype::<i32>() {
+                if let Ok(ser) = series.astype::<i32>() {
                     df.add_column(ser).unwrap();
                 } else if let Ok(ser) = series.astype::<f32>() {
                     df.add_column(ser).unwrap()
@@ -254,4 +263,3 @@ impl DataFrame {
         Ok(df)
     }
 }
-
