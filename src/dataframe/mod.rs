@@ -5,9 +5,9 @@
 use std::path::Path;
 use std::ffi::OsStr;
 
-use bytevec::{ByteEncodable, ByteDecodable};
-use bincode;
+use bincode::{serialize_into, deserialize_from};
 use csv;
+use serde::{Deserialize};
 
 use prelude::*;
 
@@ -67,12 +67,15 @@ impl SerializedSeries {
     /// Serialize a [`Series`] into a [`SerializedSeries`]
     /// used for storing various Series types into a container, typically, you will not use
     /// this directly.
-    pub fn from_series<T: BlackJackData>(series: Series<T>) -> Result<Self, BlackJackError> {
+    pub fn from_series<T>(series: Series<T>) -> Result<Self, BlackJackError>
+        where T: BlackJackData
+    {
         match series.name() {
             Some(name) => {
                 let dtype = series.dtype();
                 let len = series.len();
-                let encoded_data = series.into_vec().as_slice().encode::<u64>().unwrap();
+                let mut encoded_data = vec![];
+                serialize_into(&mut encoded_data, &series.values)?;
                 Ok(SerializedSeries { name, dtype, len, encoded_data, })
             },
             None => Err(BlackJackError::NoSeriesName)
@@ -80,9 +83,9 @@ impl SerializedSeries {
     }
     /// Deserialize this into a series
     pub fn decode<T>(&self) -> Result<Series<T>, bincode::Error>
-        where T: BlackJackData
+        where for<'de> T: BlackJackData + Deserialize<'de>,
     {
-        let data = <Vec<T>>::decode::<u64>(&self.encoded_data).unwrap();
+        let data = deserialize_from(&self.encoded_data[..])?;
         let mut series = Series::from_vec(data);
         series.set_name(&self.name);
         Ok(series)
@@ -152,7 +155,7 @@ impl DataFrame {
 
     /// Retrieves a column from the dataframe as an owned representation of it.
     pub fn get_column<'a, T>(&self, name: impl Into<&'a str>) -> Result<Series<T>, BlackJackError>
-        where T: BlackJackData
+        where for<'de> T: BlackJackData + Deserialize<'de>
     {
         let name = name.into();
         for encoded_series in &self.data {
