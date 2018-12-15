@@ -1,5 +1,6 @@
 use std::iter::Sum;
 use num::*;
+use serde::{Deserialize};
 
 use prelude::*;
 
@@ -48,13 +49,13 @@ pub trait DataFrameGroupByBehavior
     /// Group by method for grouping [`Series`] in a [`DataFrame`]
     /// by key.
     fn groupby<T>(&self, keys: Series<T>) -> DataFrameGroupBy<T>
-        where T: BlackJackData + ToPrimitive;
+        where for<'de> T: BlackJackData + Deserialize<'de> + ToPrimitive;
 }
 
 impl DataFrameGroupByBehavior for DataFrame
 {
     fn groupby<T>(&self, keys: Series<T>) -> DataFrameGroupBy<T>
-        where T: BlackJackData + ToPrimitive
+        where for<'de> T: BlackJackData + Deserialize<'de> + ToPrimitive
     {
 
         let groups = self

@@ -2,7 +2,9 @@
 
 
 use std::fmt::{Debug, Display};
-use bytevec::{ByteDecodable, ByteEncodable};
+
+use serde::Serialize;
+
 
 use prelude::*;
 mod series_groupby;
@@ -15,7 +17,7 @@ pub use self::dataframe_groupby::*;
 */
 
 /// Trait dictates the supported primitives for use in [`Series`] structs.
-pub trait BlackJackData: ByteDecodable + ByteEncodable + Debug + ToString + Clone + Send + Display {
+pub trait BlackJackData: Serialize + Debug + ToString + Clone + Send + Display {
 
     /// Return the current [`DType`] for this type. 
     fn dtype(&self) -> DType;
