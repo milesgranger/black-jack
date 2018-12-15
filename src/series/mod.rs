@@ -81,6 +81,23 @@ impl<T> Series<T>
         }
     }
 
+    /// Determine if any element in the Series meets a given condition
+    ///
+    /// This will stop iteration after encountering the first element which meets
+    /// conditions supplied.
+    pub fn any<F>(&self, condition: F) -> bool
+        where for<'r> F: FnMut(&'r &T,) -> bool
+    {
+        let first_match = self.values
+            .iter()
+            .find(condition);
+        match first_match {
+            Some(_) => true,
+            None => false
+        }
+
+    }
+
     /// Return the positions of where a given condition evaluates to `true`
     ///
     /// This is somewhat akin to the pandas `where` method.
