@@ -24,7 +24,9 @@ use std::iter::{FromIterator, Sum};
 use std::convert::From;
 use std::fmt;
 use std::str::FromStr;
+use std::marker::{Send, Sync};
 
+use rayon::prelude::*;
 use num::*;
 use stats;
 
@@ -76,6 +78,36 @@ impl<T> Series<T>
             dtype,
             values
         }
+    }
+
+    /// Map a function over a series _in parallel_
+    /// Function takes some type `T` and returns some type `B` which
+    /// has `BlackJackData` implemented.
+    pub fn map_par<B, F>(self, func: F) -> Series<B>
+        where
+            B: BlackJackData,
+            F: Fn(T) -> B + Send + Sync
+    {
+        let new_data = self.values
+            .into_par_iter()
+            .map(func)
+            .collect();
+        Series::from_vec(new_data)
+    }
+
+    /// Map a function over a series in a single thread
+    /// Function takes some type `T` and returns some type `B` which
+    /// has `BlackJackData` implemented.
+    pub fn map<B, F>(self, func: F) -> Series<B>
+        where
+            B: BlackJackData,
+            F: Fn(T) -> B
+    {
+        let new_data = self.values
+            .into_iter()
+            .map(func)
+            .collect();
+        Series::from_vec(new_data)
     }
 
     /// Convert the series into another [`DType`] (creates a new series)

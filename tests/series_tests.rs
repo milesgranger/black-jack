@@ -24,6 +24,19 @@ fn test_series_index() {
 */
 
 #[test]
+fn test_map() {
+    let mut series = Series::from_vec(vec![1, 1, 1, 1]);
+
+    // Test single thread map
+    let new = series.clone().map(|x| x * 2);
+    assert_eq!(series.sum() * 2, new.sum());
+
+    // Test parallel map
+    let new = series.clone().map_par(|x| x * 2);
+    assert_eq!(series.sum() * 2, new.sum());
+}
+
+#[test]
 fn test_groupby_sum() {
     let series = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
     let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
