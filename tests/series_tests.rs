@@ -24,6 +24,14 @@ fn test_series_index() {
 */
 
 #[test]
+fn test_locate() {
+
+    let series = Series::from_vec(vec![1, 2, 1, 2]);
+    let ones = series.positions(|x| *x == 1).collect::<Vec<usize>>();
+    assert_eq!(ones, vec![0, 2]);
+}
+
+#[test]
 fn test_map() {
     let mut series = Series::from_vec(vec![1, 1, 1, 1]);
 
