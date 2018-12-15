@@ -25,6 +25,7 @@ use std::convert::From;
 use std::fmt;
 use std::str::FromStr;
 use std::marker::{Send, Sync};
+use itertools::Itertools;
 
 use rayon::prelude::*;
 use num::*;
@@ -80,9 +81,41 @@ impl<T> Series<T>
         }
     }
 
+    /// Return the positions of where a given condition evaluates to `true`
+    ///
+    /// This is somewhat akin to the pandas `where` method.
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let series = Series::from_vec(vec![1, 2, 1, 2]);
+    ///
+    /// let indexes_of_ones = series.positions(|x| *x == 1).collect::<Vec<usize>>();
+    /// assert_eq!(indexes_of_ones, vec![0, 2]);
+    /// ```
+    pub fn positions<'a, F>(&'a self, condition: F) -> impl Iterator<Item=usize> + 'a
+        where F: 'a + Fn(&T) -> bool
+    {
+        self.values
+            .iter()
+            .positions(condition)
+    }
+
     /// Map a function over a series _in parallel_
     /// Function takes some type `T` and returns some type `B` which
     /// has `BlackJackData` implemented.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let series = Series::from_vec(vec![1, 1, 1, 1]);
+    ///
+    /// let new_series = series.map_par(|x| x * 2);
+    /// assert_eq!(new_series.sum(), 8);
+    /// ```
     pub fn map_par<B, F>(self, func: F) -> Series<B>
         where
             B: BlackJackData,
