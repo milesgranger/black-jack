@@ -24,6 +24,13 @@ fn test_series_index() {
 */
 
 #[test]
+fn test_any() {
+    let series = Series::from_vec(vec![1, 2, 3, 4]);
+    assert_eq!(series.any(|x| x > &&3), true);
+    assert_eq!(series.any(|x| x < &&1), false);
+}
+
+#[test]
 fn test_locate() {
 
     let series = Series::from_vec(vec![1, 2, 1, 2]);
