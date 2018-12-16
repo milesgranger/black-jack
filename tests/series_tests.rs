@@ -2,8 +2,6 @@ extern crate blackjack;
 extern crate num;
 extern crate float_cmp;
 
-use num::*;
-use float_cmp::*;
 use blackjack::prelude::*;
 
 /*
@@ -47,7 +45,7 @@ fn test_locate() {
 
 #[test]
 fn test_map() {
-    let mut series = Series::from_vec(vec![1, 1, 1, 1]);
+    let series = Series::from_vec(vec![1, 1, 1, 1]);
 
     // Test single thread map
     let new = series.clone().map(|x| x * 2);

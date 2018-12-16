@@ -1,8 +1,6 @@
 
 extern crate blackjack;
 
-use std::collections::HashSet;
-
 use blackjack::prelude::*;
 
 
@@ -11,7 +9,7 @@ fn test_series_serializer() {
     let mut series = Series::arange(0, 10);
     series.set_name("col1");
     let serialized = SerializedSeries::from_series(series).unwrap();
-    let deserialzed: Series<i32> = serialized.decode().unwrap();
+    let _deserialzed: Series<i32> = serialized.decode().unwrap();
 }
 
 /*
@@ -68,8 +66,6 @@ fn test_df_groupby() {
 
 #[test]
 fn test_column_names() {
-    use std::collections::HashSet;
-    use std::iter::FromIterator;
 
     let mut s1 = Series::arange(0, 2);
     let mut s2 = Series::arange(1, 3);
