@@ -21,10 +21,12 @@
 
 use std::ops::{Range, Index, IndexMut};
 use std::iter::{FromIterator, Sum};
+use std::vec::IntoIter;
 use std::convert::From;
 use std::fmt;
 use std::str::FromStr;
 use std::marker::{Send, Sync};
+
 use itertools::Itertools;
 
 use rayon::prelude::*;
@@ -33,6 +35,14 @@ use stats;
 
 pub mod overloaders;
 use prelude::*;
+
+
+// Allow series.into_iter()
+impl_series_into_iter!(String);
+impl_series_into_iter!(f64);
+impl_series_into_iter!(i64);
+impl_series_into_iter!(f32);
+impl_series_into_iter!(i32);
 
 
 /// Series struct for containing underlying Array and other meta data.
@@ -86,7 +96,7 @@ impl<T> Series<T>
     /// ## Example
     /// ```
     /// use blackjack::prelude::*;
-    /// 
+    ///
     /// let mut series = Series::from_vec(vec![0, 1, 2])
     ///     .astype::<f32>()
     ///     .unwrap();

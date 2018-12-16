@@ -22,6 +22,13 @@ fn test_series_index() {
 */
 
 #[test]
+fn test_into_iter() {
+    let series: Series<i32> = Series::from_vec(vec![1, 2, 3, 4]);
+    let sum: i32 = series.into_iter().sum();
+    assert_eq!(sum, 10);
+}
+
+#[test]
 fn test_isna() {
     let mut series = Series::from_vec(vec![0, 1, 2])
         .astype::<f32>()
