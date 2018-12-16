@@ -81,6 +81,31 @@ impl<T> Series<T>
         }
     }
 
+    /// Return an iterable of booleans determining if any element is NaN
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// 
+    /// let mut series = Series::from_vec(vec![0, 1, 2])
+    ///     .astype::<f32>()
+    ///     .unwrap();
+    ///
+    /// // No NaNs currently
+    /// assert_eq!(series.isna().collect::<Vec<bool>>(), vec![false, false, false]);
+    ///
+    /// // Insert a NaN at index zero
+    /// series[0] = num::Float::nan();
+    /// assert_eq!(series.isna().collect::<Vec<bool>>(), vec![true, false, false]);
+    /// ```
+    pub fn isna<'a>(&'a self) -> impl Iterator<Item=bool> + 'a
+        where T: Float
+    {
+        self.values
+            .iter()
+            .map(|v| v.is_nan())
+    }
+
     /// Determine if _all_ elements in the Series meet a given condition
     ///
     /// This will stop iteration after encountering the first element which breaks
