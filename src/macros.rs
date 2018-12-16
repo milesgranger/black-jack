@@ -31,6 +31,25 @@ macro_rules! impl_series_into_iter {
 }
 
 #[macro_export]
+macro_rules! impl_series_by_series_op_inplace {
+
+    // Use: impl_series_by_series_op_inplace!(MulAssign, mul_assign, *=)
+    ($operation:ident, $func_name:ident, $op:tt) => {
+        impl<T> $operation<Series<T>> for Series<T>
+            where T: BlackJackData + $operation
+        {
+            fn $func_name(&mut self, other: Series<T>) {
+                let _ = self.values
+                    .iter_mut()
+                    .zip(other.values.into_iter())
+                    .map(|(v, o)| *v $op o)
+                    .collect::<Vec<()>>();
+            }
+        }
+    }
+}
+
+#[macro_export]
 macro_rules! impl_series_by_series_op {
 
     // Use: impl_series_by_series_op(Add, add, +)
