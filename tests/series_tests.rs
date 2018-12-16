@@ -21,6 +21,22 @@ fn test_series_index() {
 }
 */
 
+/* Series <op> Series tests */
+#[test]
+fn test_series_op_series_impls() {
+    let series1 = Series::from_vec(vec![1, 1, 1, 1, 1]);
+    let series2 = Series::from_vec(vec![1, 1, 1, 1, 1, 1]);
+
+    // Adding a series with another series of a different shape should Err
+    let result = (series1.clone() + series2).is_ok();
+    assert_eq!(result, false);
+
+    // Adding a two series of the same shape should be fine
+    let result = series1.clone() + series1;
+    assert_eq!(result.is_ok(), true);
+    assert_eq!(result.unwrap().sum(), 10);
+}
+
 #[test]
 fn test_into_iter() {
     let series: Series<i32> = Series::from_vec(vec![1, 2, 3, 4]);

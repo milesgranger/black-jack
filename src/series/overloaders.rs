@@ -8,6 +8,7 @@ use std::ops::{Mul, Add, Sub, Div, MulAssign, AddAssign, SubAssign, DivAssign};
 use rayon::prelude::*;
 use rayon::iter::{IntoParallelIterator, IndexedParallelIterator};
 use num::*;
+
 use prelude::*;
 
 
@@ -43,6 +44,12 @@ impl<T> MulAssign<T> for Series<T>
     }
 }
 
+// Support `series + series` ect.
+impl_series_by_series_op!(Add, add, +);
+impl_series_by_series_op!(Sub, sub, -);
+impl_series_by_series_op!(Div, div, /);
+impl_series_by_series_op!(Mul, mul, *);
+
 /// Support `series + scalar`
 impl<T> Add<T> for Series<T>
     where 
@@ -53,9 +60,10 @@ impl<T> Add<T> for Series<T>
     type Output = Series<T>;
 
     fn add(self, scalar_val: T) -> Series<T> {
-        let vec: Vec<T> = self.values.into_par_iter()
-                                                .map(|v| v + scalar_val)
-                                                .collect();
+        let vec: Vec<T> = self.values
+            .into_par_iter()
+            .map(|v| v + scalar_val)
+            .collect();
         Series::from_vec(vec)
     }
 }
