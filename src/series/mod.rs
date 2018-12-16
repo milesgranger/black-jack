@@ -81,7 +81,29 @@ impl<T> Series<T>
         }
     }
 
-    /// Determine if any element in the Series meets a given condition
+    /// Determine if _all_ elements in the Series meet a given condition
+    ///
+    /// This will stop iteration after encountering the first element which breaks
+    /// the condition.
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let series = Series::from_vec(vec![1, 2, 3, 4]);
+    ///
+    /// assert_eq!(series.all(|x| *x > 0), true);
+    /// assert_eq!(series.all(|x| *x > 2), false);
+    /// ```
+    pub fn all<F>(&self, condition: F) -> bool
+        where for<'r> F: Fn(&'r T) -> bool
+    {
+        self.values
+            .iter()
+            .all(condition)
+    }
+
+    /// Determine if _any_ element in the Series meets a given condition
     ///
     /// This will stop iteration after encountering the first element which meets
     /// conditions supplied.
