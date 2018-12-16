@@ -22,6 +22,18 @@ fn test_series_index() {
 */
 
 #[test]
+fn test_isna() {
+    let mut series = Series::from_vec(vec![0, 1, 2])
+        .astype::<f32>()
+        .unwrap();
+
+    assert_eq!(series.isna().collect::<Vec<bool>>(), vec![false, false, false]);
+
+    series[0] = num::Float::nan();
+    assert_eq!(series.isna().collect::<Vec<bool>>(), vec![true, false, false]);
+}
+
+#[test]
 fn test_all() {
     let series = Series::from_vec(vec![1, 2, 3, 4, 5]);
     assert_eq!(series.all(|x| *x > 0), true);
