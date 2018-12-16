@@ -11,6 +11,8 @@ macro_rules! series_map {
 
 }
 
+
+/// Implement `IntoIter` for a dtype (ie. f64) for `Series`
 #[macro_export]
 macro_rules! impl_series_into_iter {
     // Use: impl_series_into_iter(i32)
@@ -27,3 +29,39 @@ macro_rules! impl_series_into_iter {
 
     }
 }
+
+#[macro_export]
+macro_rules! impl_series_by_series_op {
+
+    // Use: impl_series_by_series_op(Add, add, +)
+    ($operation:ident, $func_name:ident, $op:tt) => {
+
+        /// Support `series + series`
+        impl<T> $operation for Series<T>
+            where
+                T: $operation<Output=T> + BlackJackData,
+        {
+            type Output = Result<Series<T>, BlackJackError>;
+
+            fn $func_name(self, other: Series<T>) -> Self::Output {
+                if self.len() != other.len() {
+                    Err(BlackJackError::ValueError(
+                        format!("Source series is of size: {}, and other is of size: {}", &self.len(), &other.len())
+                    ))
+                } else {
+                    let result = self.values
+                        .into_iter()
+                        .zip(other.values.into_iter())
+                        .map(|(x1, x2)| x1 $op x2)
+                        .collect();
+                    Ok(Series::from_vec(result))
+                }
+
+
+            }
+        }
+
+    }
+}
+
+

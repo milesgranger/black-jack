@@ -30,7 +30,11 @@ pub enum BlackJackError {
 
     /// Failure of a general `std::io::Error`
     #[fail(display = "IO error")]
-    IoError(std::io::Error)
+    IoError(std::io::Error),
+
+    /// Failure due to mismatched sizes
+    #[fail(display = "ValueError")]
+    ValueError(String)
 }
 
 impl From<std::io::Error> for BlackJackError {
