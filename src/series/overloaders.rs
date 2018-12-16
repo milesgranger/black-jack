@@ -44,11 +44,17 @@ impl<T> MulAssign<T> for Series<T>
     }
 }
 
-// Support `series + series` ect.
+// Support `series + other_series` ect.
 impl_series_by_series_op!(Add, add, +);
 impl_series_by_series_op!(Sub, sub, -);
 impl_series_by_series_op!(Div, div, /);
 impl_series_by_series_op!(Mul, mul, *);
+
+// Support `series += other_series`
+impl_series_by_series_op_inplace!(MulAssign, mul_assign, *=);
+impl_series_by_series_op_inplace!(DivAssign, div_assign, /=);
+impl_series_by_series_op_inplace!(AddAssign, add_assign, +=);
+impl_series_by_series_op_inplace!(SubAssign, sub_assign, -=);
 
 /// Support `series + scalar`
 impl<T> Add<T> for Series<T>

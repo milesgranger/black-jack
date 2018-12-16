@@ -38,6 +38,15 @@ fn test_series_op_series_impls() {
 }
 
 #[test]
+fn test_series_op_series_inplace() {
+    let mut series1 = Series::from_vec(vec![1, 1, 1, 1]);
+    let series = Series::from_vec(vec![2, 2, 2, 2]);
+
+    series1 *= series;
+    assert_eq!(series1.sum(), 8);
+}
+
+#[test]
 fn test_into_iter() {
     let series: Series<i32> = Series::from_vec(vec![1, 2, 3, 4]);
     let sum: i32 = series.into_iter().sum();
