@@ -55,6 +55,36 @@ impl From<Box<bincode::ErrorKind>> for BlackJackError {
     }
 }
 
+
+/// Enum for holding valid Series types
+pub enum GenericSeriesContainer {
+
+    /// Hold `i64` type series
+    I64(Series<i64>),
+    /// Hold `f64` type series
+    F64(Series<f64>),
+    /// Hold `i32` type series
+    I32(Series<i32>),
+    /// Hold `f32` type series
+    F32(Series<f32>),
+    /// Hold `String` type series
+    STRING(Series<String>)
+}
+
+impl GenericSeriesContainer {
+
+    fn into_string_vec(self) -> Vec<String> {
+        // TODO: `.unwrap()` is pretty safe here, but should avoid it anyhow.
+        match self {
+            GenericSeriesContainer::I64(series) => series.into_type::<String>().unwrap().into_vec(),
+            GenericSeriesContainer::F64(series) => series.into_type::<String>().unwrap().into_vec(),
+            GenericSeriesContainer::I32(series) => series.into_type::<String>().unwrap().into_vec(),
+            GenericSeriesContainer::F32(series) => series.into_type::<String>().unwrap().into_vec(),
+            GenericSeriesContainer::STRING(series) => series.into_vec()
+        }
+    }
+}
+
 /// Serialized version of `Series<T>`, enabling storage inside a homogeneous container
 /// where metadata is stored and data is stored in byte/compressed format.
 #[derive(Debug)]
@@ -64,7 +94,6 @@ pub struct SerializedSeries {
     dtype: DType,
     encoded_data: Vec<u8>
 }
-
 
 impl SerializedSeries {
 
@@ -93,6 +122,21 @@ impl SerializedSeries {
         let mut series = Series::from_vec(data);
         series.set_name(&self.name);
         Ok(series)
+    }
+
+    /// Decode the series into a `GenericSeriesContainer`; useful if you don't know the
+    /// resulting type of the `Series` you're after
+    pub fn decode_infer(&self) -> Result<GenericSeriesContainer, BlackJackError> {
+        let container = match self.dtype {
+            DType::I64 => GenericSeriesContainer::I64(self.decode::<i64>()?),
+            DType::F64 => GenericSeriesContainer::F64(self.decode::<f64>()?),
+            DType::I32 => GenericSeriesContainer::I32(self.decode::<i32>()?),
+            DType::F32 => GenericSeriesContainer::F32(self.decode::<f32>()?),
+            DType::STRING => GenericSeriesContainer::STRING(self.decode::<String>()?),
+            _ => return Err(BlackJackError::ValueError("Series dtype 'None' invalid here!".to_string()))
+        };
+
+        Ok(container)
     }
 
 }
@@ -267,5 +311,68 @@ impl DataFrame {
             })
             .collect::<Vec<()>>();
         Ok(df)
+    }
+
+
+    /// Write a dataframe to CSV, consumes self, and thus will not double memory whilst
+    /// writing to CSV.
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let mut df = DataFrame::new();
+    ///
+    /// df.add_column(Series::arange(0, 10));
+    /// df.add_column(Series::arange(0, 10));
+    ///
+    /// let result = df.into_csv("/tmp/test.csv.gz", b',').is_ok(); // Gzip compression inferred.
+    /// assert_eq!(result, true);
+    /// ```
+    pub fn into_csv<S>(self, path: S, delimiter: u8) -> Result<(), BlackJackError>
+        where S: AsRef<OsStr> + ToString
+    {
+        use std::io::prelude::*;
+        use std::fs::File;
+        use flate2::read::GzEncoder;
+        use flate2::Compression;
+
+        let p = Path::new(&path);
+
+        let file_writer: Box<Write> = if path.to_string().to_lowercase().ends_with(".gz") {
+                                            // Return a Gzip reader
+                                            Box::new(GzEncoder::new(File::create(p)?, Compression::default()))
+                                        } else {
+                                            // Return plain file reader
+                                            Box::new(File::create(p)?)
+                                        };
+
+        let mut writer = csv::WriterBuilder::new()
+            .delimiter(delimiter)
+            .from_writer(file_writer);
+
+        let header = self.columns().map(|v| v.to_string()).collect::<Vec<String>>();
+
+        // Deserialize all series into string vecs
+        let mut data = vec![];
+        for serialized_series in self.data {
+            let series_container = serialized_series.decode_infer()?;
+            let string_vec = series_container.into_string_vec();
+            data.push(string_vec);
+        }
+
+        // Write out records
+        writer.write_record(header.as_slice())?;
+
+        // TODO: Probably a better way to do this?
+        for row_idx in 0..data[0].len() {
+            let mut row = vec![];
+            for column_idx in 0..data.len() {
+                row.push(&data[column_idx][row_idx]);
+            }
+            writer.write_record(row.as_slice())?;
+        }
+
+        Ok(())
     }
 }

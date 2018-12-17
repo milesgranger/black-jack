@@ -1,5 +1,8 @@
 
 extern crate blackjack;
+extern crate tempfile;
+
+use tempfile::tempdir;
 
 use blackjack::prelude::*;
 
@@ -11,6 +14,7 @@ fn test_series_serializer() {
     let serialized = SerializedSeries::from_series(series).unwrap();
     let _deserialzed: Series<i32> = serialized.decode().unwrap();
 }
+
 
 /*
 #[test]
@@ -85,15 +89,26 @@ fn test_column_names() {
 
 
 #[test]
-fn test_read_basic_csv() {
+fn test_read_write_basic_csv() {
     let path = format!("{}/tests/data/medium_csv.csv", env!("CARGO_MANIFEST_DIR"));
     println!("Using path: {}", &path);
     let df = DataFrame::read_csv(&path, b',').expect("Unable to read file!");
     //let cols = vec!["col1", "col2", "col3"];
     //assert_eq!(cols, df.columns().collect::<Vec<&str>>());
 
-    let col1: Series<i32> = df.get_column("col2").unwrap();
-    assert_eq!(col1.sum() as i32, 3000);
+    let col2: Series<i32> = df.get_column("col2").unwrap();
+    assert_eq!(col2.sum() as i32, 3000);
+
+    {
+        let tdir = tempdir().unwrap();
+        let out_path = tdir.path().join("out.csv");
+        let out_path_str = out_path.to_str().unwrap();
+        df.into_csv(&out_path_str, b',').unwrap();
+        let new_df = DataFrame::read_csv(&out_path_str, b',').unwrap();
+        let col2: Series<i32> = new_df.get_column("col2").unwrap();
+        assert_eq!(col2.sum() as i32, 3000);
+    }
+
 }
 
 
