@@ -37,6 +37,12 @@ pub enum BlackJackError {
     ValueError(String)
 }
 
+impl From<&str> for BlackJackError {
+    fn from(error: &str) -> BlackJackError {
+        BlackJackError::ValueError(error.to_owned())
+    }
+}
+
 impl From<std::io::Error> for BlackJackError {
     fn from(error: std::io::Error) -> BlackJackError {
         BlackJackError::IoError(error)

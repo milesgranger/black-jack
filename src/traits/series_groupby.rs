@@ -39,7 +39,7 @@ impl<T> SeriesGroupBy<T>
     /// let grouped: SeriesGroupBy<i32> = series.groupby(keys);
     /// let series = grouped.apply(|s: Series<i32>| s.min().unwrap());
     /// 
-    /// assert_eq!(series.max(), Ok(3));  // by key, 3 is the max.
+    /// assert_eq!(series.max().unwrap(), 3);  // by key, 3 is the max.
     /// ```
     pub fn apply<F>(self, agg_func: F) -> Series<T>
         where 
@@ -54,13 +54,58 @@ impl<T> SeriesGroupBy<T>
     }
 
     /// Apply a `sum` aggregation to each [`Series`] group
-    pub fn sum<'a>(&'a self) -> Series<T>
-        where T: Send + Num + Sum<&'a T> + Copy + Sum,
+    pub fn sum(&self) -> Series<T>
+        where T: Ord + Num + Sum + Copy
     {
-        let results = self.groups
-            .iter()
-            .map(|series| series.sum())
-            .collect::<Vec<T>>();
+        let mut results = vec![];
+        for group in &self.groups {
+            results.push(group.sum());
+        }
         Series::from_vec(results)
+    }
+
+    /// Apply a `min` aggregation to each [`Series`] group
+    pub fn min(&self) -> Result<Series<T>, BlackJackError>
+        where T: PartialOrd + Num + ToPrimitive + Copy
+    {
+
+        let mut results = vec![];
+        for group in &self.groups {
+            results.push(group.min()?);
+        }
+        Ok(Series::from_vec(results))
+    }
+
+    /// Apply a `max` aggregation to each [`Series`] group
+    pub fn max(&self) -> Result<Series<T>, BlackJackError>
+        where T: PartialOrd + Num + Copy
+    {
+        let mut results = vec![];
+        for group in &self.groups {
+            results.push(group.max()?);
+        }
+        Ok(Series::from_vec(results))
+    }
+
+    /// Apply a `max` aggregation to each [`Series`] group
+    pub fn mean(&self) -> Result<Series<f64>, BlackJackError>
+        where for<'b> T: PartialOrd + Num + Sum + Copy + ToPrimitive + Sum<&'b T>
+    {
+        let mut results = vec![];
+        for group in &self.groups {
+            results.push(group.mean()?);
+        }
+        Ok(Series::from_vec(results))
+    }
+
+    /// Apply a `max` aggregation to each [`Series`] group
+    pub fn var(&self) -> Result<Series<f64>, BlackJackError>
+        where T: PartialOrd + Num + ToPrimitive + Copy
+    {
+        let mut results = vec![];
+        for group in &self.groups {
+            results.push(group.var()?);
+        }
+        Ok(Series::from_vec(results))
     }
 }

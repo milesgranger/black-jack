@@ -101,21 +101,39 @@ fn test_map() {
 }
 
 #[test]
-fn test_groupby_sum() {
+fn test_groupbys() {
     let series = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
     let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
 
     // Split into groups and sort those groups
-    let grouped = series.groupby(keys).sum();
-
-    println!("{:#?}", &grouped);
+    let grouped = series.groupby(keys.clone()).sum();
 
     // 3 keys == 3 len
     assert_eq!(grouped.len(), 3);
 
-    let mut vals = grouped.into_vec();
-    vals.sort();
+    let vals = grouped.into_vec();
     assert_eq!(vals, vec![2, 4, 6]);
+
+    // Test min
+    let grouped = series.groupby(keys.clone()).min().unwrap();
+    let vals = grouped.into_vec();
+    assert_eq!(vals, vec![1, 2, 3]);
+
+    // Test max
+    let grouped = series.groupby(keys.clone()).max().unwrap();
+    let vals = grouped.into_vec();
+    assert_eq!(vals, vec![1, 2, 3]);
+
+    // Test mean
+    let grouped = series.groupby(keys.clone()).mean().unwrap();
+    let vals = grouped.into_vec();
+    assert_eq!(vals, vec![1_f64, 2_f64, 3_f64]);
+
+    // Test var
+    let grouped = series.groupby(keys.clone()).var().unwrap();
+    let vals = grouped.into_vec();
+    assert_eq!(vals, vec![0_f64, 0_f64, 0_f64]);
+
 }
 
 #[test]
@@ -208,10 +226,10 @@ fn test_series_aggregation_ops() {
     assert_eq!(series.mean(), Ok(2.0));
 
     // Test min
-    assert_eq!(series.min(), Ok(0_i32));
+    assert_eq!(series.min().unwrap(), 0_i32);
 
     // Test max
-    assert_eq!(series.max(), Ok(4_i32));
+    assert_eq!(series.max().unwrap(), 4_i32);
 
     // Test mode - both single mode and multiple modes
     let series = Series::from_vec(vec![0, 0, 0, 1, 2, 3]);
