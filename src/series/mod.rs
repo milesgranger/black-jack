@@ -514,29 +514,27 @@ impl<T> Series<T>
     /// 
     /// let series: Series<i32> = Series::arange(10, 100);
     /// 
-    /// assert_eq!(series.min(), Ok(10));
+    /// assert_eq!(series.min().unwrap(), 10);
     /// ```
-    pub fn min(&self) -> Result<T, &'static str>
+    pub fn min(&self) -> Result<T, BlackJackError>
         where 
-            T: Num + Clone + Ord + BlackJackData
+            T: Num + PartialOrd + BlackJackData + Copy
     {
-        let min = self.values.iter().min();
-        match min {
-            Some(m) => Ok(m.clone()),
-            None => Err("Unable to find minimum of values, perhaps values is empty?")
+        match self.values.iter().min_by(|a, b| a.partial_cmp(b).unwrap()) {
+            Some(min) => Ok(min.to_owned()),
+            None => Err(BlackJackError::ValueError("Cannot find min of empty series".into()))
         }
     }
 
     /// Exibits the same behavior and usage of [`SeriesTrait::min`], only
     /// yielding the [`Result`] of a maximum.
-    pub fn max(&self) -> Result<T, &'static str>
+    pub fn max(&self) -> Result<T, BlackJackError>
         where 
-            T: Num + Clone + Ord
+            T: Num + PartialOrd + BlackJackData + Copy
     {
-        let max = self.values.iter().max();
-        match max {
-            Some(m) => Ok(m.clone()),
-            None => Err("Unable to find maximum of values, perhaps values is empty?")
+        match self.values.iter().max_by(|a, b| a.partial_cmp(b).unwrap()) {
+            Some(max) => Ok(max.to_owned()),
+            None => Err(BlackJackError::ValueError("Cannot find max of empty series".into()))
         }
     }
 
