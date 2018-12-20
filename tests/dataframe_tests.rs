@@ -92,7 +92,7 @@ fn test_column_names() {
 fn test_read_write_basic_csv() {
     let path = format!("{}/tests/data/medium_csv.csv", env!("CARGO_MANIFEST_DIR"));
     println!("Using path: {}", &path);
-    let df = DataFrame::read_csv(&path, b',').expect("Unable to read file!");
+    let df = Reader::new(&path).read().expect("Unable to read file!");
     //let cols = vec!["col1", "col2", "col3"];
     //assert_eq!(cols, df.columns().collect::<Vec<&str>>());
 
@@ -103,8 +103,8 @@ fn test_read_write_basic_csv() {
         let tdir = tempdir().unwrap();
         let out_path = tdir.path().join("out.csv");
         let out_path_str = out_path.to_str().unwrap();
-        df.into_csv(&out_path_str, b',').unwrap();
-        let new_df = DataFrame::read_csv(&out_path_str, b',').unwrap();
+        Writer::new(&out_path_str).write(df).unwrap();
+        let new_df = Reader::new(&out_path_str).read().unwrap();
         let col2: Series<i32> = new_df.get_column("col2").unwrap();
         assert_eq!(col2.sum() as i32, 3000);
     }
@@ -117,7 +117,7 @@ fn test_read_gzipped_basic_csv() {
     
     let path = format!("{}/tests/data/basic_csv.csv.gz", env!("CARGO_MANIFEST_DIR"));
     println!("Using path: {}", &path);
-    let df = DataFrame::read_csv(&path, b',').unwrap();
+    let df = Reader::new(&path).read().unwrap();
     let cols = vec!["col1", "col2", "col3"];
     assert_eq!(cols, df.columns().collect::<Vec<&str>>());
 
