@@ -138,6 +138,21 @@ impl<T> Series<T>
             .all(condition)
     }
 
+    /// Check if all elements with the Series are equal
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let series = Series::from_vec(vec![1, 1, 1, 1, 1]);
+    /// assert!(series.all_equal());
+    /// ```
+    pub fn all_equal(&self) -> bool
+        where T: PartialEq
+    {
+        self.values.iter().all_equal()
+    }
+
     /// Determine if _any_ element in the Series meets a given condition
     ///
     /// This will stop iteration after encountering the first element which meets
