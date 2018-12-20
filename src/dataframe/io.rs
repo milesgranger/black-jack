@@ -22,9 +22,14 @@ use prelude::*;
 /// assert_eq!(col1.sum() as i32, 15);
 ///
 /// ```
+#[derive(Clone)]
 pub struct Reader {
-    delimiter: u8,
     path: String,
+    delimiter: u8,
+    terminator: csv::Terminator,
+    quote: u8,
+    has_headers: bool,
+    header: Option<Vec<String>>
 }
 
 /// DataFrame reading struct
@@ -38,12 +43,16 @@ pub struct Reader {
 /// df.add_column(Series::arange(0, 10));
 /// df.add_column(Series::arange(0, 10));
 ///
-/// let result = Writer::new(&"/tmp/test.csv.gz").write(df).is_ok(); // Gzip compression inferred.
+/// let result = Writer::new(&"/tmp/test.csv.gz").delimiter(b',').write(df).is_ok(); // Gzip compression inferred.
 /// assert_eq!(result, true);
 /// ```
+#[derive(Clone)]
 pub struct Writer {
-    delimiter: u8,
     path: String,
+    delimiter: u8,
+    terminator: csv::Terminator,
+    quote: u8,
+    has_headers: bool,
 }
 
 impl Reader {
@@ -52,16 +61,47 @@ impl Reader {
     pub fn new<S: AsRef<OsStr> + ToString>(path: &S) -> Self {
         Reader {
             path: path.to_string(),
-            delimiter: b','
+            delimiter: b',',
+            terminator: csv::Terminator::CRLF,
+            quote: b'"',
+            has_headers: true,
+            header: None
         }
+    }
+
+    /// Set header, must be set if `has_headers` is false, and ignore if it is true
+    pub fn headers(self, header: Vec<String>) -> Self {
+        let mut rdr = self;
+        rdr.header = Some(header);
+        rdr
+    }
+
+    /// Whether to expect headers in the file or not.
+    pub fn has_headers(self, yes: bool) -> Self {
+        let mut rdr = self;
+        rdr.has_headers = yes;
+        rdr
+    }
+
+    /// Set the CSV quote character, default is `b'"'`
+    pub fn quote(self, quote: u8) -> Self {
+        let mut rdr = self;
+        rdr.quote = quote;
+        rdr
     }
 
     /// Set the CSV delimiter, default is `b','` (comma delimited)
     pub fn delimiter(self, delimiter: u8) -> Self {
-        Reader {
-            delimiter,
-            path: self.path
-        }
+        let mut rdr = self;
+        rdr.delimiter = delimiter;
+        rdr
+    }
+
+    /// Set the CSV line terminator, default treats any of `\r`, `\n` or `\r\n` as a line terminator
+    pub fn terminator(self, terminator: u8) -> Self {
+        let mut rdr = self;
+        rdr.terminator = csv::Terminator::Any(terminator);
+        rdr
     }
 
     /// Read a CSV file into a [`DataFrame`] where each column represents a Series
@@ -83,15 +123,31 @@ impl Reader {
                                         };
 
         let mut reader = csv::ReaderBuilder::new()
-                                .delimiter(self.delimiter)
-                                .from_reader(file_reader);
+            .quote(self.quote)
+            .has_headers(self.has_headers)
+            .delimiter(self.delimiter)
+            .terminator(self.terminator)
+            .from_reader(file_reader);
 
-        // TODO: Don't fail on non existant headers -> give 'col0', 'col1', etc.
-        let headers: Vec<String> = reader.headers()?
-                                        .clone()
-                                        .into_iter()
-                                        .map(|v| v.to_string())
-                                        .collect();
+        let headers: Vec<String> = if self.has_headers {
+            reader.headers()?
+                .clone()
+                .into_iter()
+                .map(|v| v.to_string())
+                .collect()
+        } else {
+            match &self.header {
+                Some(header) => header.to_owned(),
+                None => {
+                    return Err(
+                        BlackJackError::ValueError(r#"Reader specifies file does not have headers,
+                        but no headers were supplied with Reader::header()"#
+                            .to_owned()
+                        )
+                    )
+                }
+            }
+        };
 
         // Containers for storing column data
         let mut vecs: Vec<Vec<String>> = (0..headers.len())
@@ -143,18 +199,40 @@ impl Writer {
     pub fn new<S: AsRef<OsStr> + ToString>(path: &S) -> Self {
         Writer {
             path: path.to_string(),
-            delimiter: b','
+            delimiter: b',',
+            terminator: csv::Terminator::CRLF,
+            quote: b'"',
+            has_headers: true
         }
+    }
+
+    /// Whether to write headers in the file or not with the dataframe output.
+    pub fn has_headers(self, yes: bool) -> Self {
+        let mut wtr = self;
+        wtr.has_headers = yes;
+        wtr
+    }
+
+    /// Set the CSV quote character, default is `b'"'`
+    pub fn quote(self, quote: u8) -> Self {
+        let mut wtr = self;
+        wtr.quote = quote;
+        wtr
     }
 
     /// Set the CSV delimiter, default is `b','` (comma delimited)
     pub fn delimiter(self, delimiter: u8) -> Self {
-        Writer {
-            delimiter,
-            path: self.path
-        }
+        let mut wtr = self;
+        wtr.delimiter = delimiter;
+        wtr
     }
 
+    /// Set the CSV line terminator, default treats any of `\r`, `\n` or `\r\n` as a line terminator
+    pub fn terminator(self, terminator: u8) -> Self {
+        let mut wtr = self;
+        wtr.terminator = csv::Terminator::Any(terminator);
+        wtr
+    }
 
     /// Write a dataframe to CSV, consumes self, and thus will not double memory whilst
     /// writing to CSV.
@@ -177,6 +255,9 @@ impl Writer {
 
         let mut writer = csv::WriterBuilder::new()
             .delimiter(self.delimiter)
+            .has_headers(self.has_headers)
+            .quote(self.quote)
+            .terminator(self.terminator)
             .from_writer(file_writer);
 
         let header = df.columns().map(|v| v.to_string()).collect::<Vec<String>>();
@@ -189,8 +270,11 @@ impl Writer {
             data.push(string_vec);
         }
 
-        // Write out records
-        writer.write_record(header.as_slice())?;
+        // User might not want to write out headers
+        if self.has_headers {
+            // Write out records
+            writer.write_record(header.as_slice())?;
+        };
 
         // TODO: Probably a better way to do this?
         for row_idx in 0..data[0].len() {
