@@ -170,6 +170,35 @@ impl<T> Series<T>
 
     }
 
+    /// Create a cartesian product of this series and another, returns a pair of
+    /// `Series` representing the cartesian product
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let series1 = Series::from_vec(vec![0, 1]);
+    /// let series2 = Series::from_vec(vec![1, 2]);
+    ///
+    /// let (cart_prod1, cart_prod2) = series1.cartesian_product(&series2);
+    ///
+    /// assert_eq!(cart_prod1.values, vec![0, 0, 1, 1]);
+    /// assert_eq!(cart_prod2.values, vec![1, 2, 1, 2]);
+    /// ```
+    pub fn cartesian_product<O>(&self, other: &Series<O>) -> (Series<T>, Series<O>)
+        where O: BlackJackData
+    {
+        let mut left = vec![];
+        let mut right = vec![];
+        let _ = self.values
+            .clone()
+            .into_iter()
+            .cartesian_product(other.values.clone().into_iter())
+            .map(|(l, r)| { left.push(l); right.push(r); })
+            .collect::<Vec<()>>();
+        (Series::from_vec(left), Series::from_vec(right))
+    }
+
     /// Return the positions of where a given condition evaluates to `true`
     ///
     /// This is somewhat akin to the pandas `where` method.
