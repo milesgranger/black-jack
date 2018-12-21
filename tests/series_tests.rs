@@ -106,7 +106,7 @@ fn test_groupbys() {
     let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
 
     // Split into groups and sort those groups
-    let grouped = series.groupby(keys.clone()).sum();
+    let grouped = series.groupby(&keys).sum();
 
     // 3 keys == 3 len
     assert_eq!(grouped.len(), 3);
@@ -115,22 +115,22 @@ fn test_groupbys() {
     assert_eq!(vals, vec![2, 4, 6]);
 
     // Test min
-    let grouped = series.groupby(keys.clone()).min().unwrap();
+    let grouped = series.groupby(&keys).min().unwrap();
     let vals = grouped.into_vec();
     assert_eq!(vals, vec![1, 2, 3]);
 
     // Test max
-    let grouped = series.groupby(keys.clone()).max().unwrap();
+    let grouped = series.groupby(&keys).max().unwrap();
     let vals = grouped.into_vec();
     assert_eq!(vals, vec![1, 2, 3]);
 
     // Test mean
-    let grouped = series.groupby(keys.clone()).mean().unwrap();
+    let grouped = series.groupby(&keys).mean().unwrap();
     let vals = grouped.into_vec();
     assert_eq!(vals, vec![1_f64, 2_f64, 3_f64]);
 
     // Test var
-    let grouped = series.groupby(keys.clone()).var().unwrap();
+    let grouped = series.groupby(&keys).var().unwrap();
     let vals = grouped.into_vec();
     assert_eq!(vals, vec![0_f64, 0_f64, 0_f64]);
 

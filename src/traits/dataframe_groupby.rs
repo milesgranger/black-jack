@@ -48,13 +48,13 @@ pub trait DataFrameGroupByBehavior
 
     /// Group by method for grouping [`Series`] in a [`DataFrame`]
     /// by key.
-    fn groupby<T>(&self, keys: Series<T>) -> DataFrameGroupBy<T>
+    fn groupby<T>(&self, keys: &Series<T>) -> DataFrameGroupBy<T>
         where for<'de> T: BlackJackData + Deserialize<'de> + ToPrimitive;
 }
 
 impl DataFrameGroupByBehavior for DataFrame
 {
-    fn groupby<T>(&self, keys: Series<T>) -> DataFrameGroupBy<T>
+    fn groupby<T>(&self, keys: &Series<T>) -> DataFrameGroupBy<T>
         where for<'de> T: BlackJackData + Deserialize<'de> + ToPrimitive
     {
 
@@ -62,7 +62,7 @@ impl DataFrameGroupByBehavior for DataFrame
             .columns()
             .map(|col_name| {
                 let series = self.get_column(col_name).unwrap();
-                series.groupby(keys.clone())
+                series.groupby(keys)
             })
             .collect::<Vec<SeriesGroupBy<T>>>();
 

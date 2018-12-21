@@ -36,7 +36,7 @@ impl<T> SeriesGroupBy<T>
     /// let series = Series::from_vec(vec![9, 9, 3, 1, 1, 9]);
     /// let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
     /// 
-    /// let grouped: SeriesGroupBy<i32> = series.groupby(keys);
+    /// let grouped: SeriesGroupBy<i32> = series.groupby(&keys);
     /// let series = grouped.apply(|s: Series<i32>| s.min().unwrap());
     /// 
     /// assert_eq!(series.max().unwrap(), 3);  // by key, 3 is the max.

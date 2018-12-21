@@ -634,14 +634,14 @@ impl<T> Series<T>
     /// let series = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
     /// let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
     ///
-    /// let grouped: Series<i32> = series.groupby(keys).sum();
+    /// let grouped: Series<i32> = series.groupby(&keys).sum();
     /// assert_eq!(grouped.len(), 3);
     ///
     /// let mut vals = grouped.into_vec();
     /// vals.sort();
     /// assert_eq!(vals, vec![2, 4, 6]);
     /// ```
-    pub fn groupby(&self, keys: Series<T>) -> SeriesGroupBy<T>
+    pub fn groupby(&self, keys: &Series<T>) -> SeriesGroupBy<T>
         where T: ToPrimitive
     {
 
@@ -661,10 +661,10 @@ impl<T> Series<T>
         let mut map: IndexMap<String, Vec<T>> = IndexMap::new();
 
         // Group values by their keys
-        for (k, v) in keys.values.into_iter().zip(values.into_iter()) {
+        for (k, v) in keys.values.iter().zip(values.iter()) {
             let key = k.to_string();
             let mr = map.entry(key).or_insert(vec![]);
-            mr.push(v);
+            mr.push(v.clone());
         }
 
         // Create new series from the previous mapping.

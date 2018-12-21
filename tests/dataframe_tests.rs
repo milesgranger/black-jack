@@ -63,7 +63,7 @@ fn test_df_groupby() {
         vec![1, 2, 3, 1, 2, 3, 1, 2, 3, 1]
     );
 
-    let grouped = df.groupby(keys).sum();
+    let grouped = df.groupby(&keys).sum();
     println!("{:?}", grouped);
 }
 
