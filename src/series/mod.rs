@@ -416,11 +416,11 @@ impl<T> Series<T>
 
     /// Finds the returns a [`Series`] containing the mode(s) of the current
     /// [`Series`]
-    pub fn mode(&self) -> Result<Self, &'static str>
+    pub fn mode(&self) -> Result<Self, BlackJackError>
         where T: BlackJackData + PartialOrd + Copy + ToPrimitive
     {
         if self.len() == 0 {
-            return Err("Cannot compute mode of an empty series!")
+            return Err(BlackJackError::ValueError("Cannot compute mode of an empty series!".to_owned()))
         }
 
         let modes = stats::modes(self.values.iter().map(|v| *v));
@@ -429,11 +429,11 @@ impl<T> Series<T>
     }
 
     /// Calculate the variance of the series
-    pub fn var(&self) -> Result<f64, &'static str>
+    pub fn var(&self) -> Result<f64, BlackJackError>
         where T: BlackJackData + ToPrimitive + Copy
     {
         if self.len() == 0  {
-            return Err("Cannot compute variance of an empty series!");
+            return Err(BlackJackError::ValueError("Cannot compute variance of an empty series!".to_owned()));
         }
         let var = stats::variance(self.values.iter().map(|v| *v));
         Ok(var)
@@ -451,11 +451,11 @@ impl<T> Series<T>
     /// assert!(std > 2.87);
     /// assert!(std < 2.88);
     /// ```
-    pub fn std(&self) -> Result<f64, &'static str>
+    pub fn std(&self) -> Result<f64, BlackJackError>
         where T: BlackJackData + ToPrimitive + Copy
     {
         if self.len() == 0 {
-            return Err("Cannot compute standard deviation of an empty series!")
+            return Err(BlackJackError::ValueError("Cannot compute standard deviation of an empty series!".to_owned()))
         }
         let std = stats::stddev(self.values.iter().map(|v| *v));
         Ok(std)
@@ -493,9 +493,9 @@ impl<T> Series<T>
     ///     }
     /// }
     /// ```
-    pub fn mean<'a>(&'a self) -> Result<f64, &'static str>
+    pub fn mean(&self) -> Result<f64, BlackJackError>
         where
-            T: ToPrimitive + Copy + Sum<&'a T> + Num + Sum
+            T: ToPrimitive + Copy + Num + Sum
     {
         let total = self.sum().to_f64().unwrap();
         let count = self.len() as f64;
@@ -514,7 +514,7 @@ impl<T> Series<T>
     /// assert!(qtl < 49.51);
     /// assert!(qtl > 49.49);
     /// ```
-    pub fn quantile(&self, quantile: f64) -> Result<f64, &'static str>
+    pub fn quantile(&self, quantile: f64) -> Result<f64, BlackJackError>
         where 
             T: ToPrimitive + BlackJackData
     {
@@ -534,18 +534,18 @@ impl<T> Series<T>
     }
 
     /// Calculate the median of a series
-    pub fn median<'a>(&'a self) -> Result<f64, &'static str>
+    pub fn median(&self) -> Result<f64, BlackJackError>
         where T: ToPrimitive + Copy + PartialOrd
     {
         if self.len() == 0 {
-            return Err("Cannot calculate median of an empty series.")
+            return Err(BlackJackError::ValueError("Cannot calculate median of an empty series.".to_owned()))
         }
         let med_opt = stats::median(self.values.iter().map(|v| v.to_f64().unwrap()));
         match med_opt {
             Some(med) => Ok(med),
-            None => Err(r#"Unable to calculate median, please create an issue!
+            None => Err(BlackJackError::ValueError(r#"Unable to calculate median, please create an issue!
                            as this wasn't expected to ever happen on a non-empty
-                           series. :("#)
+                           series. :("#.to_owned()))
         }
     }
 

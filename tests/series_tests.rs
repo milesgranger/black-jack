@@ -223,7 +223,7 @@ fn test_series_aggregation_ops() {
     assert_eq!(series.sum(), 10_i32);
 
     // Test mean
-    assert_eq!(series.mean(), Ok(2.0));
+    assert_eq!(series.mean().unwrap(), 2.0);
 
     // Test min
     assert_eq!(series.min().unwrap(), 0_i32);
@@ -233,10 +233,10 @@ fn test_series_aggregation_ops() {
 
     // Test mode - both single mode and multiple modes
     let series = Series::from_vec(vec![0, 0, 0, 1, 2, 3]);
-    assert_eq!(series.mode(), Ok(Series::from_vec(vec![0])));
+    assert_eq!(series.mode().unwrap(), Series::from_vec(vec![0]));
 
     let series = Series::from_vec(vec![0, 0, 0, 1, 1, 1, 2]);
-    assert_eq!(series.mode(), Ok(Series::from_vec(vec![0, 1])));
+    assert_eq!(series.mode().unwrap(), Series::from_vec(vec![0, 1]));
 
     // Test variance
     let series = Series::arange(0, 5);
@@ -254,12 +254,12 @@ fn test_series_aggregation_ops() {
     assert!(median < 4.51);
     assert!(median > 4.49);
     let series = Series::arange(0, 3);
-    assert_eq!(series.median(), Ok(1.0));
+    assert_eq!(series.median().unwrap(), 1.0);
 
 
     // Test quantile
     let series = Series::arange(0, 101);
-    assert_eq!(series.quantile(0.5), Ok(50.0));
+    assert_eq!(series.quantile(0.5).unwrap(), 50.0);
     let series = Series::arange(0, 100);
     let qtl = series.quantile(0.5).unwrap();
     assert!(qtl < 49.51);
