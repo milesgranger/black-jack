@@ -24,8 +24,8 @@ impl<T> DataFrameGroupBy<T>
 
     /// Sum this grouped dataframe object.
     /// basically calls `sum` in parallel on each grouped series collected.
-    pub fn sum<'a>(&'a self) -> DataFrame
-        where T: BlackJackData + Copy + Sum<&'a T> + Sum + Num + Send + Ord
+    pub fn sum(&self) -> DataFrame<i32>  // TODO:
+        where T: BlackJackData + Copy + Sum + Num + Send + Ord
     {
         // TODO: Return result
 
@@ -36,7 +36,6 @@ impl<T> DataFrameGroupBy<T>
             .map(|series_groupby| series_groupby.sum())
             .map(|series| df.add_column(series).unwrap())
             .collect::<Vec<()>>();
-
         df
     }
 }
@@ -52,10 +51,12 @@ pub trait DataFrameGroupByBehavior
         where for<'de> T: BlackJackData + Deserialize<'de> + ToPrimitive;
 }
 
-impl DataFrameGroupByBehavior for DataFrame
+impl<I> DataFrameGroupByBehavior for DataFrame<I>
+    where I: BlackJackData + PartialOrd + PartialEq
 {
     fn groupby<T>(&self, keys: &Series<T>) -> DataFrameGroupBy<T>
-        where for<'de> T: BlackJackData + Deserialize<'de> + ToPrimitive
+        where for<'de>
+              T: BlackJackData + Deserialize<'de> + ToPrimitive
     {
 
         let groups = self

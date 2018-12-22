@@ -132,7 +132,7 @@ fn test_add_columns() {
     series1.set_name("series-1");
     let series1_clone = series1.clone();
 
-    let mut series2: Series<f32> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+    let mut series2: Series<f32> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
     series2.set_name("series-2");
     let series2_clone = series2.clone();
 
