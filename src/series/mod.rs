@@ -62,6 +62,14 @@ pub struct Series<T>
     dtype: DType
 }
 
+impl<I> Default for Series<I>
+    where I: PartialOrd + PartialEq + BlackJackData
+{
+    fn default() -> Self {
+        Series::from_vec(vec![])
+    }
+}
+
 /// Constructor methods for `Series<T>`
 impl<T> Series<T>
     where
@@ -362,7 +370,11 @@ impl<T> Series<T>
     /// ```
     pub fn from_vec(vec: Vec<T>) -> Self
     {
-        let dtype = vec[0].dtype();  // TODO: Do something better.
+        let dtype = if vec.len() == 0 {
+            DType::None
+        } else {
+            vec[0].dtype()
+        };
         Series { 
             name: None,
             dtype,

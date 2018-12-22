@@ -34,7 +34,11 @@ pub enum BlackJackError {
 
     /// Failure due to mismatched sizes
     #[fail(display = "ValueError")]
-    ValueError(String)
+    ValueError(String),
+
+    /// Length mismatch
+    #[fail(display = "LengthMismatch")]
+    LengthMismatch(String)
 }
 
 impl From<&str> for BlackJackError {
@@ -149,11 +153,14 @@ impl SerializedSeries {
 
 /// The container for `Series<T>` objects, allowing for additional functionality
 #[derive(Default, Debug)]
-pub struct DataFrame {
+pub struct DataFrame<I>
+    where I: PartialOrd + PartialEq + BlackJackData
+{
+    index: Series<I>,
     data: Vec<SerializedSeries>
 }
 
-impl DataFrame {
+impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
 
     /// Create a new `DataFrame` struct
     ///
@@ -161,10 +168,11 @@ impl DataFrame {
     /// ```
     /// use blackjack::prelude::*;
     ///
-    /// let mut df = DataFrame::new();
+    /// let mut df: DataFrame<i32> = DataFrame::new();  // `i32` indicates index type of DataFrame
     /// ```
     pub fn new() -> Self {
         DataFrame {
+            index: Series::default(),
             data: vec![]
         }
     }
@@ -176,31 +184,41 @@ impl DataFrame {
     /// use blackjack::prelude::*;
     ///
     /// let mut df = DataFrame::new();
-    /// assert_eq!(df.len(), None);
+    /// assert_eq!(df.len(), 0);
     ///
     /// let series: Series<i32> = Series::arange(0, 10);
     /// df.add_column(series).unwrap();
     ///
-    /// assert_eq!(df.len(), Some(10));
+    /// assert_eq!(df.len(), 10);
     /// ```
-    pub fn len(&self) -> Option<usize> {
-        if self.data.len() > 0 {
-            Some(self.data[0].len)
-        } else {
-            None
-        }
+    pub fn len(&self) -> usize {
+        self.index.len()
     }
 
     /// Quickly identify if the dataframe is empty.
     pub fn is_empty(&self) -> bool {
-        self.len().is_none()
+        if self.len() > 0 { false } else { true }
     }
 
     /// Add a column to this dataframe.
-    pub fn add_column<T: BlackJackData>(&mut self, mut series: Series<T>) -> Result<(), BlackJackError> {
+    pub fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> Result<(), BlackJackError>
+        where Vec<I>: std::iter::FromIterator<i32>
+    {
+        let mut series = series;
+
+        // Ensure length is a match if we have columns
+        if self.len() > 0 && self.len() != series.len() {
+            return Err(
+                BlackJackError::LengthMismatch(
+                    format!("DataFrame has length: {}, cannot add series of length: {}", self.len(), series.len())))
+        } else {
+            self.index = Series::from_vec((0..series.len() as i32).collect::<Vec<I>>())
+        }
+
+
         // Set series name if it wasn't set already.
         if let None = series.name() {
-            series.set_name(&format!("col_{}", self.data.len()))
+            series.set_name(&format!("col_{}", self.n_columns()))
         }
         let serialized = SerializedSeries::from_series(series)?;
         self.data.push(serialized);

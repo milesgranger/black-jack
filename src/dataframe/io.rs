@@ -106,7 +106,7 @@ impl Reader {
 
     /// Read a CSV file into a [`DataFrame`] where each column represents a Series
     /// supports automatic decompression of gzipped files if they end with `.gz`
-    pub fn read(&self) -> Result<DataFrame, BlackJackError>
+    pub fn read(&self) -> Result<DataFrame<i32>, BlackJackError>
     {
 
         use std::io::prelude::*;
@@ -236,7 +236,7 @@ impl Writer {
 
     /// Write a dataframe to CSV, consumes self, and thus will not double memory whilst
     /// writing to CSV.
-    pub fn write(&self, df: DataFrame) -> Result<(), BlackJackError>
+    pub fn write<I: PartialEq + PartialOrd + BlackJackData>(&self, df: DataFrame<I>) -> Result<(), BlackJackError>
     {
         use std::io::prelude::*;
         use std::fs::File;
