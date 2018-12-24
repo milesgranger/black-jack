@@ -210,10 +210,10 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
         if self.data.contains_key(name) {
             let meta: &SeriesMeta = self.meta.iter().filter(|m| m.name == name).last()?;
             let container = match meta.dtype {
-                DType::I64 => GenericSeriesContainer::I64(self.data.get::<Series<i64>, _>(name).unwrap().clone()),
-                DType::F64 => GenericSeriesContainer::F64(self.data.get::<Series<f64>, _>(name).unwrap().clone()),
-                DType::I32 => GenericSeriesContainer::I32(self.data.get::<Series<i32>, _>(name).unwrap().clone()),
-                DType::F32 => GenericSeriesContainer::F32(self.data.get::<Series<f32>, _>(name).unwrap().clone()),
+                DType::I64 => GenericSeriesContainer::I64(self.data.get::<Series<i64>, _>(name)?.clone()),
+                DType::F64 => GenericSeriesContainer::F64(self.data.get::<Series<f64>, _>(name)?.clone()),
+                DType::I32 => GenericSeriesContainer::I32(self.data.get::<Series<i32>, _>(name)?.clone()),
+                DType::F32 => GenericSeriesContainer::F32(self.data.get::<Series<f32>, _>(name)?.clone()),
                 DType::STRING => GenericSeriesContainer::STRING(self.data.get::<Series<String>, _>(name).unwrap().clone()),
                 DType::None => unimplemented!()
             };
