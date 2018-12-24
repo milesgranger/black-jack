@@ -18,7 +18,7 @@ use prelude::*;
 /// let path = format!("{}/tests/data/basic_csv.csv", env!("CARGO_MANIFEST_DIR"));
 /// let df = Reader::new(&path).delimiter(b',').read().unwrap();
 ///
-/// let col1: Series<f32> = df.get_column("col1").unwrap();
+/// let col1: &Series<f32> = df.get_column("col1").unwrap();
 /// assert_eq!(col1.sum() as i32, 15);
 ///
 /// ```
@@ -264,8 +264,8 @@ impl Writer {
 
         // Deserialize all series into string vecs
         let mut data = vec![];
-        for serialized_series in df.data {
-            let series_container = serialized_series.decode_infer()?;
+        for col_name in df.data.keys() {
+            let series_container = df.get_column_infer(col_name.as_str()).unwrap();
             let string_vec = series_container.into_string_vec();
             data.push(string_vec);
         }

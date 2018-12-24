@@ -7,15 +7,6 @@ use tempfile::tempdir;
 use blackjack::prelude::*;
 
 
-#[test]
-fn test_series_serializer() {
-    let mut series = Series::arange(0, 10);
-    series.set_name("col1");
-    let serialized = SerializedSeries::from_series(series).unwrap();
-    let _deserialzed: Series<i32> = serialized.decode().unwrap();
-}
-
-
 /*
 #[test]
 fn test_change_df_index() {
@@ -81,8 +72,11 @@ fn test_column_names() {
     df.add_column(s1).unwrap();
     df.add_column(s2).unwrap();
 
+    let mut col_names = df.columns().collect::<Vec<&str>>();
+    col_names.sort();
+
     assert_eq!(
-        df.columns().collect::<Vec<&str>>(),
+        col_names,
         vec!["s1", "s2"]
     );
 }
@@ -96,8 +90,10 @@ fn test_read_write_basic_csv() {
     //let cols = vec!["col1", "col2", "col3"];
     //assert_eq!(cols, df.columns().collect::<Vec<&str>>());
 
-    let col2: Series<i32> = df.get_column("col2").unwrap();
-    assert_eq!(col2.sum() as i32, 3000);
+    {
+        let col2: &Series<i32> = df.get_column("col2").unwrap();
+        assert_eq!(col2.sum() as i32, 3000);
+    }
 
     {
         let tdir = tempdir().unwrap();
@@ -105,7 +101,7 @@ fn test_read_write_basic_csv() {
         let out_path_str = out_path.to_str().unwrap();
         Writer::new(&out_path_str).write(df).unwrap();
         let new_df = Reader::new(&out_path_str).read().unwrap();
-        let col2: Series<i32> = new_df.get_column("col2").unwrap();
+        let col2: &Series<i32> = new_df.get_column("col2").unwrap();
         assert_eq!(col2.sum() as i32, 3000);
     }
 
@@ -119,7 +115,10 @@ fn test_read_gzipped_basic_csv() {
     println!("Using path: {}", &path);
     let df = Reader::new(&path).read().unwrap();
     let cols = vec!["col1", "col2", "col3"];
-    assert_eq!(cols, df.columns().collect::<Vec<&str>>());
+
+    let mut col_names = df.columns().collect::<Vec<&str>>();
+    col_names.sort();
+    assert_eq!(cols, col_names);
 
 }
 
@@ -142,11 +141,11 @@ fn test_add_columns() {
     
     {
         // Test the columns match
-        let series1ref: Series<i32> = df.get_column("series-1").expect("No column named 'series-1'");
-        assert_eq!(series1ref, series1_clone);
+        let series1ref: &Series<i32> = df.get_column("series-1").expect("No column named 'series-1'");
+        assert_eq!(series1ref, &series1_clone);
 
-        let series2ref: Series<f32> = df.get_column("series-2").expect("No column named 'series-2'");
-        assert_eq!(series2ref, series2_clone);
+        let series2ref: &Series<f32> = df.get_column("series-2").expect("No column named 'series-2'");
+        assert_eq!(series2ref, &series2_clone);
 
         // Just sanity check two columns are still there.
         assert_eq!(df.n_columns(), 2);
@@ -164,7 +163,7 @@ fn test_get_column_by_name() {
 
     df.add_column(series).unwrap();
 
-    let series_ref: Series<i32> = df.get_column("test-series").expect("Unable to find column named 'test-series'");
-    assert_eq!(series_ref, series_clone);
+    let series_ref: &Series<i32> = df.get_column("test-series").expect("Unable to find column named 'test-series'");
+    assert_eq!(series_ref, &series_clone);
 
 }
