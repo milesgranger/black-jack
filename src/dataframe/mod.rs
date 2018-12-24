@@ -2,9 +2,8 @@
 //!
 //!
 
-use bincode::{serialize_into, deserialize_from};
 use csv;
-use serde::{Deserialize};
+use baggie::Baggie;
 
 use prelude::*;
 
@@ -98,57 +97,20 @@ impl GenericSeriesContainer {
 /// Serialized version of `Series<T>`, enabling storage inside a homogeneous container
 /// where metadata is stored and data is stored in byte/compressed format.
 #[derive(Debug)]
-pub struct SerializedSeries {
+pub struct SeriesMeta {
     name: String,
     len: usize,
-    dtype: DType,
-    encoded_data: Vec<u8>
+    dtype: DType
 }
 
-impl SerializedSeries {
-
-    /// Serialize a [`Series`] into a [`SerializedSeries`]
-    /// used for storing various Series types into a container, typically, you will not use
-    /// this directly.
-    pub fn from_series<T>(series: Series<T>) -> Result<Self, BlackJackError>
-        where T: BlackJackData
-    {
-        match series.name() {
-            Some(name) => {
-                let dtype = series.dtype();
-                let len = series.len();
-                let mut encoded_data = vec![];
-                serialize_into(&mut encoded_data, &series.values)?;
-                Ok(SerializedSeries { name, dtype, len, encoded_data, })
-            },
-            None => Err(BlackJackError::NoSeriesName)
+impl<T: BlackJackData> From<&Series<T>> for SeriesMeta {
+    fn from(series: &Series<T>) -> SeriesMeta {
+        SeriesMeta {
+            name: series.name().unwrap(),
+            len: series.len(),
+            dtype: series.dtype()
         }
     }
-    /// Deserialize this into a series
-    pub fn decode<T>(&self) -> Result<Series<T>, bincode::Error>
-        where for<'de> T: BlackJackData + Deserialize<'de>,
-    {
-        let data = deserialize_from(&self.encoded_data[..])?;
-        let mut series = Series::from_vec(data);
-        series.set_name(&self.name);
-        Ok(series)
-    }
-
-    /// Decode the series into a `GenericSeriesContainer`; useful if you don't know the
-    /// resulting type of the `Series` you're after
-    pub fn decode_infer(&self) -> Result<GenericSeriesContainer, BlackJackError> {
-        let container = match self.dtype {
-            DType::I64 => GenericSeriesContainer::I64(self.decode::<i64>()?),
-            DType::F64 => GenericSeriesContainer::F64(self.decode::<f64>()?),
-            DType::I32 => GenericSeriesContainer::I32(self.decode::<i32>()?),
-            DType::F32 => GenericSeriesContainer::F32(self.decode::<f32>()?),
-            DType::STRING => GenericSeriesContainer::STRING(self.decode::<String>()?),
-            _ => return Err(BlackJackError::ValueError("Series dtype 'None' invalid here!".to_string()))
-        };
-
-        Ok(container)
-    }
-
 }
 
 /// The container for `Series<T>` objects, allowing for additional functionality
@@ -157,7 +119,8 @@ pub struct DataFrame<I>
     where I: PartialOrd + PartialEq + BlackJackData
 {
     index: Series<I>,
-    data: Vec<SerializedSeries>
+    meta: Vec<SeriesMeta>,
+    data: Baggie<String>
 }
 
 impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
@@ -173,7 +136,8 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
     pub fn new() -> Self {
         DataFrame {
             index: Series::default(),
-            data: vec![]
+            data: Baggie::new(),
+            meta: vec![]
         }
     }
 
@@ -201,7 +165,7 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
     }
 
     /// Add a column to this dataframe.
-    pub fn add_column<T: BlackJackData>(&mut self, series: Series<T>) -> Result<(), BlackJackError>
+    pub fn add_column<T: BlackJackData + 'static>(&mut self, series: Series<T>) -> Result<(), BlackJackError>
         where Vec<I>: std::iter::FromIterator<i32>
     {
         let mut series = series;
@@ -215,35 +179,55 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
             self.index = Series::from_vec((0..series.len() as i32).collect::<Vec<I>>())
         }
 
-
-        // Set series name if it wasn't set already.
         if let None = series.name() {
             series.set_name(&format!("col_{}", self.n_columns()))
         }
-        let serialized = SerializedSeries::from_series(series)?;
-        self.data.push(serialized);
+
+        let meta = SeriesMeta::from(&series);
+        self.data.insert(meta.name.clone(), series);
+        self.meta.push(meta);
+
         Ok(())
     }
 
     /// Retrieves a column from the dataframe as an owned representation of it.
-    pub fn get_column<'a, T>(&self, name: impl Into<&'a str>) -> Result<Series<T>, BlackJackError>
-        where for<'de> T: BlackJackData + Deserialize<'de>
+    pub fn get_column<'a, T>(&self, name: impl Into<&'a str>) -> Option<&Series<T>>
+        where T: BlackJackData + 'static
     {
         let name = name.into();
-        for encoded_series in &self.data {
-            if encoded_series.name == name {
-                let series = encoded_series.decode::<T>()?;
-                return Ok(series)
+        for meta in &self.meta {
+            if meta.name == name {
+                let series: Option<&Series<T>> = self.data.get(&meta.name);
+                return series
             }
         }
-        Err(BlackJackError::NoSeriesName)
+        None
+    }
+
+    /// Get column, infer
+    pub fn get_column_infer<'a>(&self, name: impl Into<&'a str>) -> Option<GenericSeriesContainer> {
+        let name = name.into();
+        if self.data.contains_key(name) {
+            let meta: &SeriesMeta = self.meta.iter().filter(|m| m.name == name).last()?;
+            let container = match meta.dtype {
+                DType::I64 => GenericSeriesContainer::I64(self.data.get::<Series<i64>, _>(name).unwrap().clone()),
+                DType::F64 => GenericSeriesContainer::F64(self.data.get::<Series<f64>, _>(name).unwrap().clone()),
+                DType::I32 => GenericSeriesContainer::I32(self.data.get::<Series<i32>, _>(name).unwrap().clone()),
+                DType::F32 => GenericSeriesContainer::F32(self.data.get::<Series<f32>, _>(name).unwrap().clone()),
+                DType::STRING => GenericSeriesContainer::STRING(self.data.get::<Series<String>, _>(name).unwrap().clone()),
+                DType::None => unimplemented!()
+            };
+            Some(container)
+        } else {
+            None
+        }
     }
 
     /// Get a list of column names in this dataframe as an iterator
     pub fn columns(&self) -> impl Iterator<Item=&str> {
         self.data
-            .iter()
-            .map(|c| c.name.as_str())
+            .keys()
+            .map(|c| c.as_str())
     }
 
     /// Get the number of columns for this dataframe

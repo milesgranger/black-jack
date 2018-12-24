@@ -13,7 +13,7 @@ pub struct DataFrameGroupBy<T>
 }
 
 impl<T> DataFrameGroupBy<T>
-    where T: BlackJackData
+    where T: BlackJackData + 'static
 {
 
     /// Construct a new [`DataFrameGroupBy`] from a collection of [`SeiresGroupBy`]
@@ -48,7 +48,7 @@ pub trait DataFrameGroupByBehavior
     /// Group by method for grouping [`Series`] in a [`DataFrame`]
     /// by key.
     fn groupby<T>(&self, keys: &Series<T>) -> DataFrameGroupBy<T>
-        where for<'de> T: BlackJackData + Deserialize<'de> + ToPrimitive;
+        where for<'de> T: BlackJackData + Deserialize<'de> + ToPrimitive + 'static;
 }
 
 impl<I> DataFrameGroupByBehavior for DataFrame<I>
@@ -56,7 +56,7 @@ impl<I> DataFrameGroupByBehavior for DataFrame<I>
 {
     fn groupby<T>(&self, keys: &Series<T>) -> DataFrameGroupBy<T>
         where for<'de>
-              T: BlackJackData + Deserialize<'de> + ToPrimitive
+              T: BlackJackData + Deserialize<'de> + ToPrimitive + 'static
     {
 
         let groups = self

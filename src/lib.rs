@@ -33,9 +33,9 @@ extern crate prettytable;
 extern crate indexmap;
 extern crate ndarray;
 extern crate bincode;
-extern crate bytevec;
 extern crate serde;
 extern crate derive_more;
+extern crate baggie;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate failure;
 
