@@ -2,116 +2,12 @@
 //!
 //!
 
-use csv;
 use baggie::Baggie;
 
 use prelude::*;
 
 pub mod io;
 pub use self::io::*;
-
-
-/// Common error enum for the crate
-#[derive(Debug, Fail)]
-pub enum BlackJackError {
-
-    /// A failure of not having the `Series` name set, where one was expected
-    #[fail(display = "No series name present!")]
-    NoSeriesName,
-
-    /// A failure to decode a `Series<T>` which was previously encoded to `SerializedSeries`
-    #[fail(display = "Unable to decode series")]
-    SerializationDecodeError(Box<bincode::ErrorKind>),
-
-    /// Failure to parse the header of a CSV file.
-    #[fail(display = "Unable to read headers!")]
-    HeaderParseError(csv::Error),
-
-    /// Failure of a general `std::io::Error`
-    #[fail(display = "IO error")]
-    IoError(std::io::Error),
-
-    /// Failure due to mismatched sizes
-    #[fail(display = "ValueError")]
-    ValueError(String),
-
-    /// Length mismatch
-    #[fail(display = "LengthMismatch")]
-    LengthMismatch(String)
-}
-
-impl From<&str> for BlackJackError {
-    fn from(error: &str) -> BlackJackError {
-        BlackJackError::ValueError(error.to_owned())
-    }
-}
-
-impl From<std::io::Error> for BlackJackError {
-    fn from(error: std::io::Error) -> BlackJackError {
-        BlackJackError::IoError(error)
-    }
-}
-
-impl From<csv::Error> for BlackJackError {
-    fn from(error: csv::Error) -> BlackJackError {
-        BlackJackError::HeaderParseError(error)
-    }
-}
-
-impl From<Box<bincode::ErrorKind>> for BlackJackError {
-    fn from(error: Box<bincode::ErrorKind>) -> BlackJackError {
-        BlackJackError::SerializationDecodeError(error)
-    }
-}
-
-
-/// Enum for holding valid Series types
-pub enum GenericSeriesContainer {
-
-    /// Hold `i64` type series
-    I64(Series<i64>),
-    /// Hold `f64` type series
-    F64(Series<f64>),
-    /// Hold `i32` type series
-    I32(Series<i32>),
-    /// Hold `f32` type series
-    F32(Series<f32>),
-    /// Hold `String` type series
-    STRING(Series<String>)
-}
-
-impl GenericSeriesContainer {
-
-    fn into_string_vec(self) -> Vec<String> {
-        // TODO: `.unwrap()` is pretty safe here, but should avoid it anyhow.
-        match self {
-            GenericSeriesContainer::I64(series) => series.into_type::<String>().unwrap().into_vec(),
-            GenericSeriesContainer::F64(series) => series.into_type::<String>().unwrap().into_vec(),
-            GenericSeriesContainer::I32(series) => series.into_type::<String>().unwrap().into_vec(),
-            GenericSeriesContainer::F32(series) => series.into_type::<String>().unwrap().into_vec(),
-            GenericSeriesContainer::STRING(series) => series.into_vec()
-        }
-    }
-}
-
-/// Serialized version of `Series<T>`, enabling storage inside a homogeneous container
-/// where metadata is stored and data is stored in byte/compressed format.
-#[derive(Debug)]
-pub struct SeriesMeta {
-    name: String,
-    len: usize,
-    dtype: DType
-}
-
-impl<T: BlackJackData> From<&Series<T>> for SeriesMeta {
-    fn from(series: &Series<T>) -> SeriesMeta {
-        SeriesMeta {
-            name: series.name().unwrap(),
-            len: series.len(),
-            dtype: series.dtype()
-        }
-    }
-}
 
 /// The container for `Series<T>` objects, allowing for additional functionality
 #[derive(Default, Debug)]
