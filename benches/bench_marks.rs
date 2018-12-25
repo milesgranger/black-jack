@@ -54,7 +54,7 @@ fn criterion_bechmark(c: &mut Criterion) {
             })
     );
 
-
+    /*
     c.bench_function(
         "dataframe read_csv BASIC",
         |b| b.iter(|| {
@@ -62,6 +62,7 @@ fn criterion_bechmark(c: &mut Criterion) {
             let _df = DataFrame::read_csv(path, b',');
         })
     );
+    */
     
     c.bench_function(
         "series scalar ops - (Mul)",
@@ -75,7 +76,7 @@ fn criterion_bechmark(c: &mut Criterion) {
     c.bench_function(
         "series scalar ops - (MulAssign)",
         |b| b.iter_with_setup(|| {
-                let mut s = Series::arange(0, 10000);
+                let s = Series::arange(0, 10000);
                 s.astype::<i64>().unwrap();
                 s
             }, | mut series | {
@@ -140,7 +141,7 @@ fn criterion_bechmark(c: &mut Criterion) {
             let keys   = Series::arange(0, 10000);
             (keys, series)
         }, |(keys, series)| {
-            let _res = series.groupby(keys).sum();
+            let _res = series.groupby(&keys).sum();
         })
     );
 

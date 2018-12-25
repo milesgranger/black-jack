@@ -2,7 +2,7 @@
 use std::iter::Sum;
 
 use num::*;
-use prelude::*;
+use crate::prelude::*;
 
 
 /// [`Series::groupby`]  result.

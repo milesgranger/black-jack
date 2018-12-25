@@ -4,7 +4,7 @@
 
 use baggie::Baggie;
 
-use prelude::*;
+use crate::prelude::*;
 
 pub mod io;
 pub use self::io::*;

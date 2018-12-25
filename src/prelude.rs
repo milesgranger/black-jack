@@ -1,7 +1,7 @@
 //! Default and recommended imports for functionality of crate.
 
-pub use traits::*;
-pub use enums::*;
-pub use series::*;
-pub use dataframe::*;
-pub use error::*;
+pub use crate::traits::*;
+pub use crate::enums::*;
+pub use crate::series::*;
+pub use crate::dataframe::*;
+pub use crate::error::*;

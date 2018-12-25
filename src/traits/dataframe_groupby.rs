@@ -2,7 +2,7 @@ use std::iter::Sum;
 use num::*;
 use serde::{Deserialize};
 
-use prelude::*;
+use crate::prelude::*;
 
 /// [`DataFrame::groupby`]  result.
 /// Contains the split series by key

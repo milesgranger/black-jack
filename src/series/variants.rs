@@ -1,6 +1,6 @@
 //! Variations of `Series` and various helper objects
 
-use prelude::*;
+use crate::prelude::*;
 
 /// Enum for holding valid Series types
 pub enum GenericSeriesContainer {

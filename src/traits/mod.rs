@@ -6,7 +6,7 @@ use std::fmt::{Debug, Display};
 use serde::Serialize;
 
 
-use prelude::*;
+use crate::prelude::*;
 mod series_groupby;
 mod dataframe_groupby;
 pub use self::series_groupby::*;
