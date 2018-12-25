@@ -61,7 +61,7 @@ pub struct Series<T>
     /// The underlying values of the Series
     pub values: Vec<T>,
 
-    dtype: DType
+    dtype: Option<DType>
 }
 
 impl<I> Default for Series<I>
@@ -92,7 +92,7 @@ impl<T> Series<T>
             Range<T>: Iterator, 
             Vec<T>: FromIterator<<Range<T> as Iterator>::Item>
     {
-        let dtype = start.dtype();
+        let dtype = Some(start.dtype());
         let values: Vec<T> = (start..stop).collect();
         Series { 
             name: None,
@@ -293,7 +293,7 @@ impl<T> Series<T>
                 .collect::<Result<Vec<A>, _>>()?;
         let series = Series {
             name: self.name.clone(),
-            dtype: values[0].dtype(),
+            dtype: Some(values[0].dtype()),
             values
         };
         Ok(series)
@@ -320,7 +320,7 @@ impl<T> Series<T>
                 .collect::<Result<Vec<A>, _>>()?;
         let series = Series {
             name: self.name.clone(),
-            dtype: values[0].dtype(),
+            dtype: Some(values[0].dtype()),
             values
         };
         Ok(series)
@@ -373,9 +373,9 @@ impl<T> Series<T>
     pub fn from_vec(vec: Vec<T>) -> Self
     {
         let dtype = if vec.len() == 0 {
-            DType::None
+            None
         } else {
-            vec[0].dtype()
+            Some(vec[0].dtype())
         };
         Series { 
             name: None,
@@ -605,7 +605,7 @@ impl<T> Series<T>
     /// Get the dtype, returns `None` if series dtype is unknown. 
     /// in such a case, calling `.astype()` to coerce all types to a single
     /// type is needed. 
-    pub fn dtype(&self) -> DType {
+    pub fn dtype(&self) -> Option<DType> {
         self.dtype.clone()
     }
 
