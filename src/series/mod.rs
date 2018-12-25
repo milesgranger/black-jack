@@ -34,6 +34,8 @@ use num::*;
 use stats;
 
 pub mod overloaders;
+pub mod variants;
+pub use self::variants::*;
 use prelude::*;
 
 

@@ -47,3 +47,4 @@ pub mod dataframe;
 pub mod prelude;
 pub mod enums;
 pub mod traits;
+pub mod error;

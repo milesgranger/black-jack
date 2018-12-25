@@ -4,3 +4,4 @@ pub use traits::*;
 pub use enums::*;
 pub use series::*;
 pub use dataframe::*;
+pub use error::*;
