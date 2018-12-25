@@ -198,7 +198,7 @@ fn test_display_series() {
 fn test_series_arange() {
     let series = Series::arange(0, 10);
     assert_eq!(series.len(), 10);
-    assert_eq!(series.dtype(), DType::I32);
+    assert_eq!(series.dtype().unwrap(), DType::I32);
 }
 
 #[test]

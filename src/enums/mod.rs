@@ -18,7 +18,4 @@ pub enum DType {
 
     /// `String`
     STRING,
-
-    /// `None`
-    None
 }

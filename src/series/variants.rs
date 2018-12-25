@@ -50,7 +50,7 @@ impl<T: BlackJackData> From<&Series<T>> for SeriesMeta {
         SeriesMeta {
             name: series.name().unwrap(),
             len: series.len(),
-            dtype: series.dtype()
+            dtype: series.dtype().unwrap()
         }
     }
 }
