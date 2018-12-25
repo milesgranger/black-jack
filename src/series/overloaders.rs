@@ -9,7 +9,7 @@ use rayon::prelude::*;
 use rayon::iter::{IntoParallelIterator, IndexedParallelIterator};
 use num::*;
 
-use prelude::*;
+use crate::prelude::*;
 
 
 /// Support `series * scalar`

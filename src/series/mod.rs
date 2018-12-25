@@ -36,7 +36,7 @@ use stats;
 pub mod overloaders;
 pub mod variants;
 pub use self::variants::*;
-use prelude::*;
+use crate::prelude::*;
 
 
 // Allow series.into_iter()

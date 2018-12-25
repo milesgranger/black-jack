@@ -5,7 +5,7 @@
 use std::path::Path;
 use std::ffi::OsStr;
 
-use prelude::*;
+use crate::prelude::*;
 
 
 /// DataFrame reading struct
