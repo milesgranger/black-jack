@@ -1,3 +1,4 @@
+//! Series `groupby` functionality
 
 use std::iter::Sum;
 
