@@ -7,14 +7,7 @@ use serde::Serialize;
 
 
 use crate::prelude::*;
-mod series_groupby;
-mod dataframe_groupby;
-pub use self::series_groupby::*;
-pub use self::dataframe_groupby::*;
 
-/* 
-    Traits used throughout crate
-*/
 
 /// Trait dictates the supported primitives for use in [`Series`] structs.
 pub trait BlackJackData: Serialize + Debug + ToString + Clone + Send + Display {
@@ -37,7 +30,3 @@ impl BlackJackData for i32 {
 impl BlackJackData for String {
     fn dtype(&self) -> DType { DType::STRING }
 }
-
-/* 
-    Series traits
-*/

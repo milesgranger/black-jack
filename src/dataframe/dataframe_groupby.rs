@@ -1,6 +1,7 @@
+//! DataFrame `groupby` functionality.
+
 use std::iter::Sum;
 use num::*;
-use serde::{Deserialize};
 
 use crate::prelude::*;
 
@@ -37,36 +38,5 @@ impl<T> DataFrameGroupBy<T>
             .map(|series| df.add_column(series).unwrap())
             .collect::<Vec<()>>();
         df
-    }
-}
-
-
-/// The intended behavior of a grouped DataFrame.
-pub trait DataFrameGroupByBehavior
-{
-
-    /// Group by method for grouping [`Series`] in a [`DataFrame`]
-    /// by key.
-    fn groupby<T>(&self, keys: &Series<T>) -> DataFrameGroupBy<T>
-        where for<'de> T: BlackJackData + Deserialize<'de> + ToPrimitive + 'static;
-}
-
-impl<I> DataFrameGroupByBehavior for DataFrame<I>
-    where I: BlackJackData + PartialOrd + PartialEq
-{
-    fn groupby<T>(&self, keys: &Series<T>) -> DataFrameGroupBy<T>
-        where for<'de>
-              T: BlackJackData + Deserialize<'de> + ToPrimitive + 'static
-    {
-
-        let groups = self
-            .columns()
-            .map(|col_name| {
-                let series = self.get_column(col_name).unwrap();
-                series.groupby(keys)
-            })
-            .collect::<Vec<SeriesGroupBy<T>>>();
-
-        DataFrameGroupBy::new(groups)
     }
 }

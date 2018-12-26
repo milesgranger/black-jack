@@ -2,12 +2,16 @@
 //!
 //!
 
+use num::*;
+use serde::{Deserialize};
 use baggie::Baggie;
 
 use crate::prelude::*;
 
 pub mod io;
+pub mod dataframe_groupby;
 pub use self::io::*;
+pub use self::dataframe_groupby::*;
 
 /// The container for `Series<T>` objects, allowing for additional functionality
 #[derive(Default, Debug)]
@@ -128,5 +132,23 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
     /// Get the number of columns for this dataframe
     pub fn n_columns(&self) -> usize {
         self.data.len()
+    }
+
+    /// Group by method for grouping [`Series`] in a [`DataFrame`]
+    /// by key.
+    pub fn groupby<T>(&self, keys: &Series<T>) -> DataFrameGroupBy<T>
+        where for<'de>
+              T: BlackJackData + Deserialize<'de> + ToPrimitive + 'static
+    {
+
+        let groups = self
+            .columns()
+            .map(|col_name| {
+                let series = self.get_column(col_name).unwrap();
+                series.groupby(keys)
+            })
+            .collect::<Vec<SeriesGroupBy<T>>>();
+
+        DataFrameGroupBy::new(groups)
     }
 }

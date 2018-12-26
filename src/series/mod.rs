@@ -1,7 +1,4 @@
-//! Series represents a single column within a dataframe and wraps many `Array` like
-//! functionality.
-//! 
-//! For methods implemented for a [`Series`], please check out the trait [`SeriesTrait`]
+//! Series represents a single column within a `DataFrame`
 //! 
 //! ## Example use:
 //! 
@@ -34,7 +31,9 @@ use num::*;
 use stats;
 
 pub mod overloaders;
+pub mod series_groupby;
 pub mod variants;
+pub use self::series_groupby::*;
 pub use self::variants::*;
 use crate::prelude::*;
 
@@ -384,10 +383,7 @@ impl<T> Series<T>
         }
     }
 
-    /// Convert the series to a [`Vec`]  
-    /// **Type Annotations required**
-    /// Will coerce elements into the desired [`DType`] primitive, just as
-    /// [`SeriesTrait::astype()`]. 
+    /// Convert the series to a [`Vec`]
     /// 
     /// ## Example
     /// ```
@@ -584,7 +580,7 @@ impl<T> Series<T>
         }
     }
 
-    /// Exibits the same behavior and usage of [`SeriesTrait::min`], only
+    /// Exibits the same behavior and usage of [`Series::min`], only
     /// yielding the [`Result`] of a maximum.
     pub fn max(&self) -> Result<T, BlackJackError>
         where 
@@ -627,7 +623,7 @@ impl<T> Series<T>
     }
 
     /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or 
-    /// `SeriesTrait::from_raw(*mut Self)`
+    /// `Series::from_raw(*mut Self)`
     pub fn into_raw(self) -> *mut Self { 
         Box::into_raw(Box::new(self)) 
     }
