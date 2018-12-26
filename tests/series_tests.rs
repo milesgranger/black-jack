@@ -137,6 +137,20 @@ fn test_groupbys() {
 }
 
 #[test]
+fn test_rolling() {
+    use float_cmp::ApproxEq;
+
+    let series = Series::from_vec(vec![0, 1, 2, 3, 4, 5]);
+
+    let rolled: Series<f64> = series.rolling(4).mean().unwrap();
+    assert_eq!(rolled.len(), 6);
+    assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
+    assert_eq!(rolled[3], 1.5);
+    assert_eq!(rolled[4], 2.5);
+    assert_eq!(rolled[5], 3.5);
+}
+
+#[test]
 fn test_unique() {
     let series = Series::from_vec(vec![1, 2, 1, 0, 1, 0, 1, 1]);
     let unique = series.unique();
