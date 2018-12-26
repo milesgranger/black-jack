@@ -33,8 +33,12 @@ use stats;
 pub mod overloaders;
 pub mod series_groupby;
 pub mod variants;
+pub mod rolling;
+
 pub use self::series_groupby::*;
 pub use self::variants::*;
+pub use self::rolling::*;
+
 use crate::prelude::*;
 
 
@@ -98,6 +102,33 @@ impl<T> Series<T>
             dtype,
             values
         }
+    }
+
+    /// Calculate a predefined rolling aggregation
+    ///
+    /// See [`Rolling`] for additional functionality.
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    /// use float_cmp::ApproxEq;
+    ///
+    /// let series = Series::from_vec(vec![0, 1, 2, 3, 4, 5]);
+    ///
+    /// let rolled: Series<f64> = series.rolling(4).mean().unwrap();
+    /// assert_eq!(rolled.len(), 6);
+    ///
+    /// // vals in indexes 0 thru 2 should be NaN as they are inside the window
+    /// assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
+    ///
+    /// assert_eq!(rolled[3], 1.5);
+    /// assert_eq!(rolled[4], 2.5);
+    /// assert_eq!(rolled[5], 3.5);
+    /// ```
+    pub fn rolling(&self, window: usize) -> Rolling<T>
+        where T: Send + Sync
+    {
+        Rolling::new(window, &self)
     }
 
     /// Return an iterable of booleans determining if any element is NaN
@@ -698,6 +729,16 @@ impl<T> Index<usize> for Series<T>
 {
     type Output = T;
     fn index(&self, idx: usize) -> &T {
+        &self.values[idx]
+    }
+}
+
+// Support ref indexing
+impl<T> Index<Range<usize>> for Series<T>
+    where T: BlackJackData
+{
+    type Output = [T];
+    fn index(&self, idx: Range<usize>) -> &[T] {
         &self.values[idx]
     }
 }

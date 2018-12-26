@@ -145,7 +145,17 @@ fn criterion_bechmark(c: &mut Criterion) {
         })
     );
 
-    
+    c.bench_function(
+        "series rolling (MEAN)",
+        |b| b.iter_with_setup(|| {
+            let series = Series::arange(0, 10000);
+            series
+        }, |series| {
+            let _res = series.rolling(5).mean();
+        })
+    );
+
+
 }
 
 criterion_group!(benches, criterion_bechmark);
