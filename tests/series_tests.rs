@@ -142,12 +142,39 @@ fn test_rolling() {
 
     let series = Series::from_vec(vec![0, 1, 2, 3, 4, 5]);
 
-    let rolled: Series<f64> = series.rolling(4).mean().unwrap();
+    let roller = series.rolling(4);
+
+    // Mean
+    let rolled: Series<f64> = roller.mean().unwrap();
     assert_eq!(rolled.len(), 6);
     assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
     assert_eq!(rolled[3], 1.5);
     assert_eq!(rolled[4], 2.5);
     assert_eq!(rolled[5], 3.5);
+
+    // Median
+    let rolled: Series<f64> = roller.median().unwrap();
+    assert_eq!(rolled.len(), 6);
+    assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
+    assert_eq!(rolled[3], 1.5);
+    assert_eq!(rolled[4], 2.5);
+    assert_eq!(rolled[5], 3.5);
+
+    // Min
+    let rolled: Series<f64> = roller.min().unwrap();
+    assert_eq!(rolled.len(), 6);
+    assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
+    assert_eq!(rolled[3], 0.0);
+    assert_eq!(rolled[4], 1.0);
+    assert_eq!(rolled[5], 2.0);
+
+    // Max
+    let rolled: Series<f64> = roller.max().unwrap();
+    assert_eq!(rolled.len(), 6);
+    assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
+    assert_eq!(rolled[3], 3.0);
+    assert_eq!(rolled[4], 4.0);
+    assert_eq!(rolled[5], 5.0);
 }
 
 #[test]
