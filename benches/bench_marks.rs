@@ -103,7 +103,7 @@ fn criterion_bechmark(c: &mut Criterion) {
         |b| b.iter_with_setup(|| {
                 Series::arange(0, 10000)
             }, | series | {
-                let _var = series.var().unwrap();
+                let _var = series.var(1_f64).unwrap();
             })
     );
 
@@ -112,7 +112,7 @@ fn criterion_bechmark(c: &mut Criterion) {
         |b| b.iter_with_setup(|| {
                 Series::arange(0, 10000)
             }, | series | {
-                let _std = series.std().unwrap();
+                let _std = series.std(1.).unwrap();
             })
     );
 

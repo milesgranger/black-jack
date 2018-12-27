@@ -40,6 +40,7 @@ pub use self::variants::*;
 pub use self::rolling::*;
 
 use crate::prelude::*;
+use crate::funcs;
 
 
 // Allow series.into_iter()
@@ -461,7 +462,7 @@ impl<T> Series<T>
         where T: BlackJackData + PartialOrd + Copy + ToPrimitive
     {
         if self.len() == 0 {
-            return Err(BlackJackError::ValueError("Cannot compute mode of an empty series!".to_owned()))
+            return Err(BlackJackError::from("Cannot compute mode of an empty series!"))
         }
 
         let modes = stats::modes(self.values.iter().map(|v| *v));
@@ -469,15 +470,17 @@ impl<T> Series<T>
         Ok(modes)
     }
 
-    /// Calculate the variance of the series
-    pub fn var(&self) -> Result<f64, BlackJackError>
-        where T: BlackJackData + ToPrimitive + Copy
+    /// Calculate the variance of the series, using either population or sample variance
+    /// > Population: `ddof` == 0_f64
+    /// > Sample: `ddof` == 1_f64
+    pub fn var(&self, ddof: f64) -> Result<f64, BlackJackError>
+        where T: ToPrimitive + Num
     {
         if self.len() == 0  {
             return Err(BlackJackError::ValueError("Cannot compute variance of an empty series!".to_owned()));
         }
-        let var = stats::variance(self.values.iter().map(|v| *v));
-        Ok(var)
+        funcs::variance(self.values.as_slice(), ddof)
+            .ok_or_else(|| BlackJackError::from("Failed to calculate variance of series."))
     }
 
     /// Calculate the standard deviation of the series
@@ -485,33 +488,29 @@ impl<T> Series<T>
     /// ## Example
     /// ```
     /// use blackjack::prelude::*;
+    /// use float_cmp::ApproxEq;
     /// 
     /// let series = Series::arange(0, 10).astype::<f32>().unwrap();
     /// 
-    /// let std = series.std().unwrap(); // Ok(2.8722...)
-    /// assert!(std > 2.87);
-    /// assert!(std < 2.88);
+    /// let std = series.std(1_f64).unwrap(); // using population ddof (sample variance == 0_f64)
+    /// assert_eq!(std, 3.0276503540974917);
     /// ```
-    pub fn std(&self) -> Result<f64, BlackJackError>
-        where T: BlackJackData + ToPrimitive + Copy
+    pub fn std(&self, ddof: f64) -> Result<f64, BlackJackError>
+        where T: BlackJackData + ToPrimitive + Copy + Num
     {
         if self.len() == 0 {
             return Err(BlackJackError::ValueError("Cannot compute standard deviation of an empty series!".to_owned()))
         }
-        let std = stats::stddev(self.values.iter().map(|v| *v));
-        Ok(std)
+        funcs::std(self.values.as_slice(), ddof)
+            .ok_or_else(|| BlackJackError::from("Failed to calculate stddev of series."))
     }
 
     /// Sum a given series, yielding the same type as the elements stored in the 
     /// series.
     pub fn sum(&self) -> T
-        where
-            T: Num + Copy + Sum
+        where T: Num + Copy + Sum
     {
-        self.values
-            .iter()
-            .map(|v| *v)
-            .sum()
+        funcs::sum(self.values.as_slice())
     }
 
     /// Average / Mean of a given series - Requires specifying desired float 
@@ -538,9 +537,8 @@ impl<T> Series<T>
         where
             T: ToPrimitive + Copy + Num + Sum
     {
-        let total = self.sum().to_f64().unwrap();
-        let count = self.len() as f64;
-        Ok(total / count)
+        funcs::mean(self.values.as_slice())
+            .ok_or_else(|| BlackJackError::from("Failed to calculate mean!"))
     }
 
     /// Calculate the quantile of the series
@@ -579,15 +577,12 @@ impl<T> Series<T>
         where T: ToPrimitive + Copy + PartialOrd
     {
         if self.len() == 0 {
-            return Err(BlackJackError::ValueError("Cannot calculate median of an empty series.".to_owned()))
+            return Err(BlackJackError::from("Cannot calculate median of an empty series."))
         }
-        let med_opt = stats::median(self.values.iter().map(|v| v.to_f64().unwrap()));
-        match med_opt {
-            Some(med) => Ok(med),
-            None => Err(BlackJackError::ValueError(r#"Unable to calculate median, please create an issue!
+        stats::median(self.values.iter().map(|v| v.to_f64().unwrap()))
+            .ok_or_else(|| BlackJackError::from(r#"Unable to calculate median, please create an issue!
                            as this wasn't expected to ever happen on a non-empty
-                           series. :("#.to_owned()))
-        }
+                           series. :("#))
     }
 
     /// Find the minimum of the series. If several elements are equally minimum,
@@ -602,13 +597,11 @@ impl<T> Series<T>
     /// assert_eq!(series.min().unwrap(), 10);
     /// ```
     pub fn min(&self) -> Result<T, BlackJackError>
-        where 
-            T: Num + PartialOrd + BlackJackData + Copy
+        where T: Num + PartialOrd + BlackJackData + Copy
     {
-        match self.values.iter().min_by(|a, b| a.partial_cmp(b).unwrap()) {
-            Some(min) => Ok(min.to_owned()),
-            None => Err(BlackJackError::ValueError("Cannot find min of empty series".into()))
-        }
+        funcs::min(self.values.as_slice())
+            .map(|v| *v)
+            .ok_or_else(|| BlackJackError::from("Failed to calculate min of series."))
     }
 
     /// Exibits the same behavior and usage of [`Series::min`], only
@@ -617,10 +610,9 @@ impl<T> Series<T>
         where 
             T: Num + PartialOrd + BlackJackData + Copy
     {
-        match self.values.iter().max_by(|a, b| a.partial_cmp(b).unwrap()) {
-            Some(max) => Ok(max.to_owned()),
-            None => Err(BlackJackError::ValueError("Cannot find max of empty series".into()))
-        }
+        funcs::max(self.values.as_slice())
+            .map(|v| *v)
+            .ok_or_else(|| BlackJackError::from("Failed to calculate max of series."))
     }
 
     /// Determine the length of the Series
