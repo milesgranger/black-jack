@@ -12,6 +12,27 @@ use crate::funcs;
 
 
 /// Struct for calculating rolling aggregations
+///
+/// ## Example
+/// ```
+/// use blackjack::prelude::*;
+/// use float_cmp::ApproxEq;
+///
+/// let series = Series::from_vec(vec![1., 2., 3., 1., 2., 6.]);
+/// let roller = series.rolling(4);
+///
+/// // Mean
+/// let rolled: Series<f64> = roller.mean().unwrap();  // Ok(Series<f64>)
+///
+/// // Same length as original series
+/// assert_eq!(rolled.len(), 6);
+///
+/// // Elements before window are NaNs
+/// assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
+/// assert_eq!(rolled[3], 1.75);
+/// assert_eq!(rolled[4], 2.0);
+/// assert_eq!(rolled[5], 3.0);
+/// ```
 pub struct Rolling<'a, T>
     where T: BlackJackData + Send + Sync
 {
@@ -26,6 +47,15 @@ impl<'a, T> Rolling<'a, T>
 {
 
     /// Create a new `Rolling` instance from a given window and Series reference.
+    /// typically used from [`Series::rolling`](../../series/struct.Series.html#method.rolling)
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// // Create an instance of `Rolling` via `Series::rolling`
+    /// let roller = Series::from_vec(vec![0, 1, 2, 3]).rolling(2);
+    /// ```
     pub fn new(window: usize, series: &'a Series<T>) -> Self {
         let nans: Vec<f64> = (0..window - 1)
             .into_iter()
@@ -177,7 +207,7 @@ impl<'a, T> Rolling<'a, T>
         Ok(Series::from_vec(vals))
     }
 
-    /// Calculate a rolling min from the current instance.
+    /// Calculate a rolling max from the current instance.
     pub fn max(&self) -> Result<Series<f64>, BlackJackError>
         where T: PartialOrd + Num + ToPrimitive + Copy,
     {
