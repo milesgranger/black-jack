@@ -2,6 +2,7 @@ extern crate blackjack;
 extern crate num;
 extern crate float_cmp;
 
+use float_cmp::ApproxEq;
 use blackjack::prelude::*;
 
 /*
@@ -130,7 +131,7 @@ fn test_groupbys() {
     assert_eq!(vals, vec![1_f64, 2_f64, 3_f64]);
 
     // Test var
-    let grouped = series.groupby(&keys).var().unwrap();
+    let grouped = series.groupby(&keys).var(1_f64).unwrap();
     let vals = grouped.into_vec();
     assert_eq!(vals, vec![0_f64, 0_f64, 0_f64]);
 
@@ -138,43 +139,65 @@ fn test_groupbys() {
 
 #[test]
 fn test_rolling() {
-    use float_cmp::ApproxEq;
 
-    let series = Series::from_vec(vec![0, 1, 2, 3, 4, 5]);
-
+    let series = Series::from_vec(vec![1., 2., 3., 1., 2., 6.]);
     let roller = series.rolling(4);
 
     // Mean
     let rolled: Series<f64> = roller.mean().unwrap();
     assert_eq!(rolled.len(), 6);
     assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
-    assert_eq!(rolled[3], 1.5);
-    assert_eq!(rolled[4], 2.5);
-    assert_eq!(rolled[5], 3.5);
+    assert_eq!(rolled[3], 1.75);
+    assert_eq!(rolled[4], 2.0);
+    assert_eq!(rolled[5], 3.0);
 
     // Median
     let rolled: Series<f64> = roller.median().unwrap();
     assert_eq!(rolled.len(), 6);
     assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
     assert_eq!(rolled[3], 1.5);
-    assert_eq!(rolled[4], 2.5);
-    assert_eq!(rolled[5], 3.5);
+    assert_eq!(rolled[4], 2.0);
+    assert_eq!(rolled[5], 2.5);
 
     // Min
     let rolled: Series<f64> = roller.min().unwrap();
     assert_eq!(rolled.len(), 6);
     assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
-    assert_eq!(rolled[3], 0.0);
+    assert_eq!(rolled[3], 1.0);
     assert_eq!(rolled[4], 1.0);
-    assert_eq!(rolled[5], 2.0);
+    assert_eq!(rolled[5], 1.0);
 
     // Max
     let rolled: Series<f64> = roller.max().unwrap();
     assert_eq!(rolled.len(), 6);
     assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
     assert_eq!(rolled[3], 3.0);
-    assert_eq!(rolled[4], 4.0);
-    assert_eq!(rolled[5], 5.0);
+    assert_eq!(rolled[4], 3.0);
+    assert_eq!(rolled[5], 6.0);
+
+    // Variance
+    let rolled: Series<f64> = roller.var(1_f64).unwrap();
+    assert_eq!(rolled.len(), 6);
+    assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
+    assert_eq!(rolled[3], 0.9166666666666666);
+    assert_eq!(rolled[4], 0.6666666666666666);
+    assert_eq!(rolled[5], 4.6666666666666666);
+
+    // Standard deviation
+    let rolled: Series<f64> = roller.std(1_f64).unwrap();
+    assert_eq!(rolled.len(), 6);
+    assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
+    assert_eq!(rolled[3], 0.9574271077563381);
+    assert_eq!(rolled[4], 0.816496580927726);
+    assert_eq!(rolled[5], 2.160246899469287);
+
+    // Sum
+    let rolled: Series<f64> = roller.sum().unwrap();
+    assert_eq!(rolled.len(), 6);
+    assert_eq!(rolled[0..2].iter().all(|v| v.is_nan()), true);
+    assert_eq!(rolled[3], 7.0);
+    assert_eq!(rolled[4], 8.0);
+    assert_eq!(rolled[5], 12.0);
 }
 
 #[test]
@@ -280,14 +303,13 @@ fn test_series_aggregation_ops() {
     assert_eq!(series.mode().unwrap(), Series::from_vec(vec![0, 1]));
 
     // Test variance
-    let series = Series::arange(0, 5);
-    assert_eq!(series.var().unwrap() as i32, 2);
+    let series = Series::arange(0, 10);
+    assert_eq!(series.var(1_f64).unwrap(), 9.166666666666666);
 
     // Test standard deviation
     let series = Series::arange(0, 10);
-    let std = series.std().unwrap();
-    assert!(std > 2.87);
-    assert!(std < 2.88);
+    let std = series.std(1_f64).unwrap();
+    assert_eq!(std, 3.0276503540974917);
 
     // Test median, both float and integer
     let series = Series::arange(0, 10);

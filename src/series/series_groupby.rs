@@ -99,13 +99,15 @@ impl<T> SeriesGroupBy<T>
         Ok(Series::from_vec(results))
     }
 
-    /// Apply a `max` aggregation to each [`Series`] group
-    pub fn var(&self) -> Result<Series<f64>, BlackJackError>
-        where T: PartialOrd + Num + ToPrimitive + Copy
+    /// Apply a `max` aggregation to each [`Series`] group, using either population or sample variance
+    /// > Population: `ddof` == 0_f64
+    /// > Sample: `ddof` == 1_f64
+    pub fn var(&self, ddof: f64) -> Result<Series<f64>, BlackJackError>
+        where T: Num + ToPrimitive
     {
         let mut results = vec![];
         for group in &self.groups {
-            results.push(group.var()?);
+            results.push(group.var(ddof)?);
         }
         Ok(Series::from_vec(results))
     }
