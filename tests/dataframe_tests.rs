@@ -79,6 +79,8 @@ fn test_column_names() {
         col_names,
         vec!["s1", "s2"]
     );
+
+    let _s1_ref: &Series<i32> = df.get_column("s1").unwrap();
 }
 
 
