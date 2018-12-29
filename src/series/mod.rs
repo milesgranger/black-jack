@@ -52,7 +52,7 @@ impl_series_into_iter!(i32);
 
 
 /// Series struct for containing underlying Array and other meta data.
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, PartialOrd)]
 pub struct Series<T>
     where
         T: BlackJackData
@@ -64,6 +64,9 @@ pub struct Series<T>
 
     /// The underlying values of the Series
     pub values: Vec<T>,
+
+    /// The index of the Series
+    index: Indexer,
 
     dtype: Option<DType>
 }
@@ -98,12 +101,43 @@ impl<T> Series<T>
     {
         let dtype = Some(start.dtype());
         let values: Vec<T> = (start..stop).collect();
+        let index = (0..values.len() as i32).collect::<Vec<i32>>().into();
         Series { 
             name: None,
             dtype,
+            index,
             values
         }
     }
+
+    /// Obtain a reference to the [`Indexer`] of this `Series`
+    ///
+    /// ## Example:
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let series = Series::from_vec(vec![1, 2, 3, 4, 5]);
+    /// let index: &Vec<i32> = series.index().into();
+    /// assert_eq!(index, &vec![0, 1, 2, 3, 4]);
+    /// ```
+    pub fn index(&self) -> &Indexer {
+        &self.index
+    }
+
+    /// Set the series index
+    pub fn set_index<I>(&mut self, index: I) -> Result<(), BlackJackError>
+        where
+            I: IntoIterator<Item=i32>
+    {
+        let index = index.into_iter().collect::<Vec<i32>>();
+        if index.len() != self.len() {
+            Err(BlackJackError::from("Cannot add an index of a different length than Series length"))
+        } else {
+            self.index = index.into();
+            Ok(())
+        }
+    }
+
 
     /// Calculate a predefined rolling aggregation
     ///
@@ -325,7 +359,8 @@ impl<T> Series<T>
         let series = Series {
             name: self.name.clone(),
             dtype: Some(values[0].dtype()),
-            values
+            values,
+            index: self.index.clone()
         };
         Ok(series)
     }
@@ -352,7 +387,8 @@ impl<T> Series<T>
         let series = Series {
             name: self.name.clone(),
             dtype: Some(values[0].dtype()),
-            values
+            values,
+            index: self.index
         };
         Ok(series)
     }
@@ -411,6 +447,7 @@ impl<T> Series<T>
         Series { 
             name: None,
             dtype,
+            index: (0..vec.len() as i32).collect::<Vec<i32>>().into(),
             values: vec
         }
     }
@@ -711,6 +748,18 @@ impl<T> Series<T>
             .collect();
 
         SeriesGroupBy::new(groups)
+    }
+}
+
+// Support Series creation from Range
+impl<T> From<std::ops::Range<T>> for Series<T>
+    where T: BlackJackData,
+        std::ops::Range<T>: Iterator,
+        Vec<T>: FromIterator<<std::ops::Range<T> as Iterator>::Item>
+{
+    fn from(range: std::ops::Range<T>) -> Series<T> {
+        let vec = range.collect();
+        Series::from_vec(vec)
     }
 }
 

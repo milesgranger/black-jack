@@ -1,7 +1,7 @@
 //! Enums to be used throughout the crate.
 
 /// Possible DType returns, matches [`BlackJackData`]
-#[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Clone, Deserialize, Serialize, PartialOrd)]
 pub enum DType {
 
     /// `f64`

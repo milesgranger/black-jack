@@ -5,3 +5,4 @@ pub use crate::enums::*;
 pub use crate::series::*;
 pub use crate::dataframe::*;
 pub use crate::error::*;
+pub use crate::indexing::*;
