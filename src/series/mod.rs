@@ -126,18 +126,66 @@ impl<T> Series<T>
 
     /// Set the series index
     pub fn set_index<I>(&mut self, index: I) -> Result<(), BlackJackError>
-        where
-            I: IntoIterator<Item=i32>
+        where I: IntoIterator<Item=i32>
     {
         let index = index.into_iter().collect::<Vec<i32>>();
         if index.len() != self.len() {
-            Err(BlackJackError::from("Cannot add an index of a different length than Series length"))
+            Err(BlackJackError::from(
+                "Cannot add an index of a different length than Series length"))
         } else {
             self.index = index.into();
             Ok(())
         }
     }
 
+    /// Reset the series index
+    // TODO: Add 'drop' flag to keep existing index or not.
+    pub fn reset_index(&mut self) -> Result<(), BlackJackError> {
+        self.set_index(0..self.len() as i32)
+    }
+
+    /// Index the series by index values, _not_ by position.
+    ///
+    /// _No data copies are made_, and it has
+    /// time complexity O((idx_vals length - number of CPU threads) * Series length);
+    /// Meaning that the search is done by concurrently searching over each provided index value to
+    /// match, and will search over series length looking for matches.
+    ///
+    /// In practice this ends up being quite quick
+    /// (_~150x faster than equivalent Pandas operation of 10k values_) and does not care about index order.
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let series = Series::arange(1, 10001);  // Index values end up being 0-10000 by default here
+    /// let vals = series.loc(&vec![250, 500, 1000, 2000, 4000, 5000]);  // ~26us vs ~41ms in Pandas
+    /// assert_eq!(vals, vec![&251, &501, &1001, &2001, &4001, &5001]);
+    /// ```
+    ///
+    // TODO: Support indexing index values, not just i32 index vals
+    pub fn loc<'b, I>(&self, idx_vals: I) -> Vec<&T>
+        where
+            T: Sync,
+            I: IntoParallelIterator<Item=&'b i32>
+    {
+        let index: &Vec<i32> = self.index().into();
+
+        idx_vals
+            .into_par_iter()
+            .map(|idx_val| {
+                self.values
+                    .iter()
+                    .zip(index)
+                    .filter(|(_v, idx)| {
+                        &idx_val == idx
+                    })
+                    .map(|(v, _idx)| v)
+                    .collect::<Vec<&T>>()
+            })
+            .flat_map(|v| v)
+            .collect::<Vec<&T>>()
+    }
 
     /// Calculate a predefined rolling aggregation
     ///
