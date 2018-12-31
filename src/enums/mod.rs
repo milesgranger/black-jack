@@ -19,3 +19,17 @@ pub enum DType {
     /// `String`
     STRING,
 }
+
+/// Join type
+#[derive(Debug, PartialEq, Clone, Deserialize, Serialize, PartialOrd)]
+pub enum Join {
+
+    /// Perform a full join from all keys involved
+    Outer,
+    /// Join based on common keys shared
+    Inner,
+    /// Join based on keys in the right
+    Right,
+    /// Join based on keys in the left
+    Left
+}
