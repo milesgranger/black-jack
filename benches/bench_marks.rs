@@ -165,6 +165,16 @@ fn criterion_bechmark(c: &mut Criterion) {
         })
     );
 
+    c.bench_function(
+        "series indexing (ILOC)",
+        |b| b.iter_with_setup(|| {
+            let series = Series::arange(0, 10000);
+            series
+        }, |series| {
+            let _res = series.iloc(&vec![250, 500, 1000, 2000, 4000, 5000]);
+        })
+    );
+
 }
 
 criterion_group!(benches, criterion_bechmark);
