@@ -41,6 +41,72 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
         }
     }
 
+
+    /// Join a series into the dataframe
+    pub fn join_series<T>(&mut self, series: Series<T>, how: Join) -> Result<(), BlackJackError>
+        where T: BlackJackData + 'static,
+              I: ToPrimitive,
+            Vec<I>: std::iter::FromIterator<i32>
+    {
+        let mut series = series;
+        let other_index: &Vec<i32> = series.index().into();
+
+        // TODO: Implement other Joins besides 'Inner'
+        // TODO: Remove clones
+
+        match how {
+            Join::Inner => {
+
+                // Find unshared indexes
+                let unshared = self.index.values
+                    .iter()
+                    .map(|idx| idx.to_i32().unwrap())
+                    .filter(|idx| other_index.contains(&idx))
+                    .collect::<Vec<i32>>();
+
+                // Drop these indexes from the series
+                series.drop_indexes(unshared.clone());
+
+                // Drop these indexes from the dataframe, also removing from every other owned series
+                self.index.drop_indexes(unshared.clone());
+
+                // TODO: DRY
+                for meta in &self.meta {
+                    match meta.dtype {
+                        DType::I64 => {
+                            let column: &mut Series<i64> = self.data.get_mut(&meta.name).unwrap();
+                            column.drop_indexes(unshared.clone());
+                        },
+                        DType::F64 => {
+                            let column: &mut Series<f64> = self.data.get_mut(&meta.name).unwrap();
+                            column.drop_indexes(unshared.clone());
+                        },
+                        DType::I32 => {
+                            let column: &mut Series<i32> = self.data.get_mut(&meta.name).unwrap();
+                            column.drop_indexes(unshared.clone());
+                        },
+                        DType::F32 => {
+                            let column: &mut Series<f32> = self.data.get_mut(&meta.name).unwrap();
+                            column.drop_indexes(unshared.clone());
+                        },
+                        DType::STRING => {
+                            let column: &mut Series<String> = self.data.get_mut(&meta.name).unwrap();
+                            column.drop_indexes(unshared.clone());
+                        },
+                    }
+                }
+
+                // TODO: Sort the series by the current index of the dataframe
+
+                // Add column
+                self.add_column(series)?;
+            },
+            _ => unimplemented!()
+        }
+
+        Ok(())
+    }
+
     /// Length of the dataframe
     ///
     /// ## Example
