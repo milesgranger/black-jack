@@ -144,7 +144,7 @@ impl<T> Series<T>
         self.set_index(0..self.len() as i32)
     }
 
-    /// Index the series by index values, _not_ by position.
+    /// Fetch values from the series by matching index _values_, _not_ by position.
     ///
     /// _No data copies are made_, and it has
     /// time complexity O((idx_vals length - number of CPU threads) * Series length);
@@ -158,9 +158,11 @@ impl<T> Series<T>
     /// ```
     /// use blackjack::prelude::*;
     ///
-    /// let series = Series::arange(1, 10001);  // Index values end up being 0-10000 by default here
-    /// let vals = series.loc(&vec![250, 500, 1000, 2000, 4000, 5000]);  // ~26us vs ~41ms in Pandas
-    /// assert_eq!(vals, vec![&251, &501, &1001, &2001, &4001, &5001]);
+    /// let mut series = Series::arange(0, 10000);  // Index values end up being 0-10000 by default here
+    /// assert!(series.set_index(1..10001).is_ok());
+    ///
+    /// let vals = series.loc(&vec![250, 500, 1000, 2000, 4000, 5000]);  // ~26us, 150x faster than Pandas
+    /// assert_eq!(vals, vec![&249, &499, &999, &1999, &3999, &4999]);
     /// ```
     ///
     // TODO: Support indexing index values, not just i32 index vals
@@ -177,13 +179,37 @@ impl<T> Series<T>
                 self.values
                     .iter()
                     .zip(index)
-                    .filter(|(_v, idx)| {
-                        &idx_val == idx
-                    })
-                    .map(|(v, _idx)| v)
+                    .filter(|(_value, idx)| &idx_val == idx )
+                    .map(|(value, _idx)| value)
                     .collect::<Vec<&T>>()
             })
-            .flat_map(|v| v)
+            .flat_map(|value| value)
+            .collect::<Vec<&T>>()
+    }
+
+    /// Fetch values from the series by matching index _positions_, _not_ by index value.
+    ///
+    /// _No data copies are made_, and currently this is _not_ done in parallel. As by currently
+    /// single threaded exceeds parallel execution up to ~10m elements. As the _majority_ of use cases
+    /// have less than this amount, we've opted for single threading. If you need concurrent execution,
+    /// please file an issue at our github. :-)
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let mut series = Series::arange(0, 10000);  // Index values end up being 0-10000 by default here
+    /// assert!(series.set_index(1..10001).is_ok());
+    ///
+    /// let vals = series.iloc(&vec![250, 500, 1000, 2000, 4000, 5000]);  // ~300ns, ~28x faster than Pandas
+    /// assert_eq!(vals, vec![&250, &500, &1000, &2000, &4000, &5000]);
+    /// ```
+    pub fn iloc<'b, I>(&self, idx_vals: I) -> Vec<&T>
+        where I: IntoIterator<Item=&'b usize>
+    {
+        idx_vals
+            .into_iter()
+            .map(|idx_val| &self.values[*idx_val])
             .collect::<Vec<&T>>()
     }
 
