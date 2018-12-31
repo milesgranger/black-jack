@@ -110,6 +110,32 @@ impl<T> Series<T>
         }
     }
 
+    /// Drop positions of the Series
+    pub fn drop_positions<I>(&mut self, positions: I) -> ()
+        where I: IntoIterator<Item=usize>
+    {
+
+        // TODO: refactor to drop both values and indexes together.
+
+        let positions = positions.into_iter().collect::<Vec<usize>>();
+
+        // Filter out values by position
+        self.values = self.values
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, val)| if positions.contains(&idx) { None } else { Some(val.clone()) })
+            .collect::<Vec<T>>();
+
+        // Filter out index values by position
+        let index: &Vec<i32> = self.index().into();
+        self.index = index
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, val)| if positions.contains(&idx) { None } else { Some(val.clone()) })
+            .collect::<Vec<i32>>()
+            .into();
+    }
+
     /// Obtain a reference to the [`Indexer`] of this `Series`
     ///
     /// ## Example:
