@@ -175,6 +175,16 @@ fn criterion_bechmark(c: &mut Criterion) {
         })
     );
 
+    c.bench_function(
+        "series drops (DROP_INDEXES)",
+        |b| b.iter_with_setup(|| {
+            let series = Series::arange(0, 10000);
+            series
+        }, |mut series| {
+            series.drop_indexes(vec![250, 500, 1000, 2000, 4000, 5000]);
+        })
+    );
+
 }
 
 criterion_group!(benches, criterion_bechmark);

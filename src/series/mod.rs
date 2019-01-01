@@ -115,25 +115,48 @@ impl<T> Series<T>
         where I: IntoIterator<Item=usize>
     {
 
-        // TODO: refactor to drop both values and indexes together.
+        // TODO: refactor to avoid duplicating data
 
         let positions = positions.into_iter().collect::<Vec<usize>>();
-
-        // Filter out values by position
-        self.values = self.values
-            .iter()
-            .enumerate()
-            .filter_map(|(idx, val)| if positions.contains(&idx) { None } else { Some(val.clone()) })
-            .collect::<Vec<T>>();
-
-        // Filter out index values by position
         let index: &Vec<i32> = self.index().into();
-        self.index = index
+
+        // Create a collection of the new values and indexes
+        let collection = self.values
             .iter()
+            .zip(index.iter())
             .enumerate()
-            .filter_map(|(idx, val)| if positions.contains(&idx) { None } else { Some(val.clone()) })
-            .collect::<Vec<i32>>()
-            .into();
+            .filter_map(|(position, (val, idx))| {
+                if positions.contains(&position) { None } else { Some((*idx, val.clone())) }
+            })
+            .collect::<Vec<(i32, T)>>();
+
+        // Unpack collection into the new indexes and values
+        let mut new_index = vec![];
+        let mut new_values = vec![];
+
+        for (idx, value) in collection {
+            new_index.push(idx);
+            new_values.push(value);
+        }
+        self.index = new_index.into();
+        self.values = new_values;
+
+    }
+
+    /// Drop indexes of the series based on the index values themselves.
+    pub fn drop_indexes<I>(&mut self, indexes: I) -> ()
+        where I: IntoIterator<Item=i32>
+    {
+        // Based on index values, match the positions of those in the current index.
+        // then use that to drop values & indexes
+        let indexes = indexes.into_iter().collect::<Vec<i32>>();
+        let current_index: &Vec<i32> = self.index().into();
+        let positions = current_index
+            .iter()
+            .positions(|idx| indexes.contains(idx))
+            .collect::<Vec<usize>>();
+
+        self.drop_positions(positions);
     }
 
     /// Obtain a reference to the [`Indexer`] of this `Series`
