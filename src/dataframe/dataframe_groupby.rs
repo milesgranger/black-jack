@@ -25,7 +25,7 @@ impl<T> DataFrameGroupBy<T>
 
     /// Sum this grouped dataframe object.
     /// basically calls `sum` in parallel on each grouped series collected.
-    pub fn sum(&self) -> DataFrame<i32>  // TODO:
+    pub fn sum(&self) -> DataFrame
         where T: BlackJackData + Copy + Sum + Num + Send + Ord
     {
         // TODO: Return result

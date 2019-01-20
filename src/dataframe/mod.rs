@@ -15,15 +15,13 @@ pub use self::dataframe_groupby::*;
 
 /// The container for `Series<T>` objects, allowing for additional functionality
 #[derive(Default, Debug)]
-pub struct DataFrame<I>
-    where I: PartialOrd + PartialEq + BlackJackData
-{
-    index: Series<I>,
+pub struct DataFrame {
+    index: Option<String>,
     meta: Vec<SeriesMeta>,
     data: Baggie<String>
 }
 
-impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
+impl DataFrame {
 
     /// Create a new `DataFrame` struct
     ///
@@ -31,11 +29,11 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
     /// ```
     /// use blackjack::prelude::*;
     ///
-    /// let mut df: DataFrame<i32> = DataFrame::new();  // `i32` indicates index type of DataFrame
+    /// let mut df: DataFrame = DataFrame::new();
     /// ```
     pub fn new() -> Self {
         DataFrame {
-            index: Series::default(),
+            index: None,
             data: Baggie::new(),
             meta: vec![]
         }
@@ -44,66 +42,8 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
 
     /// Join a series into the dataframe
     pub fn join_series<T>(&mut self, series: Series<T>, how: Join) -> Result<(), BlackJackError>
-        where T: BlackJackData + 'static,
-              I: ToPrimitive,
-            Vec<I>: std::iter::FromIterator<i32>
+        where T: BlackJackData + 'static
     {
-        let mut series = series;
-        let other_index: &Vec<i32> = series.index().into();
-
-        // TODO: Implement other Joins besides 'Inner'
-        // TODO: Remove clones
-
-        match how {
-            Join::Inner => {
-
-                // Find unshared indexes
-                let unshared = self.index.values
-                    .iter()
-                    .map(|idx| idx.to_i32().unwrap())
-                    .filter(|idx| other_index.contains(&idx))
-                    .collect::<Vec<i32>>();
-
-                // Drop these indexes from the series
-                series.drop_indexes(unshared.clone());
-
-                // Drop these indexes from the dataframe, also removing from every other owned series
-                self.index.drop_indexes(unshared.clone());
-
-                // TODO: DRY
-                for meta in &self.meta {
-                    match meta.dtype {
-                        DType::I64 => {
-                            let column: &mut Series<i64> = self.data.get_mut(&meta.name).unwrap();
-                            column.drop_indexes(unshared.clone());
-                        },
-                        DType::F64 => {
-                            let column: &mut Series<f64> = self.data.get_mut(&meta.name).unwrap();
-                            column.drop_indexes(unshared.clone());
-                        },
-                        DType::I32 => {
-                            let column: &mut Series<i32> = self.data.get_mut(&meta.name).unwrap();
-                            column.drop_indexes(unshared.clone());
-                        },
-                        DType::F32 => {
-                            let column: &mut Series<f32> = self.data.get_mut(&meta.name).unwrap();
-                            column.drop_indexes(unshared.clone());
-                        },
-                        DType::STRING => {
-                            let column: &mut Series<String> = self.data.get_mut(&meta.name).unwrap();
-                            column.drop_indexes(unshared.clone());
-                        },
-                    }
-                }
-
-                // TODO: Sort the series by the current index of the dataframe
-
-                // Add column
-                self.add_column(series)?;
-            },
-            _ => unimplemented!()
-        }
-
         Ok(())
     }
 
@@ -122,7 +62,11 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
     /// assert_eq!(df.len(), 10);
     /// ```
     pub fn len(&self) -> usize {
-        self.index.len()
+        if self.n_columns() > 0 {
+            self.meta[0].len
+        } else {
+            0
+        }
     }
 
     /// Quickly identify if the dataframe is empty.
@@ -132,7 +76,7 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
 
     /// Add a column to this dataframe.
     pub fn add_column<T: BlackJackData + 'static>(&mut self, series: Series<T>) -> Result<(), BlackJackError>
-        where Vec<I>: std::iter::FromIterator<i32>
+        where Vec<T>: std::iter::FromIterator<T>
     {
         let mut series = series;
 
@@ -141,10 +85,7 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
             return Err(
                 BlackJackError::LengthMismatch(
                     format!("DataFrame has length: {}, cannot add series of length: {}", self.len(), series.len())))
-        } else {
-            self.index = Series::from_vec((0..series.len() as i32).collect::<Vec<I>>())
         }
-
         if let None = series.name() {
             series.set_name(&format!("col_{}", self.n_columns()))
         }
