@@ -18,3 +18,15 @@ fn test_drop_positions() {
     assert_eq!(series.len(), 4);
     assert_eq!(series.values, vec![1, 2, 3, 5]);
 }
+
+
+#[test]
+fn test_index_value_at_position() {
+    let mut series = Series::from_vec(vec![0, 1, 2, 3]);
+    assert_eq!(series.len(), 4);
+
+    series.insert(0, 15);
+
+    assert_eq!(series.len(), 5);
+    assert_eq!(series.into_vec(), vec![15, 0, 1, 2, 3]);
+}

@@ -181,7 +181,7 @@ impl<T> Series<T>
         let index: &Vec<T> = self.index();
 
         idx_vals
-            .into_iter()
+            .into_iter()  // TODO: Move this back to into_par_iter()
             .map(|idx_val| {
                 self.values
                     .iter()
@@ -217,6 +217,21 @@ impl<T> Series<T>
             .into_iter()
             .map(|idx_val| &self.values[*idx_val])
             .collect::<Vec<&T>>()
+    }
+
+    /// Insert a value at a given position
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let mut series = Series::from_vec(vec![0, 1, 2, 3]);
+    /// series.insert(0, 15);
+    ///
+    /// assert_eq!(series.into_vec(), vec![15, 0, 1, 2, 3]);
+    /// ```
+    pub fn insert(&mut self, index: usize, value: T) -> () {
+        self.values.insert(index, value)
     }
 
     /// Calculate a predefined rolling aggregation
