@@ -34,17 +34,104 @@ impl DataFrame {
     pub fn new() -> Self {
         DataFrame {
             index: None,
+            meta: vec![],
             data: Baggie::new(),
-            meta: vec![]
         }
     }
 
+    /// Drop rows by position within the dataframe
+    pub fn drop_positions<I: IntoIterator<Item=usize> + Clone>(&mut self, positions: I) -> () {
+        let new_lens = self.meta
+            .clone()
+            .iter()
+            .map(|meta| {
+                match meta.dtype {
+                    DType::I64 => {
+                        let series: &mut Series<i64> = self.data.get_mut(&meta.name).unwrap();
+                        series.drop_positions(positions.clone());
+                        series.len()
+                    },
+                    DType::F64 => {
+                        let series: &mut Series<f64> = self.data.get_mut(&meta.name).unwrap();
+                        series.drop_positions(positions.clone());
+                        series.len()
+                    },
+                    DType::I32 => {
+                        let series: &mut Series<i32> = self.data.get_mut(&meta.name).unwrap();
+                        series.drop_positions(positions.clone());
+                        series.len()
+                    },
+                    DType::F32 => {
+                        let series: &mut Series<f32> = self.data.get_mut(&meta.name).unwrap();
+                        series.drop_positions(positions.clone());
+                        series.len()
+                    },
+                    DType::STRING => {
+                        let series: &mut Series<String> = self.data.get_mut(&meta.name).unwrap();
+                        series.drop_positions(positions.clone());
+                        series.len()
+                    }
+                }
+            })
+            .collect::<Vec<usize>>();
+
+        // Update the new lens in metadata
+        self.meta
+            .iter_mut()
+            .zip(new_lens)
+            .map(|(ref mut meta, len)| meta.len = len)
+            .last();
+    }
 
     /// Join a series into the dataframe
-    pub fn join_series<T>(&mut self, series: Series<T>, how: Join) -> Result<(), BlackJackError>
+    pub fn join_series<T>(&mut self, series: Series<T>, how: Join, on: Option<&str>) -> Result<(), BlackJackError>
         where T: BlackJackData + 'static
     {
-        Ok(())
+
+        // Prep the series
+        let mut series = series;
+        if let None = series.name() {
+            series.set_name(&format!("col_{}", self.n_columns()))
+        }
+
+
+        match on {
+            Some(col) => {
+
+                // Determine if the name to match on exists
+                match self.meta.iter().filter(|meta| meta.name == col).next() {
+
+                    // If so we can check they are the same type.
+                    Some(meta) => {
+                        if meta.dtype != series.dtype().ok_or(BlackJackError::from("Series does not have DType defined"))? {
+                            Err(BlackJackError::from("Mismatch in series to join and index dtypes!"))
+                        } else {
+
+                            // We are cleared to do a join now.
+                            Ok(())
+                        }
+                    },
+
+                    // Otherwise we can't join on non-existent column.
+                    None => {
+                        Err(BlackJackError::from(format!("No column named: {}", col).as_str()))
+                    }
+                }
+
+            },
+
+            None => {
+
+                // If dataframe is empty, no column to join on is ok, we can add it directly
+                if self.is_empty() {
+                    self.add_column(series)?;
+                    Ok(())
+                // Otherwise we must have a column name to join on if using `join_series`
+                } else {
+                    Err(BlackJackError::from("Dataframe has existing columns, must provide one to join on. Did you mean to use `add_column`?"))
+                }
+            }
+        }
     }
 
     /// Length of the dataframe

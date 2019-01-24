@@ -34,7 +34,7 @@ impl GenericSeriesContainer {
 
 /// Serialized version of `Series<T>`, enabling storage inside a homogeneous container
 /// where metadata is stored and data is stored in byte/compressed format.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SeriesMeta {
 
     /// Name of a `Series`
