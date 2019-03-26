@@ -25,6 +25,7 @@ fn test_change_df_index() {
     assert!(df.set_index(idx.into_iter()).is_ok());
     assert_eq!(&expected_index, df.index());
 }
+*/
 
 #[test]
 fn test_df_column_size_mismatch() {
@@ -39,7 +40,7 @@ fn test_df_column_size_mismatch() {
     // second must be same length as the first.
     assert!(df.add_column(s2).is_err());
 }
-*/
+
 
 #[test]
 fn test_df_groupby() {

@@ -33,6 +33,7 @@ serde = "^1.0"
 failure = "^0.1"
 snap = "^0.2"
 baggie = "^0.2"
+diesel = { version = "^1.4", features = ["sqlite"] }
 
 [features]
 default = ["GSL/v2"]

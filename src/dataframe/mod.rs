@@ -90,6 +90,10 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
         Ok(())
     }
 
+    pub fn drop_indexes<N: IntoIterator<Item=usize>>(&mut self, indexes: N) {
+
+    }
+
     /// Retrieves a column from the dataframe as an owned representation of it.
     pub fn get_column<'a, T>(&self, name: impl Into<&'a str>) -> Option<&Series<T>>
         where T: BlackJackData + 'static
