@@ -93,8 +93,22 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
     pub fn drop_indexes<N: IntoIterator<Item=usize>>(&mut self, indexes: N) {
 
     }
+    
+    /// Retrieves a mutable reference to the column
+    pub fn get_column_mut<'a, T>(&mut self, name: impl Into<&'a str>) -> Option<&mut Series<T>>
+        where T: BlackJackData + 'static
+    {
+        let name = name.into();
+        for meta in &self.meta {
+            if meta.name == name {
+                let series: Option<&mut Series<T>> = self.data.get_mut(&meta.name);
+                return series
+            }
+        }
+        None
+    }
 
-    /// Retrieves a column from the dataframe as an owned representation of it.
+    /// Retrieves a reference to a column
     pub fn get_column<'a, T>(&self, name: impl Into<&'a str>) -> Option<&Series<T>>
         where T: BlackJackData + 'static
     {

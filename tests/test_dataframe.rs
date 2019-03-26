@@ -28,6 +28,21 @@ fn test_change_df_index() {
 */
 
 #[test]
+fn test_drop_indexes() {
+    let s1 = Series::arange(0, 5);
+    let s2 = Series::arange(0, 5);
+
+    let mut df = DataFrame::new();
+
+    assert!(df.add_column(s1).is_ok());
+    assert!(df.add_column(s2).is_ok());
+
+    assert_eq!(df.len(), 5);
+
+    df.drop_indexes(vec![1, 2]);
+}
+
+#[test]
 fn test_df_column_size_mismatch() {
     let s1 = Series::arange(0, 5);
     let s2 = Series::arange(0, 100);
