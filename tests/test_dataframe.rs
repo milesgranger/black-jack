@@ -40,6 +40,8 @@ fn test_drop_indexes() {
     assert_eq!(df.len(), 5);
 
     df.drop_indexes(vec![1, 2]);
+
+    assert_eq!(df.len(), 3);
 }
 
 #[test]
