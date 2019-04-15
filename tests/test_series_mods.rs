@@ -4,7 +4,6 @@
 
 use blackjack::prelude::*;
 
-
 #[test]
 fn test_drop_positions() {
     let mut series = Series::from_vec(vec![0, 1, 2, 3, 4, 5]);
@@ -24,7 +23,6 @@ fn test_drop_positions() {
 
 #[test]
 fn test_drop_indexes() {
-
     let mut series = Series::from_vec(vec![0, 1, 2, 3, 4, 5]);
 
     // before drops
@@ -35,8 +33,6 @@ fn test_drop_indexes() {
     series.drop_indexes(vec![0, 4]);
     assert_eq!(series.len(), 4);
     assert_eq!(series.values, vec![1, 2, 3, 5]);
-
-
 
     // Again but changing the index values
     let mut series = Series::from_vec(vec![0, 1, 2, 3, 4, 5]);
@@ -49,7 +45,7 @@ fn test_drop_indexes() {
     assert_eq!(series.values, vec![0, 1, 2, 3, 4, 5]);
 
     // Drop and check results
-    series.drop_indexes(vec![0, 4]);  // 0 isn't any index vale, 4 matches 3
+    series.drop_indexes(vec![0, 4]); // 0 isn't any index vale, 4 matches 3
     assert_eq!(series.len(), 5);
     assert_eq!(series.values, vec![0, 1, 2, 4, 5]);
 }

@@ -1,6 +1,6 @@
 #![warn(missing_docs)]
 //! BlackJack strives to be a full featured crate for general data processing.
-//! 
+//!
 //! _Long term_ goal is to create a lightweight [Pandas](https://pandas.pydata.org/) equivalent
 //! by and for the Rust community, but with slight differences in focus...
 //!
@@ -15,9 +15,9 @@
 //!
 //! Eventually, a Python wrapper: [Lumber-Jack](https://github.com/milesgranger/lumber-jack)
 //! associated with this crate, but that time will come.
-//! 
+//!
 //! # Example use:
-//! 
+//!
 //! ```
 //! use blackjack::prelude::*;
 //!
@@ -27,11 +27,11 @@
 //! // Make some series, of different types
 //! let series_i32: Series<i32> = Series::arange(0, 5);
 //! let mut series_f64: Series<f64> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-//! 
+//!
 //! // You can set a series name!
 //! series_f64.set_name("my-series");
-//! 
-//! // Or not... 
+//!
+//! // Or not...
 //! assert_eq!(series_i32.name(), None);
 //!
 //! // And add them to the dataframe
@@ -44,32 +44,36 @@
 //! // and a lot more...
 //! ```
 
-extern crate num;
-extern crate csv;
-extern crate stats;
-extern crate flate2;
-extern crate rgsl;
-extern crate snap;
-extern crate rayon;
-extern crate itertools;
-extern crate prettytable;
-extern crate indexmap;
-extern crate ndarray;
 extern crate bincode;
+extern crate csv;
+extern crate flate2;
+extern crate indexmap;
+extern crate itertools;
+extern crate ndarray;
+extern crate num;
+extern crate prettytable;
+extern crate rayon;
+extern crate rgsl;
 extern crate serde;
-#[macro_use] extern crate derive_more;
+extern crate snap;
+extern crate stats;
+#[macro_use]
+extern crate derive_more;
 extern crate baggie;
-#[macro_use] extern crate serde_derive;
-#[macro_use] extern crate failure;
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate failure;
 
+#[macro_use]
+pub mod macros;
 
-#[macro_use] pub mod macros;
-
-pub mod indexing;
-pub mod series;
 pub mod dataframe;
-pub mod prelude;
 pub mod enums;
-pub mod traits;
 pub mod error;
 mod funcs;
+pub mod indexing;
+pub mod prelude;
+pub mod row;
+pub mod series;
+pub mod traits;

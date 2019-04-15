@@ -1,9 +1,9 @@
 extern crate blackjack;
-extern crate num;
 extern crate float_cmp;
+extern crate num;
 
-use float_cmp::ApproxEq;
 use blackjack::prelude::*;
+use float_cmp::ApproxEq;
 
 /*
 #[test]
@@ -56,14 +56,18 @@ fn test_into_iter() {
 
 #[test]
 fn test_isna() {
-    let mut series = Series::from_vec(vec![0, 1, 2])
-        .astype::<f32>()
-        .unwrap();
+    let mut series = Series::from_vec(vec![0, 1, 2]).astype::<f32>().unwrap();
 
-    assert_eq!(series.isna().collect::<Vec<bool>>(), vec![false, false, false]);
+    assert_eq!(
+        series.isna().collect::<Vec<bool>>(),
+        vec![false, false, false]
+    );
 
     series[0] = num::Float::nan();
-    assert_eq!(series.isna().collect::<Vec<bool>>(), vec![true, false, false]);
+    assert_eq!(
+        series.isna().collect::<Vec<bool>>(),
+        vec![true, false, false]
+    );
 }
 
 #[test]
@@ -82,7 +86,6 @@ fn test_any() {
 
 #[test]
 fn test_locate() {
-
     let series = Series::from_vec(vec![1, 2, 1, 2]);
     let ones = series.positions(|x| *x == 1).collect::<Vec<usize>>();
     assert_eq!(ones, vec![0, 2]);
@@ -104,7 +107,7 @@ fn test_map() {
 #[test]
 fn test_groupbys() {
     let series = Series::from_vec(vec![1, 2, 3, 1, 2, 3]);
-    let keys   = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
+    let keys = Series::from_vec(vec![4, 5, 6, 4, 5, 6]);
 
     // Split into groups and sort those groups
     let grouped = series.groupby(&keys).sum();
@@ -134,12 +137,10 @@ fn test_groupbys() {
     let grouped = series.groupby(&keys).var(1_f64).unwrap();
     let vals = grouped.into_vec();
     assert_eq!(vals, vec![0_f64, 0_f64, 0_f64]);
-
 }
 
 #[test]
 fn test_rolling() {
-
     let series = Series::from_vec(vec![1., 2., 3., 1., 2., 6.]);
     let roller = series.rolling(4);
 
@@ -209,7 +210,6 @@ fn test_unique() {
 
 #[test]
 fn test_series_scalar_ops() {
-    
     let base_series = Series::arange(0, 5);
 
     // Test Mul
@@ -319,7 +319,6 @@ fn test_series_aggregation_ops() {
     let series = Series::arange(0, 3);
     assert_eq!(series.median().unwrap(), 1.0);
 
-
     // Test quantile
     let series = Series::arange(0, 101);
     assert_eq!(series.quantile(0.5).unwrap(), 50.0);
@@ -327,7 +326,6 @@ fn test_series_aggregation_ops() {
     let qtl = series.quantile(0.5).unwrap();
     assert!(qtl < 49.51);
     assert!(qtl > 49.49);
-
 }
 
 #[test]
@@ -338,6 +336,4 @@ fn test_into_from_raw() {
     let ptr = series.into_raw();
     let recovered_series = Series::from_raw(ptr);
     assert_eq!(recovered_series, series_clone)
-
-
 }

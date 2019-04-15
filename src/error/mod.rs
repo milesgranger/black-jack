@@ -3,7 +3,6 @@
 /// Common error enum for the crate
 #[derive(Debug, Fail)]
 pub enum BlackJackError {
-
     /// A failure of not having the `Series` name set, where one was expected
     #[fail(display = "No series name present!")]
     NoSeriesName,
@@ -26,7 +25,7 @@ pub enum BlackJackError {
 
     /// Length mismatch
     #[fail(display = "LengthMismatch")]
-    LengthMismatch(String)
+    LengthMismatch(String),
 }
 
 impl From<&str> for BlackJackError {

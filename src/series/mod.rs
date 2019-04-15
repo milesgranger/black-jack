@@ -1,12 +1,12 @@
 //! Series represents a single column within a `DataFrame`
-//! 
+//!
 //! ## Example use:
-//! 
+//!
 //! ```
 //! use blackjack::prelude::*;
-//! 
+//!
 //! let mut series = Series::arange(0, 5);
-//! 
+//!
 //! // Index and change elements
 //! series[0] = 1;
 //! series[1] = 0;
@@ -16,32 +16,31 @@
 //! assert_eq!(series.len(), 5);
 //! ```
 
-use std::ops::{Range, Index, IndexMut};
-use std::iter::{FromIterator, Sum};
-use std::vec::IntoIter;
 use std::convert::From;
 use std::fmt;
-use std::str::FromStr;
+use std::iter::{FromIterator, Sum};
 use std::marker::{Send, Sync};
+use std::ops::{Index, IndexMut, Range};
+use std::str::FromStr;
+use std::vec::IntoIter;
 
 use itertools::Itertools;
 
-use rayon::prelude::*;
 use num::*;
+use rayon::prelude::*;
 use stats;
 
 pub mod overloaders;
+pub mod rolling;
 pub mod series_groupby;
 pub mod variants;
-pub mod rolling;
 
+pub use self::rolling::*;
 pub use self::series_groupby::*;
 pub use self::variants::*;
-pub use self::rolling::*;
 
-use crate::prelude::*;
 use crate::funcs;
-
+use crate::prelude::*;
 
 // Allow series.into_iter()
 impl_series_into_iter!(String);
@@ -50,14 +49,12 @@ impl_series_into_iter!(i64);
 impl_series_into_iter!(f32);
 impl_series_into_iter!(i32);
 
-
 /// Series struct for containing underlying Array and other meta data.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, PartialOrd)]
 pub struct Series<T>
-    where
-        T: BlackJackData
+where
+    T: BlackJackData,
 {
-    
     /// Name of the series, if added to a dataframe without a name, it will be assigned
     /// a default name equalling the count of columns in the dataframe.
     pub name: Option<String>,
@@ -68,11 +65,12 @@ pub struct Series<T>
     /// The index of the Series
     index: Indexer,
 
-    dtype: Option<DType>
+    dtype: Option<DType>,
 }
 
 impl<I> Default for Series<I>
-    where I: PartialOrd + PartialEq + BlackJackData
+where
+    I: PartialOrd + PartialEq + BlackJackData,
 {
     fn default() -> Self {
         Series::from_vec(vec![])
@@ -81,52 +79,56 @@ impl<I> Default for Series<I>
 
 /// Constructor methods for `Series<T>`
 impl<T> Series<T>
-    where
-        T: BlackJackData
+where
+    T: BlackJackData,
 {
-
-    /// Create a new Series struct from an integer range with one step increments. 
-    /// 
+    /// Create a new Series struct from an integer range with one step increments.
+    ///
     /// ## Example
     /// ```
     /// use blackjack::prelude::*;
-    /// 
+    ///
     /// let series: Series<i32> = Series::arange(0, 10);
     /// ```
     pub fn arange(start: T, stop: T) -> Self
-        where
-            T: Integer + BlackJackData + ToPrimitive,
-            Range<T>: Iterator, 
-            Vec<T>: FromIterator<<Range<T> as Iterator>::Item>
+    where
+        T: Integer + BlackJackData + ToPrimitive,
+        Range<T>: Iterator,
+        Vec<T>: FromIterator<<Range<T> as Iterator>::Item>,
     {
         let dtype = Some(start.dtype());
         let values: Vec<T> = (start..stop).collect();
         let index = (0..values.len() as i32).collect::<Vec<i32>>().into();
-        Series { 
+        Series {
             name: None,
             dtype,
             index,
-            values
+            values,
         }
     }
 
     /// Drop positions of the Series
     pub fn drop_positions<I>(&mut self, positions: I) -> ()
-        where I: IntoIterator<Item=usize>
+    where
+        I: IntoIterator<Item = usize>,
     {
-
         // TODO: refactor to avoid duplicating data
 
         let positions = positions.into_iter().collect::<Vec<usize>>();
         let index: &Vec<i32> = self.index().into();
 
         // Create a collection of the new values and indexes
-        let collection = self.values
+        let collection = self
+            .values
             .iter()
             .zip(index.iter())
             .enumerate()
             .filter_map(|(position, (val, idx))| {
-                if positions.contains(&position) { None } else { Some((*idx, val.clone())) }
+                if positions.contains(&position) {
+                    None
+                } else {
+                    Some((*idx, val.clone()))
+                }
             })
             .collect::<Vec<(i32, T)>>();
 
@@ -140,12 +142,12 @@ impl<T> Series<T>
         }
         self.index = new_index.into();
         self.values = new_values;
-
     }
 
     /// Drop indexes of the series based on the index values themselves.
     pub fn drop_indexes<I>(&mut self, indexes: I) -> ()
-        where I: IntoIterator<Item=i32>
+    where
+        I: IntoIterator<Item = i32>,
     {
         // Based on index values, match the positions of those in the current index.
         // then use that to drop values & indexes
@@ -175,12 +177,14 @@ impl<T> Series<T>
 
     /// Set the series index
     pub fn set_index<I>(&mut self, index: I) -> Result<(), BlackJackError>
-        where I: IntoIterator<Item=i32>
+    where
+        I: IntoIterator<Item = i32>,
     {
         let index = index.into_iter().collect::<Vec<i32>>();
         if index.len() != self.len() {
             Err(BlackJackError::from(
-                "Cannot add an index of a different length than Series length"))
+                "Cannot add an index of a different length than Series length",
+            ))
         } else {
             self.index = index.into();
             Ok(())
@@ -216,9 +220,9 @@ impl<T> Series<T>
     ///
     // TODO: Support indexing index values, not just i32 index vals
     pub fn loc<'b, I>(&self, idx_vals: I) -> Vec<&T>
-        where
-            T: Sync,
-            I: IntoParallelIterator<Item=&'b i32>
+    where
+        T: Sync,
+        I: IntoParallelIterator<Item = &'b i32>,
     {
         let index: &Vec<i32> = self.index().into();
 
@@ -228,7 +232,7 @@ impl<T> Series<T>
                 self.values
                     .iter()
                     .zip(index)
-                    .filter(|(_value, idx)| &idx_val == idx )
+                    .filter(|(_value, idx)| &idx_val == idx)
                     .map(|(value, _idx)| value)
                     .collect::<Vec<&T>>()
             })
@@ -254,7 +258,8 @@ impl<T> Series<T>
     /// assert_eq!(vals, vec![&250, &500, &1000, &2000, &4000, &5000]);
     /// ```
     pub fn iloc<'b, I>(&self, idx_vals: I) -> Vec<&T>
-        where I: IntoIterator<Item=&'b usize>
+    where
+        I: IntoIterator<Item = &'b usize>,
     {
         idx_vals
             .into_iter()
@@ -284,7 +289,8 @@ impl<T> Series<T>
     /// assert_eq!(rolled[5], 3.5);
     /// ```
     pub fn rolling(&self, window: usize) -> Rolling<T>
-        where T: Send + Sync
+    where
+        T: Send + Sync,
     {
         Rolling::new(window, &self)
     }
@@ -306,12 +312,11 @@ impl<T> Series<T>
     /// series[0] = num::Float::nan();
     /// assert_eq!(series.isna().collect::<Vec<bool>>(), vec![true, false, false]);
     /// ```
-    pub fn isna<'a>(&'a self) -> impl Iterator<Item=bool> + 'a
-        where T: Float
+    pub fn isna<'a>(&'a self) -> impl Iterator<Item = bool> + 'a
+    where
+        T: Float,
     {
-        self.values
-            .iter()
-            .map(|v| v.is_nan())
+        self.values.iter().map(|v| v.is_nan())
     }
 
     /// Determine if _all_ elements in the Series meet a given condition
@@ -329,11 +334,10 @@ impl<T> Series<T>
     /// assert_eq!(series.all(|x| *x > 2), false);
     /// ```
     pub fn all<F>(&self, condition: F) -> bool
-        where for<'r> F: Fn(&'r T) -> bool
+    where
+        for<'r> F: Fn(&'r T) -> bool,
     {
-        self.values
-            .iter()
-            .all(condition)
+        self.values.iter().all(condition)
     }
 
     /// Check if all elements with the Series are equal
@@ -346,7 +350,8 @@ impl<T> Series<T>
     /// assert!(series.all_equal());
     /// ```
     pub fn all_equal(&self) -> bool
-        where T: PartialEq
+    where
+        T: PartialEq,
     {
         self.values.iter().all_equal()
     }
@@ -356,16 +361,14 @@ impl<T> Series<T>
     /// This will stop iteration after encountering the first element which meets
     /// conditions supplied.
     pub fn any<F>(&self, condition: F) -> bool
-        where for<'r> F: FnMut(&'r &T,) -> bool
+    where
+        for<'r> F: FnMut(&'r &T) -> bool,
     {
-        let first_match = self.values
-            .iter()
-            .find(condition);
+        let first_match = self.values.iter().find(condition);
         match first_match {
             Some(_) => true,
-            None => false
+            None => false,
         }
-
     }
 
     /// Create a cartesian product of this series and another, returns a pair of
@@ -384,15 +387,20 @@ impl<T> Series<T>
     /// assert_eq!(cart_prod2.values, vec![1, 2, 1, 2]);
     /// ```
     pub fn cartesian_product<O>(&self, other: &Series<O>) -> (Series<T>, Series<O>)
-        where O: BlackJackData
+    where
+        O: BlackJackData,
     {
         let mut left = vec![];
         let mut right = vec![];
-        let _ = self.values
+        let _ = self
+            .values
             .clone()
             .into_iter()
             .cartesian_product(other.values.clone().into_iter())
-            .map(|(l, r)| { left.push(l); right.push(r); })
+            .map(|(l, r)| {
+                left.push(l);
+                right.push(r);
+            })
             .collect::<Vec<()>>();
         (Series::from_vec(left), Series::from_vec(right))
     }
@@ -410,12 +418,11 @@ impl<T> Series<T>
     /// let indexes_of_ones = series.positions(|x| *x == 1).collect::<Vec<usize>>();
     /// assert_eq!(indexes_of_ones, vec![0, 2]);
     /// ```
-    pub fn positions<'a, F>(&'a self, condition: F) -> impl Iterator<Item=usize> + 'a
-        where F: 'a + Fn(&T) -> bool
+    pub fn positions<'a, F>(&'a self, condition: F) -> impl Iterator<Item = usize> + 'a
+    where
+        F: 'a + Fn(&T) -> bool,
     {
-        self.values
-            .iter()
-            .positions(condition)
+        self.values.iter().positions(condition)
     }
 
     /// Map a function over a series _in parallel_
@@ -433,14 +440,11 @@ impl<T> Series<T>
     /// assert_eq!(new_series.sum(), 8);
     /// ```
     pub fn map_par<B, F>(self, func: F) -> Series<B>
-        where
-            B: BlackJackData,
-            F: Fn(T) -> B + Send + Sync
+    where
+        B: BlackJackData,
+        F: Fn(T) -> B + Send + Sync,
     {
-        let new_data = self.values
-            .into_par_iter()
-            .map(func)
-            .collect();
+        let new_data = self.values.into_par_iter().map(func).collect();
         Series::from_vec(new_data)
     }
 
@@ -448,14 +452,11 @@ impl<T> Series<T>
     /// Function takes some type `T` and returns some type `B` which
     /// has `BlackJackData` implemented.
     pub fn map<B, F>(self, func: F) -> Series<B>
-        where
-            B: BlackJackData,
-            F: Fn(T) -> B
+    where
+        B: BlackJackData,
+        F: Fn(T) -> B,
     {
-        let new_data = self.values
-            .into_iter()
-            .map(func)
-            .collect();
+        let new_data = self.values.into_iter().map(func).collect();
         Series::from_vec(new_data)
     }
 
@@ -471,19 +472,21 @@ impl<T> Series<T>
     /// assert_eq!(new_series[0].dtype(), DType::F64);
     /// ```
     pub fn astype<A>(&self) -> Result<Series<A>, &'static str>
-        where A: BlackJackData + FromStr
+    where
+        A: BlackJackData + FromStr,
     {
-        let values = self.values
-                .clone()
-                .into_iter()
-                .map(|v| v.to_string())
-                .map(|v| v.parse::<A>().map_err(|_| "Cannot cast into type"))
-                .collect::<Result<Vec<A>, _>>()?;
+        let values = self
+            .values
+            .clone()
+            .into_iter()
+            .map(|v| v.to_string())
+            .map(|v| v.parse::<A>().map_err(|_| "Cannot cast into type"))
+            .collect::<Result<Vec<A>, _>>()?;
         let series = Series {
             name: self.name.clone(),
             dtype: Some(values[0].dtype()),
             values,
-            index: self.index.clone()
+            index: self.index.clone(),
         };
         Ok(series)
     }
@@ -500,46 +503,48 @@ impl<T> Series<T>
     /// assert_eq!(new_series[0].dtype(), DType::F64);
     /// ```
     pub fn into_type<A>(self) -> Result<Series<A>, &'static str>
-        where A: BlackJackData + FromStr
+    where
+        A: BlackJackData + FromStr,
     {
-        let values = self.values
-                .into_iter()
-                .map(|v| v.to_string())
-                .map(|v| v.parse::<A>().map_err(|_| "Cannot cast into type"))
-                .collect::<Result<Vec<A>, _>>()?;
+        let values = self
+            .values
+            .into_iter()
+            .map(|v| v.to_string())
+            .map(|v| v.parse::<A>().map_err(|_| "Cannot cast into type"))
+            .collect::<Result<Vec<A>, _>>()?;
         let series = Series {
             name: self.name.clone(),
             dtype: Some(values[0].dtype()),
             values,
-            index: self.index
+            index: self.index,
         };
         Ok(series)
     }
 
     /// Get a series of the unique elements held in this series
-    /// 
+    ///
     /// ## Example
-    /// 
+    ///
     /// ```
     /// use blackjack::prelude::*;
-    /// 
+    ///
     /// let series: Series<i32> = Series::from_vec(vec![1, 2, 1, 0, 1, 0, 1, 1]);
     /// let unique: Series<i32> = series.unique();
     /// assert_eq!(unique, Series::from_vec(vec![0, 1, 2]));
     /// ```
     pub fn unique(&self) -> Series<T>
-        where T: PartialOrd + Copy
+    where
+        T: PartialOrd + Copy,
     {
         // Cannot use `HashSet` as f32 & f64 don't implement Hash
         let mut unique: Vec<T> = vec![];
         let mut values = self.values.clone();
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-        for val in values
-        {
+        for val in values {
             if unique.len() > 0 {
                 if val == unique[unique.len() - 1] {
-                    continue
+                    continue;
                 } else {
                     unique.push(val)
                 }
@@ -547,42 +552,40 @@ impl<T> Series<T>
                 unique.push(val)
             }
         }
-        
+
         Series::from_vec(unique)
-        
     }
 
-    /// Create a new Series struct from a vector, where T is supported by [`BlackJackData`]. 
-    /// 
+    /// Create a new Series struct from a vector, where T is supported by [`BlackJackData`].
+    ///
     /// ## Example
     /// ```
     /// use blackjack::prelude::*;
-    /// 
+    ///
     /// let series: Series<i32> = Series::from_vec(vec![1, 2, 3]);
     /// ```
-    pub fn from_vec(vec: Vec<T>) -> Self
-    {
+    pub fn from_vec(vec: Vec<T>) -> Self {
         let dtype = if vec.len() == 0 {
             None
         } else {
             Some(vec[0].dtype())
         };
-        Series { 
+        Series {
             name: None,
             dtype,
             index: (0..vec.len() as i32).collect::<Vec<i32>>().into(),
-            values: vec
+            values: vec,
         }
     }
 
     /// Convert the series to a [`Vec`]
-    /// 
+    ///
     /// ## Example
     /// ```
     /// use blackjack::prelude::*;
-    /// 
+    ///
     /// let series = Series::from_vec(vec![1_f64, 2_f64, 3_f64]);
-    /// 
+    ///
     /// assert_eq!(
     ///     series.clone().into_vec(),
     ///     vec![1_f64, 2_f64, 3_f64]
@@ -597,32 +600,35 @@ impl<T> Series<T>
         self.name = Some(name.to_string());
     }
 
-    /// Get the name of the series; Series may not be assigned a string, 
+    /// Get the name of the series; Series may not be assigned a string,
     /// so an `Option` is returned.
-    /// 
+    ///
     /// ## Example
     /// ```
     /// use blackjack::prelude::*;
-    /// 
+    ///
     /// let mut series = Series::from_vec(vec![1, 2, 3]);
     /// series.set_name("my-series");
-    /// 
+    ///
     /// assert_eq!(series.name(), Some("my-series".to_string()));
     /// ```
     pub fn name(&self) -> Option<String> {
         match self.name {
             Some(ref name) => Some(name.clone()),
-            None => None
+            None => None,
         }
     }
 
     /// Finds the returns a [`Series`] containing the mode(s) of the current
     /// [`Series`]
     pub fn mode(&self) -> Result<Self, BlackJackError>
-        where T: BlackJackData + PartialOrd + Copy + ToPrimitive
+    where
+        T: BlackJackData + PartialOrd + Copy + ToPrimitive,
     {
         if self.len() == 0 {
-            return Err(BlackJackError::from("Cannot compute mode of an empty series!"))
+            return Err(BlackJackError::from(
+                "Cannot compute mode of an empty series!",
+            ));
         }
 
         let modes = stats::modes(self.values.iter().map(|v| *v));
@@ -634,55 +640,62 @@ impl<T> Series<T>
     /// > Population: `ddof` == 0_f64
     /// > Sample: `ddof` == 1_f64
     pub fn var(&self, ddof: f64) -> Result<f64, BlackJackError>
-        where T: ToPrimitive + Num
+    where
+        T: ToPrimitive + Num,
     {
-        if self.len() == 0  {
-            return Err(BlackJackError::ValueError("Cannot compute variance of an empty series!".to_owned()));
+        if self.len() == 0 {
+            return Err(BlackJackError::ValueError(
+                "Cannot compute variance of an empty series!".to_owned(),
+            ));
         }
         funcs::variance(self.values.as_slice(), ddof)
             .ok_or_else(|| BlackJackError::from("Failed to calculate variance of series."))
     }
 
     /// Calculate the standard deviation of the series
-    /// 
+    ///
     /// ## Example
     /// ```
     /// use blackjack::prelude::*;
     /// use float_cmp::ApproxEq;
-    /// 
+    ///
     /// let series = Series::arange(0, 10).astype::<f32>().unwrap();
-    /// 
+    ///
     /// let std = series.std(1_f64).unwrap(); // using population ddof (sample variance == 0_f64)
     /// assert_eq!(std, 3.0276503540974917);
     /// ```
     pub fn std(&self, ddof: f64) -> Result<f64, BlackJackError>
-        where T: BlackJackData + ToPrimitive + Copy + Num
+    where
+        T: BlackJackData + ToPrimitive + Copy + Num,
     {
         if self.len() == 0 {
-            return Err(BlackJackError::ValueError("Cannot compute standard deviation of an empty series!".to_owned()))
+            return Err(BlackJackError::ValueError(
+                "Cannot compute standard deviation of an empty series!".to_owned(),
+            ));
         }
         funcs::std(self.values.as_slice(), ddof)
             .ok_or_else(|| BlackJackError::from("Failed to calculate stddev of series."))
     }
 
-    /// Sum a given series, yielding the same type as the elements stored in the 
+    /// Sum a given series, yielding the same type as the elements stored in the
     /// series.
     pub fn sum(&self) -> T
-        where T: Num + Copy + Sum
+    where
+        T: Num + Copy + Sum,
     {
         funcs::sum(self.values.as_slice())
     }
 
-    /// Average / Mean of a given series - Requires specifying desired float 
-    /// return annotation 
-    /// 
+    /// Average / Mean of a given series - Requires specifying desired float
+    /// return annotation
+    ///
     /// ## Example:
     /// ```
     /// use blackjack::prelude::*;
-    /// 
+    ///
     /// let series = Series::arange(0, 5);
     /// let mean = series.mean();
-    /// 
+    ///
     /// match mean {
     ///     Ok(result) => {
     ///         println!("Result is: {}", &result);
@@ -694,28 +707,28 @@ impl<T> Series<T>
     /// }
     /// ```
     pub fn mean(&self) -> Result<f64, BlackJackError>
-        where
-            T: ToPrimitive + Copy + Num + Sum
+    where
+        T: ToPrimitive + Copy + Num + Sum,
     {
         funcs::mean(self.values.as_slice())
             .ok_or_else(|| BlackJackError::from("Failed to calculate mean!"))
     }
 
     /// Calculate the quantile of the series
-    /// 
+    ///
     /// ## Example:
     /// ```
     /// use blackjack::prelude::*;
-    /// 
+    ///
     /// let series = Series::arange(0, 100).astype::<f32>().unwrap();
     /// let qtl = series.quantile(0.5).unwrap(); // `49.5_f32`
-    /// 
+    ///
     /// assert!(qtl < 49.51);
     /// assert!(qtl > 49.49);
     /// ```
     pub fn quantile(&self, quantile: f64) -> Result<f64, BlackJackError>
-        where 
-            T: ToPrimitive + BlackJackData
+    where
+        T: ToPrimitive + BlackJackData,
     {
         use rgsl::statistics::quantile_from_sorted_data;
         use std::cmp::Ordering;
@@ -734,30 +747,37 @@ impl<T> Series<T>
 
     /// Calculate the median of a series
     pub fn median(&self) -> Result<f64, BlackJackError>
-        where T: ToPrimitive + Copy + PartialOrd
+    where
+        T: ToPrimitive + Copy + PartialOrd,
     {
         if self.len() == 0 {
-            return Err(BlackJackError::from("Cannot calculate median of an empty series."))
+            return Err(BlackJackError::from(
+                "Cannot calculate median of an empty series.",
+            ));
         }
-        stats::median(self.values.iter().map(|v| v.to_f64().unwrap()))
-            .ok_or_else(|| BlackJackError::from(r#"Unable to calculate median, please create an issue!
+        stats::median(self.values.iter().map(|v| v.to_f64().unwrap())).ok_or_else(|| {
+            BlackJackError::from(
+                r#"Unable to calculate median, please create an issue!
                            as this wasn't expected to ever happen on a non-empty
-                           series. :("#))
+                           series. :("#,
+            )
+        })
     }
 
     /// Find the minimum of the series. If several elements are equally minimum,
     /// the first element is returned. If it's empty, an Error will be returned.
-    /// 
+    ///
     /// ## Example
     /// ```
     /// use blackjack::prelude::*;
-    /// 
+    ///
     /// let series: Series<i32> = Series::arange(10, 100);
-    /// 
+    ///
     /// assert_eq!(series.min().unwrap(), 10);
     /// ```
     pub fn min(&self) -> Result<T, BlackJackError>
-        where T: Num + PartialOrd + BlackJackData + Copy
+    where
+        T: Num + PartialOrd + BlackJackData + Copy,
     {
         funcs::min(self.values.as_slice())
             .map(|v| *v)
@@ -767,8 +787,8 @@ impl<T> Series<T>
     /// Exibits the same behavior and usage of [`Series::min`], only
     /// yielding the [`Result`] of a maximum.
     pub fn max(&self) -> Result<T, BlackJackError>
-        where 
-            T: Num + PartialOrd + BlackJackData + Copy
+    where
+        T: Num + PartialOrd + BlackJackData + Copy,
     {
         funcs::max(self.values.as_slice())
             .map(|v| *v)
@@ -776,27 +796,31 @@ impl<T> Series<T>
     }
 
     /// Determine the length of the Series
-    pub fn len(&self) -> usize { self.values.len() }
+    pub fn len(&self) -> usize {
+        self.values.len()
+    }
 
     /// Determine if series is empty.
-    pub fn is_empty(&self) -> bool { self.len() == 0 }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
-    /// Get the dtype, returns `None` if series dtype is unknown. 
+    /// Get the dtype, returns `None` if series dtype is unknown.
     /// in such a case, calling `.astype()` to coerce all types to a single
-    /// type is needed. 
+    /// type is needed.
     pub fn dtype(&self) -> Option<DType> {
         self.dtype.clone()
     }
 
     /// Append a [`BlackJackData`] element to the Series
-    /// 
+    ///
     /// ## Example
     /// ```
     /// use blackjack::prelude::*;
-    /// 
+    ///
     /// let mut series = Series::from_vec(vec![0, 1, 2]);
     /// assert_eq!(series.len(), 3);
-    /// 
+    ///
     /// series.append(3);
     /// assert_eq!(series.len(), 4);
     /// ```
@@ -805,15 +829,15 @@ impl<T> Series<T>
         self.values.push(v);
     }
 
-    /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or 
+    /// As boxed pointer, recoverable by `Box::from_raw(ptr)` or
     /// `Series::from_raw(*mut Self)`
-    pub fn into_raw(self) -> *mut Self { 
-        Box::into_raw(Box::new(self)) 
+    pub fn into_raw(self) -> *mut Self {
+        Box::into_raw(Box::new(self))
     }
 
     /// Create from raw pointer
-    pub fn from_raw(ptr: *mut Self) -> Self { 
-        unsafe { *Box::from_raw(ptr) } 
+    pub fn from_raw(ptr: *mut Self) -> Self {
+        unsafe { *Box::from_raw(ptr) }
     }
 
     /// Group by method for grouping elements in a [`Series`]
@@ -835,9 +859,9 @@ impl<T> Series<T>
     /// assert_eq!(vals, vec![2, 4, 6]);
     /// ```
     pub fn groupby(&self, keys: &Series<T>) -> SeriesGroupBy<T>
-        where T: ToPrimitive
+    where
+        T: ToPrimitive,
     {
-
         /* TODO: Revisit this to avoid the clones. Needs to keep the groups
            in order based on key order; match pandas. ie:
 
@@ -876,9 +900,10 @@ impl<T> Series<T>
 
 // Support Series creation from Range
 impl<T> From<std::ops::Range<T>> for Series<T>
-    where T: BlackJackData,
-        std::ops::Range<T>: Iterator,
-        Vec<T>: FromIterator<<std::ops::Range<T> as Iterator>::Item>
+where
+    T: BlackJackData,
+    std::ops::Range<T>: Iterator,
+    Vec<T>: FromIterator<<std::ops::Range<T> as Iterator>::Item>,
 {
     fn from(range: std::ops::Range<T>) -> Series<T> {
         let vec = range.collect();
@@ -886,10 +911,10 @@ impl<T> From<std::ops::Range<T>> for Series<T>
     }
 }
 
-
 // Support ref indexing
 impl<T> Index<usize> for Series<T>
-    where T: BlackJackData
+where
+    T: BlackJackData,
 {
     type Output = T;
     fn index(&self, idx: usize) -> &T {
@@ -899,7 +924,8 @@ impl<T> Index<usize> for Series<T>
 
 // Support ref indexing
 impl<T> Index<Range<usize>> for Series<T>
-    where T: BlackJackData
+where
+    T: BlackJackData,
 {
     type Output = [T];
     fn index(&self, idx: Range<usize>) -> &[T] {
@@ -916,37 +942,28 @@ impl<T: BlackJackData> IndexMut<usize> for Series<T> {
 
 // Support Display for Series
 impl<T> fmt::Display for Series<T>
-    where
-        T: BlackJackData,
-        String: From<T>
+where
+    T: BlackJackData,
+    String: From<T>,
 {
-
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-
-        use prettytable::{Table, Row, Cell};
+        use prettytable::{Cell, Row, Table};
 
         let mut table = Table::new();
 
         // Title (column name)
-        table.add_row(
-            Row::new(
-                vec![
-                    Cell::new(&self.name().unwrap_or("<NA>".to_string()))
-                ]
-            )
-        );
+        table.add_row(Row::new(vec![Cell::new(
+            &self.name().unwrap_or("<NA>".to_string()),
+        )]));
 
         // Build remaining values.
         // TODO: Limit how many are actually printed.
-        let _ = self.values
+        let _ = self
+            .values
             .iter()
             .map(|v| {
                 let v: String = v.clone().into();
-                table.add_row(
-                    Row::new(vec![
-                        Cell::new(&format!("{}", v))
-                    ])
-                );
+                table.add_row(Row::new(vec![Cell::new(&format!("{}", v))]));
             })
             .collect::<Vec<()>>();
 

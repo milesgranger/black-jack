@@ -2,32 +2,25 @@
 
 #[macro_export]
 macro_rules! series_map {
-
-    ($data:expr, $function:tt) => {
-        {
-            println!("Function: {:?}", $function);
-        }
-    }
-
+    ($data:expr, $function:tt) => {{
+        println!("Function: {:?}", $function);
+    }};
 }
-
 
 /// Implement `IntoIter` for a dtype (ie. f64) for `Series`
 #[macro_export]
 macro_rules! impl_series_into_iter {
     // Use: impl_series_into_iter(i32)
     ($primitive:ty) => {
-
         impl IntoIterator for Series<$primitive> {
-            type Item =  $primitive;
+            type Item = $primitive;
             type IntoIter = IntoIter<$primitive>;
 
             fn into_iter(self) -> Self::IntoIter {
                 self.values.into_iter()
             }
         }
-
-    }
+    };
 }
 
 #[macro_export]
@@ -82,5 +75,3 @@ macro_rules! impl_series_by_series_op {
 
     }
 }
-
-

@@ -2,11 +2,10 @@
 //! This module contains the io operators for dealing with DataFrames reading and writing.
 //!
 
-use std::path::Path;
 use std::ffi::OsStr;
+use std::path::Path;
 
 use crate::prelude::*;
-
 
 /// DataFrame reading struct
 ///
@@ -29,7 +28,7 @@ pub struct Reader {
     terminator: csv::Terminator,
     quote: u8,
     has_headers: bool,
-    header: Option<Vec<String>>
+    header: Option<Vec<String>>,
 }
 
 /// DataFrame reading struct
@@ -56,7 +55,6 @@ pub struct Writer {
 }
 
 impl Reader {
-
     /// Create a new instance of `Reader` with defaults CSV params
     pub fn new<S: AsRef<OsStr> + ToString>(path: &S) -> Self {
         Reader {
@@ -65,7 +63,7 @@ impl Reader {
             terminator: csv::Terminator::CRLF,
             quote: b'"',
             has_headers: true,
-            header: None
+            header: None,
         }
     }
 
@@ -106,21 +104,19 @@ impl Reader {
 
     /// Read a CSV file into a [`DataFrame`] where each column represents a Series
     /// supports automatic decompression of gzipped files if they end with `.gz`
-    pub fn read(&self) -> Result<DataFrame<i32>, BlackJackError>
-    {
-
-        use std::io::prelude::*;
-        use std::fs::File;
+    pub fn read(&self) -> Result<DataFrame<i32>, BlackJackError> {
         use flate2::read::GzDecoder;
+        use std::fs::File;
+        use std::io::prelude::*;
 
         let p = Path::new(&self.path);
         let file_reader: Box<Read> = if self.path.to_string().to_lowercase().ends_with(".gz") {
-                                            // Return a Gzip reader
-                                            Box::new(GzDecoder::new(File::open(p)?))
-                                        } else {
-                                            // Return plain file reader
-                                            Box::new(File::open(p)?)
-                                        };
+            // Return a Gzip reader
+            Box::new(GzDecoder::new(File::open(p)?))
+        } else {
+            // Return plain file reader
+            Box::new(File::open(p)?)
+        };
 
         let mut reader = csv::ReaderBuilder::new()
             .quote(self.quote)
@@ -130,7 +126,8 @@ impl Reader {
             .from_reader(file_reader);
 
         let headers: Vec<String> = if self.has_headers {
-            reader.headers()?
+            reader
+                .headers()?
                 .clone()
                 .into_iter()
                 .map(|v| v.to_string())
@@ -139,33 +136,28 @@ impl Reader {
             match &self.header {
                 Some(header) => header.to_owned(),
                 None => {
-                    return Err(
-                        BlackJackError::ValueError(r#"Reader specifies file does not have headers,
+                    return Err(BlackJackError::ValueError(
+                        r#"Reader specifies file does not have headers,
                         but no headers were supplied with Reader::header()"#
-                            .to_owned()
-                        )
-                    )
+                            .to_owned(),
+                    ));
                 }
             }
         };
 
         // Containers for storing column data
-        let mut vecs: Vec<Vec<String>> = (0..headers.len())
-                                            .map(|_| Vec::new())
-                                            .collect();
+        let mut vecs: Vec<Vec<String>> = (0..headers.len()).map(|_| Vec::new()).collect();
 
         for record in reader.records() {
-
             match record {
-
                 Ok(rec) => {
                     for (field, container) in rec.iter().zip(&mut vecs) {
                         container.push(field.into());
-                    };
-                },
+                    }
+                }
 
                 // TODO: Process for dealing with invalid records.
-                Err(err) => println!("Unable to read record: '{}'", err)
+                Err(err) => println!("Unable to read record: '{}'", err),
             }
         }
 
@@ -194,7 +186,6 @@ impl Reader {
 }
 
 impl Writer {
-
     /// Create a new instance of `Reader` with defaults CSV params
     pub fn new<S: AsRef<OsStr> + ToString>(path: &S) -> Self {
         Writer {
@@ -202,7 +193,7 @@ impl Writer {
             delimiter: b',',
             terminator: csv::Terminator::CRLF,
             quote: b'"',
-            has_headers: true
+            has_headers: true,
         }
     }
 
@@ -236,22 +227,24 @@ impl Writer {
 
     /// Write a dataframe to CSV, consumes self, and thus will not double memory whilst
     /// writing to CSV.
-    pub fn write<I: PartialEq + PartialOrd + BlackJackData>(&self, df: DataFrame<I>) -> Result<(), BlackJackError>
-    {
-        use std::io::prelude::*;
-        use std::fs::File;
+    pub fn write<I: PartialEq + PartialOrd + BlackJackData>(
+        &self,
+        df: DataFrame<I>,
+    ) -> Result<(), BlackJackError> {
         use flate2::read::GzEncoder;
         use flate2::Compression;
+        use std::fs::File;
+        use std::io::prelude::*;
 
         let p = Path::new(&self.path);
 
         let file_writer: Box<Write> = if self.path.to_string().to_lowercase().ends_with(".gz") {
-                                            // Return a Gzip reader
-                                            Box::new(GzEncoder::new(File::create(p)?, Compression::default()))
-                                        } else {
-                                            // Return plain file reader
-                                            Box::new(File::create(p)?)
-                                        };
+            // Return a Gzip reader
+            Box::new(GzEncoder::new(File::create(p)?, Compression::default()))
+        } else {
+            // Return plain file reader
+            Box::new(File::create(p)?)
+        };
 
         let mut writer = csv::WriterBuilder::new()
             .delimiter(self.delimiter)
