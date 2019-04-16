@@ -45,6 +45,21 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
         }
     }
 
+    /// Iterator over rows of a dataframe where each element contained is a reference
+    ///
+    /// ## Example
+    /// ```
+    /// # use blackjack::prelude::*;
+    /// # let mut df = DataFrame::new();
+    /// # let s1 = Series::from_vec(vec![0, 1, 2, 3]);
+    /// # let s2 = Series::from_vec(vec![1, 2, 3, 4]);
+    /// # assert!(df.add_column(s1).is_ok());
+    /// # assert!(df.add_column(s2).is_ok());
+    ///
+    /// let rows = df.iter_rows().collect::<Vec<Row>>();
+    /// assert_eq!(rows.len(), 4);  // Four rows
+    /// assert!(rows.iter().all(|r| r.data.len() == 2));  // Each row has two elements
+    /// ```
     pub fn iter_rows(&self) -> impl Iterator<Item = Row<'_>> {
         (0..self.len()).map(move |idx| {
             let mut row = Row::new();
@@ -76,7 +91,32 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
         })
     }
 
-    pub fn loc<Idx>(&self, idx: Idx) -> impl Iterator<Item = Row<'_>>
+    /// Select rows of the DataFrame based on positional index
+    ///
+    /// ## Example
+    /// ```
+    /// use blackjack::prelude::*;
+    ///
+    /// let mut df = DataFrame::new();
+    ///  let s1 = Series::from_vec(vec![0, 1, 2, 3]);
+    ///  let s2 = Series::from_vec(vec![1, 2, 3, 4]);
+    ///
+    ///  assert!(df.add_column(s1).is_ok());
+    ///  assert!(df.add_column(s2).is_ok());
+    ///
+    ///  let rows = df.iloc(vec![1]).collect::<Vec<Row>>();
+    ///
+    ///  // First column is s1, second element is 1
+    ///  if let Datum::I32(val) = rows[0].data[0].data {
+    ///      assert_eq!(val, &1);
+    ///  }
+    ///
+    ///  // second column is s2, second element is 2
+    ///  if let Datum::I32(val) = rows[0].data[1].data {
+    ///      assert_eq!(val, &2);
+    ///  }
+    /// ```
+    pub fn iloc<Idx>(&self, idx: Idx) -> impl Iterator<Item = Row<'_>>
     where
         Idx: IntoIterator<Item = usize>,
     {
