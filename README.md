@@ -37,8 +37,19 @@ associated with this crate, but that time will come.
 
 ### Example use:
 
-```rust
+<!--
+```rust,skeptic-template
+extern crate blackjack;
+
 use blackjack::prelude::*;
+
+fn main() {{
+    {}
+}}
+```
+-->
+
+```rust
 
 // We have a dataframe, of course...
 let mut df = DataFrame::new();
@@ -61,6 +72,7 @@ df.add_column(series_i32).unwrap();
 let series_f64_ref: &Series<f64> = df.get_column("my-series").unwrap();
 
 // and a lot more...
+
 ```
 ---
 
