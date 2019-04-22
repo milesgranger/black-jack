@@ -37,19 +37,7 @@ associated with this crate, but that time will come.
 
 ### Example use:
 
-<!--
-```rust,skeptic-template
-extern crate blackjack;
-
-use blackjack::prelude::*;
-
-fn main() {{
-    {}
-}}
-```
--->
-
-```rust
+```rust,skt-default
 
 // We have a dataframe, of course...
 let mut df = DataFrame::new();
@@ -71,9 +59,26 @@ df.add_column(series_i32).unwrap();
 // And then get a reference to a Series
 let series_f64_ref: &Series<f64> = df.get_column("my-series").unwrap();
 
-// and a lot more...
+```
+
+## Read a CSV file:
+Also supports reading `.gz` files
+
+```rust,skt-default
+
+// Define the path to file
+let path: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/medium_csv.csv");
+
+// Use the `Reader` to read the dataframe
+let df = Reader::new(&path).read().expect("Failed to read file");
+
+// Get a refrence to a specific column and assert the sum of that series
+let series2: &Series<i32> = df.get_column("col2").unwrap();
+
+assert_eq!(series2.sum(), 3000);
 
 ```
+
 ---
 
 ## Development
