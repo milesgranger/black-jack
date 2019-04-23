@@ -896,6 +896,25 @@ where
 
         SeriesGroupBy::new(groups)
     }
+
+    /// Find the _positions_ where a condition is true
+    ///
+    /// ## Example
+    /// ```
+    /// # use blackjack::prelude::*;
+    ///
+    /// let series = Series::from(0..10);
+    /// let positions = series.find(|v| v % 2 == 0);
+    ///
+    /// assert_eq!(positions, vec![0, 2, 4, 6, 8]);
+    /// ```
+    pub fn find<F: Fn(&T) -> bool>(&self, condition: F) -> Vec<usize> {
+        self.values.iter()
+            .enumerate()
+            .filter(|(idx, val)| condition(val))
+            .map(|(idx, val)| idx)
+            .collect()
+    }
 }
 
 // Support Series creation from Range
