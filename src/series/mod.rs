@@ -62,9 +62,6 @@ where
     /// The underlying values of the Series
     pub values: Vec<T>,
 
-    /// The index of the Series
-    index: Indexer,
-
     dtype: Option<DType>,
 }
 
@@ -98,11 +95,9 @@ where
     {
         let dtype = Some(start.dtype());
         let values: Vec<T> = (start..stop).collect();
-        let index = (0..values.len() as i32).collect::<Vec<i32>>().into();
         Series {
             name: None,
             dtype,
-            index,
             values,
         }
     }
@@ -115,129 +110,20 @@ where
         // TODO: refactor to avoid duplicating data
 
         let positions = positions.into_iter().collect::<Vec<usize>>();
-        let index: &Vec<i32> = self.index().into();
 
         // Create a collection of the new values and indexes
-        let collection = self
+        self.values = self
             .values
             .iter()
-            .zip(index.iter())
             .enumerate()
-            .filter_map(|(position, (val, idx))| {
+            .filter_map(|(position, val)| {
                 if positions.contains(&position) {
                     None
                 } else {
-                    Some((*idx, val.clone()))
+                    Some((val.clone()))
                 }
             })
             .collect::<Vec<(i32, T)>>();
-
-        // Unpack collection into the new indexes and values
-        let mut new_index = vec![];
-        let mut new_values = vec![];
-
-        for (idx, value) in collection {
-            new_index.push(idx);
-            new_values.push(value);
-        }
-        self.index = new_index.into();
-        self.values = new_values;
-    }
-
-    /// Drop indexes of the series based on the index values themselves.
-    pub fn drop_indexes<I>(&mut self, indexes: I) -> ()
-    where
-        I: IntoIterator<Item = i32>,
-    {
-        // Based on index values, match the positions of those in the current index.
-        // then use that to drop values & indexes
-        let indexes = indexes.into_iter().collect::<Vec<i32>>();
-        let current_index: &Vec<i32> = self.index().into();
-        let positions = current_index
-            .iter()
-            .positions(|idx| indexes.contains(idx))
-            .collect::<Vec<usize>>();
-
-        self.drop_positions(positions);
-    }
-
-    /// Obtain a reference to the [`Indexer`] of this `Series`
-    ///
-    /// ## Example:
-    /// ```
-    /// use blackjack::prelude::*;
-    ///
-    /// let series = Series::from_vec(vec![1, 2, 3, 4, 5]);
-    /// let index: &Vec<i32> = series.index().into();
-    /// assert_eq!(index, &vec![0, 1, 2, 3, 4]);
-    /// ```
-    pub fn index(&self) -> &Indexer {
-        &self.index
-    }
-
-    /// Set the series index
-    pub fn set_index<I>(&mut self, index: I) -> Result<(), BlackJackError>
-    where
-        I: IntoIterator<Item = i32>,
-    {
-        let index = index.into_iter().collect::<Vec<i32>>();
-        if index.len() != self.len() {
-            Err(BlackJackError::from(
-                "Cannot add an index of a different length than Series length",
-            ))
-        } else {
-            self.index = index.into();
-            Ok(())
-        }
-    }
-
-    /// Reset the series index
-    // TODO: Add 'drop' flag to keep existing index or not.
-    pub fn reset_index(&mut self) -> Result<(), BlackJackError> {
-        self.set_index(0..self.len() as i32)
-    }
-
-    /// Fetch values from the series by matching index _values_, _not_ by position.
-    ///
-    /// _No data copies are made_, and it has
-    /// time complexity O((idx_vals length - number of CPU threads) * Series length);
-    /// Meaning that the search is done by concurrently searching over each provided index value to
-    /// match, and will search over series length looking for matches.
-    ///
-    /// In practice this ends up being quite quick
-    /// (_~150x faster than equivalent Pandas operation of 10k values_) and does not care about index order.
-    ///
-    /// ## Example
-    /// ```
-    /// use blackjack::prelude::*;
-    ///
-    /// let mut series = Series::arange(0, 10000);  // Index values end up being 0-10000 by default here
-    /// assert!(series.set_index(1..10001).is_ok());
-    ///
-    /// let vals = series.loc(&vec![250, 500, 1000, 2000, 4000, 5000]);  // ~26us, 150x faster than Pandas
-    /// assert_eq!(vals, vec![&249, &499, &999, &1999, &3999, &4999]);
-    /// ```
-    ///
-    // TODO: Support indexing index values, not just i32 index vals
-    pub fn loc<'b, I>(&self, idx_vals: I) -> Vec<&T>
-    where
-        T: Sync,
-        I: IntoParallelIterator<Item = &'b i32>,
-    {
-        let index: &Vec<i32> = self.index().into();
-
-        idx_vals
-            .into_par_iter()
-            .map(|idx_val| {
-                self.values
-                    .iter()
-                    .zip(index)
-                    .filter(|(_value, idx)| &idx_val == idx)
-                    .map(|(value, _idx)| value)
-                    .collect::<Vec<&T>>()
-            })
-            .flat_map(|value| value)
-            .collect::<Vec<&T>>()
     }
 
     /// Fetch values from the series by matching index _positions_, _not_ by index value.
@@ -486,7 +372,6 @@ where
             name: self.name.clone(),
             dtype: Some(values[0].dtype()),
             values,
-            index: self.index.clone(),
         };
         Ok(series)
     }
@@ -516,7 +401,6 @@ where
             name: self.name.clone(),
             dtype: Some(values[0].dtype()),
             values,
-            index: self.index,
         };
         Ok(series)
     }
@@ -573,7 +457,6 @@ where
         Series {
             name: None,
             dtype,
-            index: (0..vec.len() as i32).collect::<Vec<i32>>().into(),
             values: vec,
         }
     }
