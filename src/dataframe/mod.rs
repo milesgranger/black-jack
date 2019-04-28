@@ -148,11 +148,7 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
 
     /// Quickly identify if the dataframe is empty.
     pub fn is_empty(&self) -> bool {
-        if self.len() > 0 {
-            false
-        } else {
-            true
-        }
+        !self.len() > 0
     }
 
     /// Add a column to this dataframe.

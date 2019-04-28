@@ -11,6 +11,6 @@ fn dataframe_iter_rows() {
     assert!(df.add_column(s2).is_ok());
 
     let rows = df.iter_rows().collect_vec();
-    assert_eq!(rows.len(), 4);  // Four rows
-    assert!(rows.iter().all(|r| r.data.len() == 2));  // Each row has two elements
+    assert_eq!(rows.len(), 4); // Four rows
+    assert!(rows.iter().all(|r| r.data.len() == 2)); // Each row has two elements
 }

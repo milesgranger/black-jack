@@ -791,7 +791,8 @@ where
     /// assert_eq!(positions, vec![0, 2, 4, 6, 8]);
     /// ```
     pub fn find<F: Fn(&T) -> bool>(&self, condition: F) -> Vec<usize> {
-        self.values.iter()
+        self.values
+            .iter()
             .enumerate()
             .filter(|(idx, val)| condition(val))
             .map(|(idx, val)| idx)
