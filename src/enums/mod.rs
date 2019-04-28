@@ -1,5 +1,5 @@
 //! Enums to be used throughout the crate.
-
+use serde::{Serialize, Deserialize};
 use crate::prelude::*;
 
 /// Possible DType returns, matches [`BlackJackData`]

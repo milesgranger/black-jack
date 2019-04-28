@@ -44,26 +44,6 @@
 //! // and a lot more...
 //! ```
 
-extern crate baggie;
-extern crate bincode;
-extern crate csv;
-extern crate derive_more;
-extern crate flate2;
-extern crate indexmap;
-extern crate itertools;
-extern crate ndarray;
-extern crate num;
-extern crate prettytable;
-extern crate rayon;
-extern crate rgsl;
-extern crate serde;
-extern crate snap;
-extern crate stats;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate failure;
-
 #[macro_use]
 pub mod macros;
 

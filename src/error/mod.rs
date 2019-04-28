@@ -1,5 +1,7 @@
 //! The common Error(s) and associated implementations used in within the crate
 
+use failure::Fail;
+
 /// Common error enum for the crate
 #[derive(Debug, Fail)]
 pub enum BlackJackError {

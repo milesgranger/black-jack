@@ -24,6 +24,7 @@ use std::ops::{Index, IndexMut, Range};
 use std::str::FromStr;
 use std::vec::IntoIter;
 
+use serde::{Deserialize, Serialize};
 use itertools::Itertools;
 
 use num::*;
