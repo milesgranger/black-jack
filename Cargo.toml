@@ -1,17 +1,17 @@
 [package]
 name = "black-jack"
-version = "0.0.16-a"
+version = "0.1.0"
 edition = "2018"
 authors = ["Miles Granger <miles59923@gmail.com>"]
-description = "DataFrame / Series processing in Rust - Work in progress"
+description = "DataFrame / Series / general data processing in Rust"
 repository = "https://github.com/milesgranger/black-jack"
 readme = "README.md"
+exclude = ["/.gitignore", ".travis.yml", ".cargo/config"]
 license-file = "LICENSE"
 build = "build.rs"
 
 [badges]
-travis-ci = { repository = "https://github.com/milesgranger/black-jack", branch = "master" }
-coveralls = { repository = "https://github.com/milesgranger/black-jack", branch = "master", service = "github" }
+travis-ci = { repository = "milesgranger/black-jack", branch = "master" }
 
 [lib]
 name = "blackjack"

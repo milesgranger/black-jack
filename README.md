@@ -1,6 +1,6 @@
 # black-jack
 
-#### BlackJack is under development and not meant to be used; aside from those curious & daring few. :)
+#### BlackJack is under development and PRs / issues are _definitely_ welcome! 
 
 [![crates.io](http://meritbadge.herokuapp.com/black-jack)](https://crates.io/crates/black-jack) 
 [![Build Status](https://travis-ci.com/milesgranger/black-jack.svg?branch=master)](https://travis-ci.com/milesgranger/black-jack) 
@@ -115,11 +115,15 @@ df.filter_by_row(|row| row["col3"] != Datum::STR(&"foo".to_string()));
 assert_eq!(df.len(), 2);
 ```
 
+
+## and a whole lot more..
+
+
 ---
 
 ## Development
 
-- Rust >= 1.29, although older versions are expected to work as well.
+- Rust >= 1.31
 - [GSL](https://www.gnu.org/software/gsl/) ~= 2.4
     - Fedora: `sudo dnf install gsl-devel`
     - Ubuntu: `sudo apt-get install libgsl-dev`
