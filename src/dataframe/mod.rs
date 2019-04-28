@@ -187,37 +187,6 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
         Ok(())
     }
 
-    /// Drop indexes of the dataframe
-    pub fn drop_indexes<N: IntoIterator<Item = i32> + Clone>(&mut self, indexes: N) {
-        for meta in self.meta.clone() {
-            match meta.dtype {
-                DType::I64 => {
-                    let series: &mut Series<i64> = self.get_column_mut(meta.name.as_str()).unwrap();
-                    series.drop_indexes(indexes.clone());
-                }
-                DType::I32 => {
-                    let series: &mut Series<i32> = self.get_column_mut(meta.name.as_str()).unwrap();
-                    series.drop_indexes(indexes.clone());
-                }
-                DType::F64 => {
-                    let series: &mut Series<f64> = self.get_column_mut(meta.name.as_str()).unwrap();
-                    series.drop_indexes(indexes.clone());
-                }
-                DType::F32 => {
-                    let series: &mut Series<f64> = self.get_column_mut(meta.name.as_str()).unwrap();
-                    series.drop_indexes(indexes.clone());
-                }
-                DType::STRING => {
-                    let series: &mut Series<String> =
-                        self.get_column_mut(meta.name.as_str()).unwrap();
-                    series.drop_indexes(indexes.clone());
-                }
-            };
-        }
-
-        self.index.drop_indexes(indexes);
-    }
-
     /// Retrieves a mutable reference to the column
     pub fn get_column_mut<'a, T>(&mut self, name: impl Into<&'a str>) -> Option<&mut Series<T>>
     where

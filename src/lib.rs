@@ -72,7 +72,6 @@ pub mod dataframe;
 pub mod enums;
 pub mod error;
 mod funcs;
-pub mod indexing;
 pub mod prelude;
 pub mod row;
 pub mod series;

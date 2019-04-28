@@ -123,7 +123,7 @@ where
                     Some((val.clone()))
                 }
             })
-            .collect::<Vec<(i32, T)>>();
+            .collect::<Vec<T>>();
     }
 
     /// Fetch values from the series by matching index _positions_, _not_ by index value.
@@ -138,7 +138,6 @@ where
     /// use blackjack::prelude::*;
     ///
     /// let mut series = Series::arange(0, 10000);  // Index values end up being 0-10000 by default here
-    /// assert!(series.set_index(1..10001).is_ok());
     ///
     /// let vals = series.iloc(&vec![250, 500, 1000, 2000, 4000, 5000]);  // ~300ns, ~28x faster than Pandas
     /// assert_eq!(vals, vec![&250, &500, &1000, &2000, &4000, &5000]);
