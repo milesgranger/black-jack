@@ -1,11 +1,4 @@
-//! Nothing to see here, placeholder until new macros are needed.
-
-#[macro_export]
-macro_rules! series_map {
-    ($data:expr, $function:tt) => {{
-        println!("Function: {:?}", $function);
-    }};
-}
+//! Mostly internal level macros for implementing ops per series type
 
 /// Implement `IntoIter` for a dtype (ie. f64) for `Series`
 #[macro_export]
@@ -23,6 +16,8 @@ macro_rules! impl_series_into_iter {
     };
 }
 
+/// Implement various inplace numeric operations for a Series
+/// ie. `series += 1`
 #[macro_export]
 macro_rules! impl_series_by_series_op_inplace {
 
@@ -42,6 +37,8 @@ macro_rules! impl_series_by_series_op_inplace {
     }
 }
 
+/// Implement series by series operations
+/// ie. `series1 + series2`
 #[macro_export]
 macro_rules! impl_series_by_series_op {
 

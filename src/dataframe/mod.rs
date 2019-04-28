@@ -6,16 +6,12 @@ use baggie::Baggie;
 use num::*;
 use serde::Deserialize;
 
-use std::ops::Index;
-
 use crate::prelude::*;
 
 pub mod dataframe_groupby;
 pub mod io;
 pub use self::dataframe_groupby::*;
 pub use self::io::*;
-use core::borrow::Borrow;
-use rayon::result::IntoIter;
 
 /// The container for `Series<T>` objects, allowing for additional functionality
 #[derive(Default, Debug)]
@@ -90,7 +86,7 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
         let positions_to_drop = self
             .iter_rows()
             .enumerate()
-            .filter(|(idx, row)| condition(row))
+            .filter(|(_idx, row)| condition(row))
             .map(|(idx, _)| idx)
             .collect::<Vec<usize>>();
 
@@ -219,8 +215,8 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
 
         self.iter_rows()
             .enumerate()
-            .filter(move |(idx, row)| indexes.contains(&idx))
-            .map(|(idx, row)| row)
+            .filter(move |(idx, _row)| indexes.contains(&idx))
+            .map(|(_idx, row)| row)
     }
 
     /// Length of the dataframe

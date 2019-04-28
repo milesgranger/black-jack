@@ -120,7 +120,7 @@ where
                 if positions.contains(&position) {
                     None
                 } else {
-                    Some((val.clone()))
+                    Some(val.clone())
                 }
             })
             .collect::<Vec<T>>();
@@ -794,8 +794,8 @@ where
         self.values
             .iter()
             .enumerate()
-            .filter(|(idx, val)| condition(val))
-            .map(|(idx, val)| idx)
+            .filter(|(_idx, val)| condition(val))
+            .map(|(idx, _val)| idx)
             .collect()
     }
 }

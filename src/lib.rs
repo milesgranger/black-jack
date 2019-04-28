@@ -44,8 +44,10 @@
 //! // and a lot more...
 //! ```
 
+extern crate baggie;
 extern crate bincode;
 extern crate csv;
+extern crate derive_more;
 extern crate flate2;
 extern crate indexmap;
 extern crate itertools;
@@ -57,9 +59,6 @@ extern crate rgsl;
 extern crate serde;
 extern crate snap;
 extern crate stats;
-#[macro_use]
-extern crate derive_more;
-extern crate baggie;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
