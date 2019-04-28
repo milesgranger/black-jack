@@ -5,25 +5,40 @@ use tempfile::tempdir;
 
 use blackjack::prelude::*;
 
-/*
 #[test]
-fn test_change_df_index() {
-    let s1 = Series::arange(0, 5);
-    let idx = 1..s1.len() + 1;
+fn filter_by_row() {
+    let mut s1 = Series::from(0..5);
+    s1.set_name("col1");
+
+    let mut s2 = Series::from(10..15);
+    s2.set_name("col2");
+
+    let mut s3 = Series::from_vec(vec![
+        "foo".to_string(),
+        "bar".to_string(),
+        "foo".to_string(),
+        "bar".to_string(),
+        "foo".to_string(),
+    ]);
+    s3.set_name("col3");
 
     let mut df = DataFrame::new();
-    df.add_column(s1).unwrap();
+    assert!(df.add_column(s1).is_ok());
+    assert!(df.add_column(s2).is_ok());
+    assert!(df.add_column(s3).is_ok());
 
-    let expected_index = idx
-        .clone()
-        .into_iter()
-        .map(|v| v.into())
-        .collect::<Vec<DataElement>>();
+    // Before filtering, we're len 5 and first element of 'col1' is 0
+    assert_eq!(df.len(), 5);
 
-    assert!(df.set_index(idx.into_iter()).is_ok());
-    assert_eq!(&expected_index, df.index());
+    df.filter_by_row(|row| row["col1"] == Datum::I32(&0));
+
+    // After filtering, we're len 4 and first element of 'col1' is now 1
+    assert_eq!(df.len(), 4);
+
+    // Filter by string foo,
+    df.filter_by_row(|row| row["col3"] != Datum::STR(&"foo".to_string()));
+    assert_eq!(df.len(), 2);
 }
-*/
 
 #[test]
 fn test_df_column_size_mismatch() {

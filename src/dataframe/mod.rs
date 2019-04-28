@@ -45,6 +45,101 @@ impl<I: PartialOrd + PartialEq + BlackJackData> DataFrame<I> {
         }
     }
 
+    /// Filter the dataframe by iterating over its `Row`s.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use blackjack::prelude::*;
+    /// let mut s1 = Series::from(0..5);
+    /// s1.set_name("col1");
+    ///
+    /// let mut s2 = Series::from(10..15);
+    /// s2.set_name("col2");
+    ///
+    /// let mut s3 = Series::from_vec(vec![
+    ///     "foo".to_string(),
+    ///     "bar".to_string(),
+    ///     "foo".to_string(),
+    ///     "bar".to_string(),
+    ///     "foo".to_string(),
+    /// ]);
+    /// s3.set_name("col3");
+    ///
+    /// let mut df = DataFrame::new();
+    /// assert!(df.add_column(s1).is_ok());
+    /// assert!(df.add_column(s2).is_ok());
+    /// assert!(df.add_column(s3).is_ok());
+    ///
+    /// // Before filtering, we're len 5
+    /// assert_eq!(df.len(), 5);
+    ///
+    /// df.filter_by_row(|row| row["col1"] == Datum::I32(&0));
+    ///
+    /// // After filtering, we're len 4 and first element of 'col1' is now 1
+    /// assert_eq!(df.len(), 4);
+    ///
+    /// // Filter by string foo,
+    /// df.filter_by_row(|row| row["col3"] != Datum::STR(&"foo".to_string()));
+    /// assert_eq!(df.len(), 2);
+    /// ```
+    pub fn filter_by_row<F>(&mut self, condition: F) -> ()
+    where
+        F: Fn(&Row<'_>) -> bool,
+    {
+        let positions_to_drop = self
+            .iter_rows()
+            .enumerate()
+            .filter(|(idx, row)| condition(row))
+            .map(|(idx, _)| idx)
+            .collect::<Vec<usize>>();
+
+        self.drop_positions(positions_to_drop.into_iter())
+    }
+
+    /// Drop positions within the `Series`
+    ///
+    /// ## Example
+    /// ```
+    /// # use blackjack::prelude::*;
+    ///
+    /// let mut df = DataFrame::new();
+    /// assert!(df.add_column(Series::from(0..10)).is_ok());
+    ///
+    /// assert_eq!(df.len(), 10);
+    /// df.drop_positions(0..5);  // Iterator of `usize` items
+    /// assert_eq!(df.len(), 5);
+    /// ```
+    pub fn drop_positions(&mut self, positions: impl Iterator<Item = usize>) -> () {
+        let positions = positions.into_iter().collect::<Vec<usize>>();
+        for meta in self.meta.clone() {
+            match meta.dtype {
+                DType::F64 => {
+                    let s: &mut Series<f64> = &mut self.get_column_mut(meta.name.as_str()).unwrap();
+                    s.drop_positions(positions.clone())
+                }
+                DType::I64 => {
+                    let s: &mut Series<i64> = &mut self.get_column_mut(meta.name.as_str()).unwrap();
+                    s.drop_positions(positions.clone())
+                }
+                DType::F32 => {
+                    let s: &mut Series<f32> = &mut self.get_column_mut(meta.name.as_str()).unwrap();
+                    s.drop_positions(positions.clone())
+                }
+                DType::I32 => {
+                    let s: &mut Series<i32> = &mut self.get_column_mut(meta.name.as_str()).unwrap();
+                    s.drop_positions(positions.clone())
+                }
+                DType::STRING => {
+                    let s: &mut Series<String> =
+                        &mut self.get_column_mut(meta.name.as_str()).unwrap();
+                    s.drop_positions(positions.clone())
+                }
+            };
+        }
+        self.index.drop_positions(positions);
+    }
+
     /// Iterator over rows of a dataframe where each element contained is a reference
     ///
     /// ## Example

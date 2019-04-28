@@ -22,6 +22,7 @@ pub enum DType {
 }
 
 /// Container for use with `Row` struct
+#[derive(PartialEq)]
 pub enum Datum<'a> {
     F64(&'a f64),
     I64(&'a i64),

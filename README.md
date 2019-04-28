@@ -79,6 +79,42 @@ assert_eq!(series2.sum(), 3000);
 
 ```
 
+## Query/filter a dataframe
+
+```rust,skt-default
+let mut s1 = Series::from(0..5);
+s1.set_name("col1");
+
+let mut s2 = Series::from(10..15);
+s2.set_name("col2");
+
+let mut s3 = Series::from_vec(vec![
+    "foo".to_string(),
+    "bar".to_string(),
+    "foo".to_string(),
+    "bar".to_string(),
+    "foo".to_string(),
+]);
+s3.set_name("col3");
+
+let mut df = DataFrame::new();
+assert!(df.add_column(s1).is_ok());
+assert!(df.add_column(s2).is_ok());
+assert!(df.add_column(s3).is_ok());
+
+// Before filtering, we're len 5 and first element of 'col1' is 0
+assert_eq!(df.len(), 5);
+
+df.filter_by_row(|row| row["col1"] == Datum::I32(&0));
+
+// After filtering, we're len 4 and first element of 'col1' is now 1
+assert_eq!(df.len(), 4);
+
+// Filter by string foo,
+df.filter_by_row(|row| row["col3"] != Datum::STR(&"foo".to_string()));
+assert_eq!(df.len(), 2);
+```
+
 ---
 
 ## Development
