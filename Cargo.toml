@@ -39,7 +39,7 @@ default = ["GSL/v2"]
 
 [dev-dependencies]
 float-cmp = "0.5"
-criterion = "0.2.6"
+criterion = "0.3.0"
 tempfile = "3.0"
 skeptic = "0.13"
 
