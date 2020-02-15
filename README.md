@@ -6,8 +6,6 @@
 [![Build Status](https://travis-ci.com/milesgranger/black-jack.svg?branch=master)](https://travis-ci.com/milesgranger/black-jack) 
 [![Coverage Status](https://coveralls.io/repos/github/milesgranger/black-jack/badge.svg?branch=master)](https://coveralls.io/github/milesgranger/black-jack?branch=master)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=milesgranger/black-jack)](https://dependabot.com)
-[![License](https://img.shields.io/badge/license-Unlicense-green.svg)](http://unlicense.org/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://en.wikipedia.org/wiki/MIT_License)  
 
 
 
