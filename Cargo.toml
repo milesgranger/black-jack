@@ -38,7 +38,7 @@ baggie = "^0.2"
 default = ["GSL/v2"]
 
 [dev-dependencies]
-float-cmp = "0.6"
+float-cmp = "0.7"
 criterion = "0.3.0"
 tempfile = "3.0"
 skeptic = "0.13"
