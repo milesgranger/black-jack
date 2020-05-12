@@ -1,6 +1,6 @@
 [package]
 name = "black-jack"
-version = "0.1.0"
+version = "0.2.0-alpha"
 edition = "2018"
 authors = ["Miles Granger <miles59923@gmail.com>"]
 description = "DataFrame / Series / general data processing in Rust"
@@ -8,43 +8,18 @@ repository = "https://github.com/milesgranger/black-jack"
 readme = "README.md"
 exclude = ["/.gitignore", ".travis.yml", ".cargo/config"]
 license-file = "LICENSE"
-build = "build.rs"
 
 [badges]
 travis-ci = { repository = "milesgranger/black-jack", branch = "master" }
 
 [lib]
 name = "blackjack"
+proc-macro = true
 
 [dependencies]
-num = "^0.2"
-csv = "^1.0"
-streaming-stats = "0.2"
-GSL = "^1.0"
-rayon = "^1.0"
-itertools = "^0.9"
-flate2 = { version = "^1.0", features = ["rust_backend"], default-features = false }
-prettytable-rs = "^0.8"
-indexmap = "^1.0"
-ndarray = "^0.13"
-derive_more = "^0.99"
-bincode = "1.0.1"
-serde = {version = "^1.0", features = ["derive"] }
-failure = "^0.1"
-snap = "^1.0"
-baggie = "^0.2"
-
-[features]
-default = ["GSL/v2"]
-
-[dev-dependencies]
-float-cmp = "0.8"
-criterion = "0.3.0"
-tempfile = "3.0"
-skeptic = "0.13"
-
-[build-dependencies]
-skeptic = "0.13"
+quote = "^1.0"
+syn = { version = "^1.0", features = ["full", "extra-traits"] }
+proc-macro2 = "^1.0"
 
 [[bench]]
 name = "bench_marks"

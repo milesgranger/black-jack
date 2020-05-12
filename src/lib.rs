@@ -1,57 +1,65 @@
-#![warn(missing_docs)]
-//! BlackJack strives to be a full featured crate for general data processing.
-//!
-//! _Long term_ goal is to create a lightweight [Pandas](https://pandas.pydata.org/) equivalent
-//! by and for the Rust community, but with slight differences in focus...
-//!
-//! The project strives for a few key principles. When any implementation decisions are to be made,
-//! they are made with these principles in mind, and in this order:
-//! 1. **Memory efficiency**
-//!     - Minimize memory use at every opportunity.
-//! 2. **Usability**
-//!     - Strive for ergonomics; often done by modeling the `Pandas` API where possible.
-//! 3. **Speedy**
-//!     - It comes naturally most times with Rust. :)
-//!
-//! Eventually, a Python wrapper: [Lumber-Jack](https://github.com/milesgranger/lumber-jack)
-//! associated with this crate, but that time will come.
-//!
-//! # Example use:
-//!
-//! ```
-//! use blackjack::prelude::*;
-//!
-//! // We have a dataframe, of course...
-//! let mut df = DataFrame::new();
-//!
-//! // Make some series, of different types
-//! let series_i32: Series<i32> = Series::arange(0, 5);
-//! let mut series_f64: Series<f64> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-//!
-//! // You can set a series name!
-//! series_f64.set_name("my-series");
-//!
-//! // Or not...
-//! assert_eq!(series_i32.name(), None);
-//!
-//! // And add them to the dataframe
-//! df.add_column(series_f64).unwrap();
-//! df.add_column(series_i32).unwrap();
-//!
-//! // And then get a reference to a Series
-//! let series_f64_ref: &Series<f64> = df.get_column("my-series").unwrap();
-//!
-//! // and a lot more...
-//! ```
+use proc_macro::TokenStream;
+use quote::{format_ident, quote};
+use syn::{Data, DeriveInput, Field, Fields};
 
-#[macro_use]
-pub mod macros;
+#[proc_macro_derive(DataFrame)]
+#[allow(non_snake_case)]
+pub fn DataFrame(input: TokenStream) -> TokenStream {
+    let ast: DeriveInput = syn::parse(input).unwrap();
 
-pub mod dataframe;
-pub mod enums;
-pub mod error;
-mod funcs;
-pub mod prelude;
-pub mod row;
-pub mod series;
-pub mod traits;
+    let new_name = format_ident!("{}{}", &ast.ident, "DataFrame");
+
+    let data = match &ast.data {
+        Data::Struct(data_struct) => data_struct,
+        _ => panic!("derive(DataFrame) only supported for structs"),
+    };
+    let fields = match &data.fields {
+        Fields::Named(fields) => fields
+            .named
+            .iter()
+            .map(Clone::clone)
+            .map(|f: Field| {
+                let ty = f.ty;
+                let name = format_ident!("{}", f.ident.unwrap().to_string());
+                let ts = quote! { pub #name: Vec<#ty> };
+                ts
+            })
+            .collect::<Vec<proc_macro2::TokenStream>>(),
+        _ => vec![],
+    };
+
+    let field_names = match &data.fields {
+        Fields::Named(fields) => fields
+            .named
+            .iter()
+            .map(Clone::clone)
+            .map(|f: Field| {
+                let name = format_ident!("{}", f.ident.unwrap().to_string());
+                name
+            })
+            .collect::<Vec<syn::Ident>>(),
+        _ => vec![],
+    };
+
+    let name = &ast.ident;
+
+    let push_code = field_names.iter().map(|ident| {
+        quote! { self.#ident.push(row.#ident); }
+    });
+
+    (quote! {
+        #[derive(Default)]
+        pub struct #new_name {
+            #(#fields),*
+        }
+        impl #new_name {
+            pub fn new() -> Self {
+                Self::default()
+            }
+            pub fn push(&mut self, row: #name) {
+                #(#push_code)*
+            }
+        }
+    })
+    .into()
+}
