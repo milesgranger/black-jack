@@ -17,7 +17,7 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         Fields::Named(fields) => fields,
         _ => panic!("#[derive(DataFrame)] only supported for structs with named fields"),
     };
-    let fields = fields_named
+    let dataframe_fields = fields_named
         .named
         .iter()
         .map(|f: &Field| {
@@ -48,7 +48,7 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         #(#attrs)*
         #[derive(Default)]
         pub struct #dataframe_name {
-            #(#fields),*
+            #(#dataframe_fields),*
         }
         impl #dataframe_name {
             #pub_fn_new
