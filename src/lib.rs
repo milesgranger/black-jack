@@ -11,28 +11,30 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let data = match &ast.data {
         Data::Struct(data_struct) => data_struct,
-        _ => panic!("derive(DataFrame) only supported for structs"),
+        _ => panic!("#[derive(DataFrame)] only supported for structs"),
     };
-    let fields = match &data.fields {
-        Fields::Named(fields) => fields
-            .named
-            .iter()
-            .map(|f: &Field| {
-                let ty = &f.ty;
-                let name = f.ident.as_ref().unwrap();
-                quote! { pub #name: Vec<#ty> }
-            })
-            .collect::<Vec<proc_macro2::TokenStream>>(),
-        _ => vec![],
+    let fields_named = match &data.fields {
+        Fields::Named(fields) => fields,
+        _ => panic!("#[derive(DataFrame)] only supported for structs with named fields"),
     };
-    let field_names = match &data.fields {
-        Fields::Named(fields) => fields
-            .named
-            .iter()
-            .map(|f: &Field| f.ident.clone().unwrap())
-            .collect::<Vec<Ident>>(),
-        _ => vec![],
-    };
+    let fields = fields_named
+        .named
+        .iter()
+        .map(|f: &Field| {
+            let ty = &f.ty;
+            let name = f.ident.as_ref().unwrap();
+            quote! { pub #name: Vec<#ty> }
+        })
+        .collect::<Vec<proc_macro2::TokenStream>>();
+    let field_names = fields_named
+        .named
+        .iter()
+        .map(|f: &Field| f.ident.clone().unwrap())
+        .collect::<Vec<Ident>>();
+
+    // Generate attribute accessor methods
+    // ie. attr 'foo' on row struct will have DataFrame::foo() and DataFrame::foo_mut()
+    let attr_accessors = dataframe::attr_accessors(&fields_named);
 
     // generate methods
     let pub_fn_new = dataframe::new();
@@ -54,6 +56,7 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             #pub_fn_push
             #pub_fn_select
             #pub_fn_filter
+            #(#attr_accessors)*
         }
     })
     .into()
@@ -62,8 +65,8 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 mod dataframe {
 
     use proc_macro2::TokenStream;
-    use quote::quote;
-    use syn::{DataStruct, Fields, Ident};
+    use quote::{format_ident, quote};
+    use syn::{DataStruct, Fields, FieldsNamed, Ident};
 
     /// Generate `DataFrame::push(row)` method
     pub fn new() -> TokenStream {
@@ -72,6 +75,24 @@ mod dataframe {
                 Self::default()
             }
         }
+    }
+
+    /// For every field/attr, generate accessors.
+    /// ie. row struct w/ attr 'foo' gets: `DataFrame::foo()` & `DataFrame::foo_mut()`
+    pub fn attr_accessors(fields: &FieldsNamed) -> impl Iterator<Item = TokenStream> + '_ {
+        fields.named.iter().map(|field| {
+            let field_name = field.ident.as_ref().unwrap();
+            let field_name_mut = format_ident!("{}_{}", &field_name, "mut");
+            let ty = &field.ty;
+            quote! {
+                pub fn #field_name(&self) -> &[#ty] {
+                    &self.#field_name
+                }
+                pub fn #field_name_mut(&mut self) -> &mut[#ty] {
+                    &mut self.#field_name
+                }
+            }
+        })
     }
 
     /// Generate `DataFrame::push(row)` method
