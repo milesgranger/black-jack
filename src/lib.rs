@@ -23,7 +23,7 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         .map(|f: &Field| {
             let ty = &f.ty;
             let name = f.ident.as_ref().unwrap();
-            quote! { pub #name: Vec<#ty> }
+            quote! { #name: Vec<#ty> }
         })
         .collect::<Vec<proc_macro2::TokenStream>>();
     let field_names = fields_named
