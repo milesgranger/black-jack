@@ -42,7 +42,8 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let pub_fn_push = dataframe::push(&data, &struct_name);
     let pub_fn_select = dataframe::select(&struct_name, &field_names);
     let pub_fn_filter = dataframe::filter(&struct_name);
-
+    let pub_fn_filter_inplace = dataframe::filter_inplace(&struct_name);
+    let pub_fn_remove = dataframe::remove(&struct_name, &field_names);
     let attrs = &ast.attrs;
     (quote! {
         #(#attrs)*
@@ -56,6 +57,8 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             #pub_fn_push
             #pub_fn_select
             #pub_fn_filter
+            #pub_fn_filter_inplace
+            #pub_fn_remove
             #(#attr_accessors)*
         }
     })
@@ -146,6 +149,32 @@ mod dataframe {
                     }
                 }
                 df
+            }
+        }
+    }
+    /// Generate `DataFrame::filter_inplace(|row| ...)`
+    pub fn filter_inplace(row_ident: &Ident) -> TokenStream {
+        quote! {
+            pub fn filter_inplace<F: Fn(&#row_ident) -> bool>(&mut self, condition: F) -> () {
+                let mut n_removed = 0;
+                for idx in 0..self.len() {
+                    let row = self.select(idx - n_removed);
+                    if condition(&row) == true {
+                        let _ = self.remove(idx - n_removed);
+                        n_removed += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn remove(row_ident: &Ident, field_names: &[Ident]) -> TokenStream {
+        let field_assignments = field_names
+            .iter()
+            .map(|ident| quote! { #ident: self.#ident.remove(idx) });
+        quote! {
+            pub fn remove(&mut self, idx: usize) -> #row_ident {
+                #row_ident { #(#field_assignments),* }
             }
         }
     }
