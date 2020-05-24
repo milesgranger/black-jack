@@ -13,7 +13,6 @@ fn test_derive() {
 
 #[test]
 fn test_push() {
-
     let row = Row {
         col1: 1,
         col2: "Hello".to_string(),
@@ -68,8 +67,6 @@ fn test_filter_inplace() {
     df.filter_inplace(|row| row.col1 == 1 || row.col1 == 3);
     assert_eq!(df.len(), 1);
 }
-
-
 
 #[test]
 fn test_remove() {
@@ -127,4 +124,23 @@ fn test_column_accessors() {
     assert_eq!(&df.col2()[0], "Hello");
     df.col2_mut()[0] = "Hey-ya".to_string();
     assert_eq!(&df.col2()[0], "Hey-ya");
+}
+
+#[test]
+fn test_into_iter() {
+    let mut df = RowDataFrame::new();
+    df.push(Row {
+        col1: 1,
+        col2: "Hello".to_string(),
+    });
+    df.push(Row {
+        col1: 2,
+        col2: "World".to_string(),
+    });
+    df.push(Row {
+        col1: 3,
+        col2: "!".to_string(),
+    });
+
+    assert_eq!(df.into_iter().count(), 3);
 }

@@ -7,6 +7,7 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
 
     let dataframe_name = format_ident!("{}{}", &ast.ident, "DataFrame");
+    let dataframe_intoiterator_ident = format_ident!("{}IntoIterator", &dataframe_name);
     let struct_name = &ast.ident;
 
     let data = match &ast.data {
@@ -44,7 +45,10 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let pub_fn_filter = dataframe::filter(&struct_name);
     let pub_fn_filter_inplace = dataframe::filter_inplace(&struct_name);
     let pub_fn_remove = dataframe::remove(&struct_name, &field_names);
+    let pub_fn_is_empty = dataframe::is_empty();
+
     let attrs = &ast.attrs;
+
     (quote! {
         #(#attrs)*
         #[derive(Default)]
@@ -59,8 +63,33 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             #pub_fn_filter
             #pub_fn_filter_inplace
             #pub_fn_remove
+            #pub_fn_is_empty
             #(#attr_accessors)*
         }
+
+        /// Implement DataFrame::into_iter()
+        pub struct #dataframe_intoiterator_ident {
+            df: #dataframe_name
+        }
+        impl std::iter::IntoIterator for #dataframe_name {
+            type Item = #struct_name;
+            type IntoIter = #dataframe_intoiterator_ident;
+
+            fn into_iter(self) -> Self::IntoIter {
+                #dataframe_intoiterator_ident { df: self }
+            }
+        }
+        impl std::iter::Iterator for #dataframe_intoiterator_ident {
+            type Item = #struct_name;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                match self.df.is_empty() {
+                    true => None,
+                    false => Some(self.df.remove(0))
+                }
+            }
+        }
+
     })
     .into()
 }
@@ -96,6 +125,14 @@ mod dataframe {
                 }
             }
         })
+    }
+
+    pub fn is_empty() -> TokenStream {
+        quote! {
+            pub fn is_empty(&self) -> bool {
+                self.len() == 0
+            }
+        }
     }
 
     /// Generate `DataFrame::push(row)` method
