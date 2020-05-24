@@ -6,9 +6,9 @@ use syn::{Data, DeriveInput, Field, Fields, Ident};
 pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: DeriveInput = syn::parse(input).unwrap();
 
-    let dataframe_name = format_ident!("{}{}", &ast.ident, "DataFrame");
-    let dataframe_intoiterator_ident = format_ident!("{}IntoIterator", &dataframe_name);
-    let struct_name = &ast.ident;
+    let dataframe_ident = format_ident!("{}{}", &ast.ident, "DataFrame");
+    let dataframe_intoiterator_ident = format_ident!("{}IntoIterator", &dataframe_ident);
+    let row_ident = &ast.ident;
 
     let data = match &ast.data {
         Data::Struct(data_struct) => data_struct,
@@ -40,11 +40,11 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // generate methods
     let pub_fn_new = dataframe::new();
     let pub_fn_len = dataframe::len(&field_names);
-    let pub_fn_push = dataframe::push(&data, &struct_name);
-    let pub_fn_select = dataframe::select(&struct_name, &field_names);
-    let pub_fn_filter = dataframe::filter(&struct_name);
-    let pub_fn_filter_inplace = dataframe::filter_inplace(&struct_name);
-    let pub_fn_remove = dataframe::remove(&struct_name, &field_names);
+    let pub_fn_push = dataframe::push(&data, &row_ident);
+    let pub_fn_select = dataframe::select(&row_ident, &field_names);
+    let pub_fn_filter = dataframe::filter(&row_ident);
+    let pub_fn_filter_inplace = dataframe::filter_inplace(&row_ident);
+    let pub_fn_remove = dataframe::remove(&row_ident, &field_names);
     let pub_fn_is_empty = dataframe::is_empty();
 
     let attrs = &ast.attrs;
@@ -52,10 +52,10 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     (quote! {
         #(#attrs)*
         #[derive(Default)]
-        pub struct #dataframe_name {
+        pub struct #dataframe_ident {
             #(#dataframe_fields),*
         }
-        impl #dataframe_name {
+        impl #dataframe_ident {
             #pub_fn_new
             #pub_fn_len
             #pub_fn_push
@@ -69,10 +69,10 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
         /// Implement DataFrame::into_iter()
         pub struct #dataframe_intoiterator_ident {
-            df: #dataframe_name
+            df: #dataframe_ident
         }
-        impl std::iter::IntoIterator for #dataframe_name {
-            type Item = #struct_name;
+        impl std::iter::IntoIterator for #dataframe_ident {
+            type Item = #row_ident;
             type IntoIter = #dataframe_intoiterator_ident;
 
             fn into_iter(self) -> Self::IntoIter {
@@ -80,7 +80,7 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             }
         }
         impl std::iter::Iterator for #dataframe_intoiterator_ident {
-            type Item = #struct_name;
+            type Item = #row_ident;
 
             fn next(&mut self) -> Option<Self::Item> {
                 match self.df.is_empty() {
@@ -91,9 +91,9 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
 
         /// Implement DataFrame::FromIterator
-        impl std::iter::FromIterator<#struct_name> for #dataframe_name {
-            fn from_iter<I: std::iter::IntoIterator<Item=#struct_name>>(iter: I) -> Self {
-                let mut df = #dataframe_name::new();
+        impl std::iter::FromIterator<#row_ident> for #dataframe_ident {
+            fn from_iter<I: std::iter::IntoIterator<Item=#row_ident>>(iter: I) -> Self {
+                let mut df = #dataframe_ident::new();
                 for i in iter {
                     df.push(i);
                 }
@@ -147,7 +147,7 @@ mod dataframe {
     }
 
     /// Generate `DataFrame::push(row)` method
-    pub fn push(data: &DataStruct, struct_name: &Ident) -> TokenStream {
+    pub fn push(data: &DataStruct, row_ident: &Ident) -> TokenStream {
         let push_code = if let Fields::Named(fields) = &data.fields {
             fields
                 .named
@@ -159,7 +159,7 @@ mod dataframe {
         };
 
         quote! {
-            pub fn push(&mut self, row: #struct_name) {
+            pub fn push(&mut self, row: #row_ident) {
                 #(#push_code)*
             }
         }
