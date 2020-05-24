@@ -90,6 +90,17 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             }
         }
 
+        /// Implement DataFrame::FromIterator
+        impl std::iter::FromIterator<#struct_name> for #dataframe_name {
+            fn from_iter<I: std::iter::IntoIterator<Item=#struct_name>>(iter: I) -> Self {
+                let mut df = #dataframe_name::new();
+                for i in iter {
+                    df.push(i);
+                }
+                df
+            }
+        }
+
     })
     .into()
 }

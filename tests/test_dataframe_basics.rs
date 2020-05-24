@@ -1,4 +1,5 @@
 use blackjack::DataFrame;
+use std::iter::FromIterator;
 
 #[derive(DataFrame, PartialEq, Clone, Debug)]
 pub struct Row {
@@ -143,4 +144,35 @@ fn test_into_iter() {
     });
 
     assert_eq!(df.into_iter().count(), 3);
+}
+
+#[test]
+fn test_from_iter() {
+    let mut df = RowDataFrame::new();
+    df.push(Row {
+        col1: 1,
+        col2: "Hello".to_string(),
+    });
+    df.push(Row {
+        col1: 2,
+        col2: "World".to_string(),
+    });
+    df.push(Row {
+        col1: 3,
+        col2: "!".to_string(),
+    });
+
+    #[derive(DataFrame)]
+    pub struct ModifiedRow {
+        pub col1: usize,
+        pub col2: String,
+        pub col3: u32,
+    }
+
+    let df2 = ModifiedRowDataFrame::from_iter(df.into_iter().map(|row| ModifiedRow {
+        col1: row.col1,
+        col2: row.col2,
+        col3: (row.col1 * 2) as u32,
+    }));
+    assert_eq!(df2.len(), 3);
 }
