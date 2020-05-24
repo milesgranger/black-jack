@@ -1,23 +1,18 @@
 use blackjack::DataFrame;
 
+#[derive(DataFrame, PartialEq, Clone, Debug)]
+pub struct Row {
+    pub col1: usize,
+    pub col2: String,
+}
+
 #[test]
 fn test_derive() {
-    #[derive(DataFrame)]
-    #[allow(dead_code)]
-    pub struct Row {
-        pub col1: usize,
-    }
-
     let _df = RowDataFrame::new();
 }
 
 #[test]
 fn test_push() {
-    #[derive(DataFrame)]
-    pub struct Row {
-        pub col1: usize,
-        pub col2: String,
-    }
 
     let row = Row {
         col1: 1,
@@ -38,11 +33,6 @@ fn test_push() {
 
 #[test]
 fn test_filter() {
-    #[derive(DataFrame)]
-    pub struct Row {
-        pub col1: usize,
-        pub col2: String,
-    }
     let mut df = RowDataFrame::new();
     df.push(Row {
         col1: 1,
@@ -60,11 +50,6 @@ fn test_filter() {
 
 #[test]
 fn test_filter_inplace() {
-    #[derive(DataFrame)]
-    pub struct Row {
-        pub col1: usize,
-        pub col2: String,
-    }
     let mut df = RowDataFrame::new();
     df.push(Row {
         col1: 1,
@@ -84,13 +69,10 @@ fn test_filter_inplace() {
     assert_eq!(df.len(), 1);
 }
 
+
+
 #[test]
 fn test_remove() {
-    #[derive(DataFrame, PartialEq, Clone, Debug)]
-    pub struct Row {
-        pub col1: usize,
-        pub col2: String,
-    }
     let mut df = RowDataFrame::new();
     df.push(Row {
         col1: 1,
@@ -114,11 +96,6 @@ fn test_remove() {
 
 #[test]
 fn test_select() {
-    #[derive(DataFrame, Clone, PartialEq, Debug)]
-    pub struct Row {
-        pub col1: usize,
-        pub col2: String,
-    }
     let mut df = RowDataFrame::new();
     df.push(Row {
         col1: 1,
@@ -136,11 +113,6 @@ fn test_select() {
 
 #[test]
 fn test_column_accessors() {
-    #[derive(DataFrame)]
-    pub struct Row {
-        pub col1: usize,
-        pub col2: String,
-    }
     let mut df = RowDataFrame::new();
     df.push(Row {
         col1: 1,
