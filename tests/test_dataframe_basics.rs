@@ -1,15 +1,20 @@
 use blackjack::DataFrame;
 use std::iter::FromIterator;
 
-#[derive(DataFrame, PartialEq, Clone, Debug)]
+#[derive(DataFrame, PartialEq, Clone, Debug, Default)]
 pub struct Row {
     pub col1: usize,
     pub col2: String,
 }
 
+#[derive(Default)]
+pub struct DataFrame<T> {
+    values: Vec<T>,
+}
+
 #[test]
 fn test_derive() {
-    let _df = RowDataFrame::new();
+    let _df = <DataFrame<Row>>::new();
 }
 
 #[test]
@@ -19,21 +24,21 @@ fn test_push() {
         col2: "Hello".to_string(),
     };
 
-    let mut df = RowDataFrame::new();
+    let mut df = <DataFrame<Row>>::new();
 
     // Pushing
     assert_eq!(df.len(), 0);
-    assert_eq!(df.col1().len(), 0);
-    assert_eq!(df.col2().len(), 0);
+    assert_eq!(df.col1().count(), 0);
+    assert_eq!(df.col2().count(), 0);
     df.push(row);
     assert_eq!(df.len(), 1);
-    assert_eq!(df.col1().len(), 1);
-    assert_eq!(df.col2().len(), 1);
+    assert_eq!(df.col1().count(), 1);
+    assert_eq!(df.col2().count(), 1);
 }
 
 #[test]
 fn test_filter() {
-    let mut df = RowDataFrame::new();
+    let mut df = <DataFrame<Row>>::new();
     df.push(Row {
         col1: 1,
         col2: "Hello".to_string(),
@@ -50,7 +55,7 @@ fn test_filter() {
 
 #[test]
 fn test_filter_inplace() {
-    let mut df = RowDataFrame::new();
+    let mut df = <DataFrame<Row>>::new();
     df.push(Row {
         col1: 1,
         col2: "Hello".to_string(),
@@ -71,7 +76,7 @@ fn test_filter_inplace() {
 
 #[test]
 fn test_remove() {
-    let mut df = RowDataFrame::new();
+    let mut df = <DataFrame<Row>>::new();
     df.push(Row {
         col1: 1,
         col2: "Hello".to_string(),
@@ -93,43 +98,27 @@ fn test_remove() {
 }
 
 #[test]
-fn test_select() {
-    let mut df = RowDataFrame::new();
-    df.push(Row {
-        col1: 1,
-        col2: "Hello".to_string(),
-    });
-    let row = Row {
-        col1: 2,
-        col2: "World".to_string(),
-    };
-    df.push(row.clone());
-
-    let selected_row = df.select(1);
-    assert_eq!(row, selected_row);
-}
-
-#[test]
 fn test_column_accessors() {
-    let mut df = RowDataFrame::new();
+    let mut df: DataFrame<Row> = DataFrame::default();
     df.push(Row {
         col1: 1,
         col2: "Hello".to_string(),
     });
 
-    assert_eq!(df.col1()[0], 1);
-    let col: &mut [usize] = df.col1_mut();
-    col[0] *= 2;
-    assert_eq!(df.col1()[0], 2);
+    assert_eq!(df.col1().collect::<Vec<&usize>>()[0], &1);
+    let mut col = df.col1_mut().collect::<Vec<&mut usize>>();
+    *col[0] *= 2;
+    assert_eq!(df.col1().collect::<Vec<&usize>>()[0], &2);
 
-    assert_eq!(&df.col2()[0], "Hello");
-    df.col2_mut()[0] = "Hey-ya".to_string();
-    assert_eq!(&df.col2()[0], "Hey-ya");
+    assert_eq!(df.col2().collect::<Vec<&String>>()[0], "Hello");
+    let mut col = df.col2_mut().collect::<Vec<&mut String>>();
+    *col[0] = "Hey-ya".to_string();
+    assert_eq!(df.col2().collect::<Vec<&String>>()[0], "Hey-ya");
 }
 
 #[test]
 fn test_into_iter() {
-    let mut df = RowDataFrame::new();
+    let mut df: DataFrame<Row> = DataFrame::default();
     df.push(Row {
         col1: 1,
         col2: "Hello".to_string(),
@@ -148,7 +137,7 @@ fn test_into_iter() {
 
 #[test]
 fn test_from_iter() {
-    let mut df = RowDataFrame::new();
+    let mut df = <DataFrame<Row>>::new();
     df.push(Row {
         col1: 1,
         col2: "Hello".to_string(),
@@ -162,14 +151,14 @@ fn test_from_iter() {
         col2: "!".to_string(),
     });
 
-    #[derive(DataFrame)]
+    #[derive(DataFrame, Default)]
     pub struct ModifiedRow {
         pub col1: usize,
         pub col2: String,
         pub col3: u32,
     }
 
-    let df2 = ModifiedRowDataFrame::from_iter(df.into_iter().map(|row| ModifiedRow {
+    let df2: DataFrame<ModifiedRow> = DataFrame::from_iter(df.into_iter().map(|row| ModifiedRow {
         col1: row.col1,
         col2: row.col2,
         col3: (row.col1 * 2) as u32,
@@ -178,8 +167,8 @@ fn test_from_iter() {
 }
 
 #[test]
-fn test_dataframe_iterator_into() {
-    let mut df = RowDataFrame::new();
+fn test_iterator_into() {
+    let mut df = <DataFrame<Row>>::new();
     df.push(Row {
         col1: 1,
         col2: "Hello".to_string(),
@@ -193,7 +182,7 @@ fn test_dataframe_iterator_into() {
         col2: "!".to_string(),
     });
 
-    #[derive(DataFrame)]
+    #[derive(DataFrame, Default)]
     pub struct ModifiedRow {
         pub col1: usize,
         pub col2: String,
@@ -212,6 +201,6 @@ fn test_dataframe_iterator_into() {
         }
     }
 
-    let df2: ModifiedRowDataFrame = df.into_iter().filter(|v| v.col1 != 1).into();
+    let df2: DataFrame<ModifiedRow> = df.into_iter().filter(|v| v.col1 != 1).into();
     assert_eq!(df2.len(), 2);
 }
