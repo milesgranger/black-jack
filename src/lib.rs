@@ -101,6 +101,20 @@ pub fn DataFrame(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             }
         }
 
+        /// From<>
+        impl<D, R> From<D> for #dataframe_ident
+            where D: std::iter::Iterator<Item = R>,
+                  R: Into<#row_ident>
+        {
+            fn from(data: D) -> Self {
+                let mut df = #dataframe_ident::new();
+                for row in data {
+                    df.push(row.into());
+                }
+                df
+            }
+        }
+
     })
     .into()
 }

@@ -176,3 +176,42 @@ fn test_from_iter() {
     }));
     assert_eq!(df2.len(), 3);
 }
+
+#[test]
+fn test_dataframe_iterator_into() {
+    let mut df = RowDataFrame::new();
+    df.push(Row {
+        col1: 1,
+        col2: "Hello".to_string(),
+    });
+    df.push(Row {
+        col1: 2,
+        col2: "World".to_string(),
+    });
+    df.push(Row {
+        col1: 3,
+        col2: "!".to_string(),
+    });
+
+    #[derive(DataFrame)]
+    pub struct ModifiedRow {
+        pub col1: usize,
+        pub col2: String,
+        pub col3: u32,
+    }
+
+    // Only need to implement From<Row> to convert
+    // RowDataFrame -> ModifiedRowDataFrame
+    impl From<Row> for ModifiedRow {
+        fn from(row: Row) -> ModifiedRow {
+            ModifiedRow {
+                col1: row.col1,
+                col2: row.col2,
+                col3: (row.col1 * 2) as u32,
+            }
+        }
+    }
+
+    let df2: ModifiedRowDataFrame = df.into_iter().filter(|v| v.col1 != 1).into();
+    assert_eq!(df2.len(), 2);
+}
