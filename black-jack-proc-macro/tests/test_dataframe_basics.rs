@@ -1,4 +1,4 @@
-use blackjack::DataFrame;
+use blackjack_proc_macro::DataFrame;
 use std::iter::FromIterator;
 
 #[derive(DataFrame, PartialEq, Clone, Debug, Default)]

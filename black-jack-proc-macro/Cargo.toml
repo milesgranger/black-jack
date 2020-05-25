@@ -1,5 +1,5 @@
 [package]
-name = "black-jack"
+name = "black-jack-proc-macro"
 version = "0.2.0-alpha"
 edition = "2018"
 authors = ["Miles Granger <miles59923@gmail.com>"]
@@ -13,20 +13,11 @@ license-file = "LICENSE"
 travis-ci = { repository = "milesgranger/black-jack", branch = "master" }
 
 [lib]
-name = "blackjack"
-
-[workspace]
-members = [
-    ".",
-    "black-jack-proc-macro"
-]
+name = "blackjack_proc_macro"
+proc-macro = true
 
 [dependencies]
-black-jack-proc-macro = {path = "black-jack-proc-macro"}
-csv = "1.1"
-serde = { version = "1.0", features = ["derive"] }
+quote = "^1.0"
+syn = { version = "^1.0", features = ["full", "extra-traits"] }
+proc-macro2 = "^1.0"
 
-
-[[bench]]
-name = "bench_marks"
-harness = false
