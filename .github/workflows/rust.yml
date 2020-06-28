@@ -1,0 +1,32 @@
+name: RustCI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build-n-test:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+
+      - name: Build
+        run: cargo build
+
+      - name: Run black-jack-proc-macro tests
+        run: cargo test -p black-jack-proc-macro
+
+      - name: Run black-jack tests
+        run: cargo test -p black-jack

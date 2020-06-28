@@ -1,57 +1,41 @@
-#![warn(missing_docs)]
-//! BlackJack strives to be a full featured crate for general data processing.
-//!
-//! _Long term_ goal is to create a lightweight [Pandas](https://pandas.pydata.org/) equivalent
-//! by and for the Rust community, but with slight differences in focus...
-//!
-//! The project strives for a few key principles. When any implementation decisions are to be made,
-//! they are made with these principles in mind, and in this order:
-//! 1. **Memory efficiency**
-//!     - Minimize memory use at every opportunity.
-//! 2. **Usability**
-//!     - Strive for ergonomics; often done by modeling the `Pandas` API where possible.
-//! 3. **Speedy**
-//!     - It comes naturally most times with Rust. :)
-//!
-//! Eventually, a Python wrapper: [Lumber-Jack](https://github.com/milesgranger/lumber-jack)
-//! associated with this crate, but that time will come.
-//!
-//! # Example use:
-//!
-//! ```
-//! use blackjack::prelude::*;
-//!
-//! // We have a dataframe, of course...
-//! let mut df = DataFrame::new();
-//!
-//! // Make some series, of different types
-//! let series_i32: Series<i32> = Series::arange(0, 5);
-//! let mut series_f64: Series<f64> = Series::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-//!
-//! // You can set a series name!
-//! series_f64.set_name("my-series");
-//!
-//! // Or not...
-//! assert_eq!(series_i32.name(), None);
-//!
-//! // And add them to the dataframe
-//! df.add_column(series_f64).unwrap();
-//! df.add_column(series_i32).unwrap();
-//!
-//! // And then get a reference to a Series
-//! let series_f64_ref: &Series<f64> = df.get_column("my-series").unwrap();
-//!
-//! // and a lot more...
-//! ```
+use anyhow::Result;
+pub use blackjack_proc_macro::DataFrame;
 
-#[macro_use]
-pub mod macros;
+#[macro_export]
+macro_rules! blackjack_init {
+    () => {
+        #[derive(Default, Debug)]
+        pub struct DataFrame<T> {
+            pub values: Vec<T>,
+        }
+    };
+}
 
-pub mod dataframe;
-pub mod enums;
-pub mod error;
-mod funcs;
-pub mod prelude;
-pub mod row;
-pub mod series;
-pub mod traits;
+pub trait Join {
+    type Left;
+    type Right;
+
+    /// Implement joining two rows from different dataframes
+    /// into another row type
+    fn join(left: &Self::Left, right: &Self::Right) -> Result<Self>
+    where
+        Self: Sized;
+}
+
+#[macro_export]
+macro_rules! join {
+    ($left:ident <- $right:ident) => {
+        <DataFrame<_>>::from_iter(
+            $left
+                .values
+                .iter()
+                .map(|left_row| {
+                    $right
+                        .values
+                        .iter()
+                        .filter_map(move |right_row| Join::join(left_row, right_row).ok())
+                })
+                .flatten(),
+        )
+    };
+}

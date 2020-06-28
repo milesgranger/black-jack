@@ -3,7 +3,7 @@
 ##### While PRs are welcome, the approach taken only allows for concrete types (String, f64, i64, ...) I'm not sure this is the way to go. I want to think that using anything which implements `serde::{Serialize, Deserialize}` and better use of traits may have more flexibility, just not sure how to do that yet. The project is not abandoned, just in limbo. :-)
 
 [![crates.io](http://meritbadge.herokuapp.com/black-jack)](https://crates.io/crates/black-jack) 
-[![Build Status](https://travis-ci.com/milesgranger/black-jack.svg?branch=master)](https://travis-ci.com/milesgranger/black-jack) 
+[![RustCI](https://github.com/milesgranger/black-jack/workflows/RustCI/badge.svg?branch=master)](https://github.com/milesgranger/black-jack/actions?query=branch=master) 
 [![Coverage Status](https://coveralls.io/repos/github/milesgranger/black-jack/badge.svg?branch=master)](https://coveralls.io/github/milesgranger/black-jack?branch=master)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=milesgranger/black-jack)](https://dependabot.com)
 
