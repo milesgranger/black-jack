@@ -22,6 +22,7 @@ members = [
 ]
 
 [dependencies]
+anyhow = "1"
 black-jack-proc-macro = {path = "black-jack-proc-macro"}
 csv = "1.1"
 serde = { version = "1.0", features = ["derive"] }

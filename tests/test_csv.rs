@@ -1,8 +1,8 @@
 use blackjack::{blackjack_init, DataFrame};
-use serde::{Deserialize};
+use serde::Deserialize;
 use std::iter::FromIterator;
 
-blackjack_init![];
+blackjack_init!();
 
 #[test]
 fn test_read_csv() {
