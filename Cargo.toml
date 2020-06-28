@@ -17,7 +17,7 @@ travis-ci = { repository = "milesgranger/black-jack", branch = "master" }
 name = "blackjack"
 
 [dependencies]
-num = "^0.2"
+num = "^0.3"
 csv = "^1.0"
 streaming-stats = "0.2"
 GSL = "^1.0"
