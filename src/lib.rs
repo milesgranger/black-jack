@@ -11,7 +11,7 @@ macro_rules! blackjack_init {
     };
 }
 
-pub trait Join {
+pub trait InnerJoin {
     type Left;
     type Right;
 
@@ -24,7 +24,7 @@ pub trait Join {
 
 #[macro_export]
 macro_rules! join {
-    ($left:ident <- $right:ident) => {
+    ($left:ident -><- $right:ident) => {
         <DataFrame<_>>::from_iter(
             $left
                 .values
@@ -33,7 +33,7 @@ macro_rules! join {
                     $right
                         .values
                         .iter()
-                        .filter_map(move |right_row| Join::join(left_row, right_row).ok())
+                        .filter_map(move |right_row| InnerJoin::join(left_row, right_row).ok())
                 })
                 .flatten(),
         )
