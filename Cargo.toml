@@ -20,7 +20,7 @@ name = "blackjack"
 num = "^0.3"
 csv = "^1.0"
 streaming-stats = "0.2"
-GSL = "^1.0"
+GSL = "^2.0"
 rayon = "^1.0"
 itertools = "^0.9"
 flate2 = { version = "^1.0", features = ["rust_backend"], default-features = false }
